@@ -1024,8 +1024,9 @@ To contrast, a theoretical binary buddy system was simulated for a heap size com
 
 \section{\textbf{Iscandar}: Laboratory Source Code}
 
-This DYALOG APL implementation was used to generate the report's tables. The test code simulates high-churn volumetric stress to verify determinism of the sentinel-steered geometry.
+For immediate demonstration: this listing can be copied directly from the LaTeX or PDF file into the clipboard, and pasted into a new instance of the "Dyalog APL/W-64 20.0 Unicode" GUI running on Windows 11.  
 
+\pagestyle{empty} % Silences the page numbers starting here
 \begin{HonestLab}
 
 ⍝ === ISCANDAR-OZ: VOLUMETRIC LABORATORY (VER 16.4.1) ===
@@ -1137,8 +1138,12 @@ A ← 32 ⋄ K ← 3 ⋄ V ← A*K
   ⎕ ← 'VARIANCE: ',⍕v
 ∇
 
+INIT_GEOMETRY
+RUN_LAB
+
 \end{HonestLab}
 
+\clearpage % Ensures the last page of the listing also has no number
 
 \begin{thebibliography}{99}
 
