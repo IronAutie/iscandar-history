@@ -839,6 +839,66 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 
 \clearpage
 
+\begin{Iscandar}[HeuristicLarge.apl]
+:Namespace HeuristicLarge
+
+    ARITY ← 32 ⋄ OK ← 1 ⋄ FAIL ← 0
+
+    ∇ Result ← Run L
+      ⍝ Hierarchical Coordinate Dispatch
+      Result ← ##.LargeRowDriver.Run (
+          ##.LargeDriver.Run L SectorScan
+      )
+    ∇
+
+    ∇ Result ← SectorScan (Plane Row L);W_Core;W_Edges;
+                                     L_Edges;Idx;S;
+                                     Sum;Start;Len
+      ⍝ 1. Geometric Decomposition
+      W_Core ← ⌊L ÷ ARITY
+      W_Edges ← 2 × 0 ≠ ARITY | L
+      Idx ← (Plane × 32) + Row
+
+      ⍝ 2. Branch: Join vs. Extrusion
+      :If W_Edges > 0
+          L_Edges ← ARITY | L
+
+          ⍝ Head Resolution
+          S ← (##.Cube.Rows[Idx]).sectors
+          (Len Start) ← ##.Oracle.Left.Resolve S
+          L_Edges -← Len
+
+          ⍝ Tail Resolution (Double-Ended Fast-Fail)
+          :If L_Edges > 0
+              S ← (##.Cube.Rows[Idx + 1 + W_Core]).sectors
+              L_Edges -← ##.Oracle.Right.Resolve S
+          :EndIf
+          →(L_Edges > 0)/FAIL_EXIT
+
+          ⍝ Shard (Core) Validation
+          :If W_Core > 0
+              Sum ← +/ (##.Cube.Rows[Idx + 1 + ⍳W_Core]).count
+              →(Sum ≠ 0)/FAIL_EXIT
+          :EndIf
+          Result ← OK Start
+
+      :Else
+          ⍝ Case II: Row-Aligned Extrusion
+          Sum ← +/ (##.Cube.Rows[Idx + ⍳W_Core]).count
+          →(Sum ≠ 0)/FAIL_EXIT
+          Result ← OK 0
+      :EndIf
+      →END
+
+    FAIL_EXIT: Result ← FAIL 0
+    END:
+    ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\clearpage
+
 \subsection*{Polytope Formation Between Rows}
 
 \subsubsection*{The Small Resolution ($A < L \le 2\mathcal{A}$)}
@@ -2293,6 +2353,346 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 \thispagestyle{empty}
+
+\begin{Iscandar}[LargeDriver.apl]
+:Namespace LargeDriver
+
+    A ← 32
+    OK ← 1 ⋄ FAIL ← 0
+    B ← 2*⍳32
+
+    ∇ Result ← CR CS Run L;W;Matrix;Mask;Capability;Offset
+      ⍝ 1. Calculate W-row window for tripartite weld
+      W ← (⌊L÷A) + (2 × 0 ≠ A|L)
+
+      ⍝ 2. Global sweep: poll all 1024 rows for occupancy
+      ⍝ Pad with ARITY (A) to deter edge-overflow baskets
+      Matrix ← 32 32 ⍴ 1024 ↑ W +/ (##.Cube.Rows.count, (W-1)⍴A)
+
+      ⍝ 3. Generate 32-bit steering map (Capability Vector)
+      ⍝ Identify planes where (Max Window - Occupancy) >= L
+      Mask ← ∨/ L ≤ (W × A) - Matrix
+      Capability ← Mask +.× B
+
+      ⍝ 4. Admissibility Gate: execute fast-fail if sum is zero
+      →(0 = Capability)/FAIL_EXIT
+
+      ⍝ 5. Phase II Dispatch: descend to unrolled plane logic
+      Offset ← 0
+      Result ← CS CR Capability Offset Matrix ExecutePlaneDispatch L
+      →END
+
+    FAIL_EXIT: Result ← FAIL 0
+    END:
+    ∇
+
+    ∇ Result ← CS CR V Offset Matrix ExecutePlaneDispatch L;s;b;Track;Candidate
+      Candidate ← V ∧ B
+    
+      P0:  →(0 = 0⊃Candidate)/P1 ⋄ Track ← Matrix[0;]
+           (s b) ← CS CR (0 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P1 ⋄ Result ← OK (0 Position (Offset b)) ⋄ →END
+
+      P1:  →(0 = 1⊃Candidate)/P2 ⋄ Track ← Matrix[1;]
+           (s b) ← CS CR (1 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P2 ⋄ Result ← OK (1 Position (Offset b)) ⋄ →END
+
+      P2:  →(0 = 2⊃Candidate)/P3 ⋄ Track ← Matrix[2;]
+           (s b) ← CS CR (2 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P3 ⋄ Result ← OK (2 Position (Offset b)) ⋄ →END
+
+      P3:  →(0 = 3⊃Candidate)/P4 ⋄ Track ← Matrix[3;]
+           (s b) ← CS CR (3 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P4 ⋄ Result ← OK (3 Position (Offset b)) ⋄ →END
+
+      P4:  →(0 = 4⊃Candidate)/P5 ⋄ Track ← Matrix[4;]
+           (s b) ← CS CR (4 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P5 ⋄ Result ← OK (4 Position (Offset b)) ⋄ →END
+
+      P5:  →(0 = 5⊃Candidate)/P6 ⋄ Track ← Matrix[5;]
+           (s b) ← CS CR (5 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P6 ⋄ Result ← OK (5 Position (Offset b)) ⋄ →END
+
+      P6:  →(0 = 6⊃Candidate)/P7 ⋄ Track ← Matrix[6;]
+           (s b) ← CS CR (6 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P7 ⋄ Result ← OK (6 Position (Offset b)) ⋄ →END
+
+      P7:  →(0 = 7⊃Candidate)/P8 ⋄ Track ← Matrix[7;]
+           (s b) ← CS CR (7 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P8 ⋄ Result ← OK (7 Position (Offset b)) ⋄ →END
+
+      P8:  →(0 = 8⊃Candidate)/P9 ⋄ Track ← Matrix[8;]
+           (s b) ← CS CR (8 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P9 ⋄ Result ← OK (8 Position (Offset b)) ⋄ →END
+
+      P9:  →(0 = 9⊃Candidate)/P10 ⋄ Track ← Matrix[9;]
+           (s b) ← CS CR (9 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P10 ⋄ Result ← OK (9 Position (Offset b)) ⋄ →END
+
+      P10: →(0 = 10⊃Candidate)/P11 ⋄ Track ← Matrix[10;]
+           (s b) ← CS CR (10 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P11 ⋄ Result ← OK (10 Position (Offset b)) ⋄ →END
+
+      P11: →(0 = 11⊃Candidate)/P12 ⋄ Track ← Matrix[11;]
+           (s b) ← CS CR (11 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P12 ⋄ Result ← OK (11 Position (Offset b)) ⋄ →END
+
+      P12: →(0 = 12⊃Candidate)/P13 ⋄ Track ← Matrix[12;]
+           (s b) ← CS CR (12 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P13 ⋄ Result ← OK (12 Position (Offset b)) ⋄ →END
+
+      P13: →(0 = 13⊃Candidate)/P14 ⋄ Track ← Matrix[13;]
+           (s b) ← CS CR (13 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P14 ⋄ Result ← OK (13 Position (Offset b)) ⋄ →END
+
+      P14: →(0 = 14⊃Candidate)/P15 ⋄ Track ← Matrix[14;]
+           (s b) ← CS CR (14 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P15 ⋄ Result ← OK (14 Position (Offset b)) ⋄ →END
+
+      P15: →(0 = 15⊃Candidate)/P16 ⋄ Track ← Matrix[15;]
+           (s b) ← CS CR (15 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P16 ⋄ Result ← OK (15 Position (Offset b)) ⋄ →END
+
+      P16: →(0 = 16⊃Candidate)/P17 ⋄ Track ← Matrix[16;]
+           (s b) ← CS CR (16 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P17 ⋄ Result ← OK (16 Position (Offset b)) ⋄ →END
+
+      P17: →(0 = 17⊃Candidate)/P18 ⋄ Track ← Matrix[17;]
+           (s b) ← CS CR (17 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P18 ⋄ Result ← OK (17 Position (Offset b)) ⋄ →END
+
+      P18: →(0 = 18⊃Candidate)/P19 ⋄ Track ← Matrix[18;]
+           (s b) ← CS CR (18 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P19 ⋄ Result ← OK (18 Position (Offset b)) ⋄ →END
+
+      P19: →(0 = 19⊃Candidate)/P20 ⋄ Track ← Matrix[19;]
+           (s b) ← CS CR (19 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P20 ⋄ Result ← OK (19 Position (Offset b)) ⋄ →END
+
+      P20: →(0 = 20⊃Candidate)/P21 ⋄ Track ← Matrix[20;]
+           (s b) ← CS CR (20 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P21 ⋄ Result ← OK (20 Position (Offset b)) ⋄ →END
+
+      P21: →(0 = 21⊃Candidate)/P22 ⋄ Track ← Matrix[21;]
+           (s b) ← CS CR (21 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P22 ⋄ Result ← OK (21 Position (Offset b)) ⋄ →END
+
+      P22: →(0 = 22⊃Candidate)/P23 ⋄ Track ← Matrix[22;]
+           (s b) ← CS CR (22 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P23 ⋄ Result ← OK (22 Position (Offset b)) ⋄ →END
+
+      P23: →(0 = 23⊃Candidate)/P24 ⋄ Track ← Matrix[23;]
+           (s b) ← CS CR (23 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P24 ⋄ Result ← OK (23 Position (Offset b)) ⋄ →END
+
+      P24: →(0 = 24⊃Candidate)/P25 ⋄ Track ← Matrix[24;]
+           (s b) ← CS CR (24 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P25 ⋄ Result ← OK (24 Position (Offset b)) ⋄ →END
+
+      P25: →(0 = 25⊃Candidate)/P26 ⋄ Track ← Matrix[25;]
+           (s b) ← CS CR (25 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P26 ⋄ Result ← OK (25 Position (Offset b)) ⋄ →END
+
+      P26: →(0 = 26⊃Candidate)/P27 ⋄ Track ← Matrix[26;]
+           (s b) ← CS CR (26 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P27 ⋄ Result ← OK (26 Position (Offset b)) ⋄ →END
+
+      P27: →(0 = 27⊃Candidate)/P28 ⋄ Track ← Matrix[27;]
+           (s b) ← CS CR (27 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P28 ⋄ Result ← OK (27 Position (Offset b)) ⋄ →END
+
+      P28: →(0 = 28⊃Candidate)/P29 ⋄ Track ← Matrix[28;]
+           (s b) ← CS CR (28 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P29 ⋄ Result ← OK (28 Position (Offset b)) ⋄ →END
+
+      P29: →(0 = 29⊃Candidate)/P30 ⋄ Track ← Matrix[29;]
+           (s b) ← CS CR (29 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P30 ⋄ Result ← OK (29 Position (Offset b)) ⋄ →END
+
+      P30: →(0 = 30⊃Candidate)/P31 ⋄ Track ← Matrix[30;]
+           (s b) ← CS CR (30 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/P31 ⋄ Result ← OK (30 Position (Offset b)) ⋄ →END
+
+      P31: →(0 = 31⊃Candidate)/FAIL_EXIT ⋄ Track ← Matrix[31;]
+           (s b) ← CS CR (31 Offset Track L) ##.RowsDriver.VerifyWeld
+           →(s ≠ OK)/FAIL_EXIT ⋄ Result ← OK (31 Position (Offset b)) ⋄ →END
+
+    FAIL_EXIT: Result ← FAIL 0
+    END:
+    ∇
+
+    ∇ Result ← plane Position Args;offset;sector
+      (offset sector) ← Args
+      Result ← (32*2)×plane + (32×offset) + sector
+    ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\begin{Iscandar}[LargeRowDriver.apl]
+:Namespace LargeRowDriver
+
+    A ← 32
+    OK ← 1 ⋄ FAIL ← 0
+    B ← 2*⍳32
+
+    ∇ Result ← CS Run (Plane Offset Track L);V;Cap;Cand
+      ⍝ 1. Map Railroad Track to local Capability Vector
+      V ← L ≤ (A × (⌊L÷A) + (2 × 0 ≠ A|L)) - Track
+      Cap ← V +.× B
+
+      ⍝ 2. Fast-Fail if plane volume is insufficient
+      →(0 = Cap)/FAIL_EXIT
+
+      ⍝ 3. Unrolled Row Dispatch
+      Result ← CS Cap Plane Offset L ExecuteRowDispatch
+      →END
+
+    FAIL_EXIT: Result ← FAIL 0
+    END:
+    ∇
+
+    ∇ Result ← CS V Plane Offset L ExecuteRowDispatch;Cand;s;b
+      Cand ← V ∧ B
+    
+      R0:  →(0 = 0⊃Cand)/R1
+           (s b) ← CS (Plane 0 L)
+           →(s ≠ OK)/R1 ⋄ Result ← OK (0 Position b) ⋄ →END
+
+      R1:  →(0 = 1⊃Cand)/R2
+           (s b) ← CS (Plane 1 L)
+           →(s ≠ OK)/R2 ⋄ Result ← OK (1 Position b) ⋄ →END
+
+      R2:  →(0 = 2⊃Cand)/R3
+           (s b) ← CS (Plane 2 L)
+           →(s ≠ OK)/R3 ⋄ Result ← OK (2 Position b) ⋄ →END
+
+      R3:  →(0 = 3⊃Cand)/R4
+           (s b) ← CS (Plane 3 L)
+           →(s ≠ OK)/R4 ⋄ Result ← OK (3 Position b) ⋄ →END
+
+      R4:  →(0 = 4⊃Cand)/R5
+           (s b) ← CS (Plane 4 L)
+           →(s ≠ OK)/R5 ⋄ Result ← OK (4 Position b) ⋄ →END
+
+      R5:  →(0 = 5⊃Cand)/R6
+           (s b) ← CS (Plane 5 L)
+           →(s ≠ OK)/R6 ⋄ Result ← OK (5 Position b) ⋄ →END
+
+      R6:  →(0 = 6⊃Cand)/R7
+           (s b) ← CS (Plane 6 L)
+           →(s ≠ OK)/R7 ⋄ Result ← OK (6 Position b) ⋄ →END
+
+      R7:  →(0 = 7⊃Cand)/R8
+           (s b) ← CS (Plane 7 L)
+           →(s ≠ OK)/R8 ⋄ Result ← OK (7 Position b) ⋄ →END
+
+      R8:  →(0 = 8⊃Cand)/R9
+           (s b) ← CS (Plane 8 L)
+           →(s ≠ OK)/R9 ⋄ Result ← OK (8 Position b) ⋄ →END
+
+      R9:  →(0 = 9⊃Cand)/R10
+           (s b) ← CS (Plane 9 L)
+           →(s ≠ OK)/R10 ⋄ Result ← OK (9 Position b) ⋄ →END
+
+      R10: →(0 = 10⊃Cand)/R11
+           (s b) ← CS (10 Offset Track L)
+           →(s ≠ OK)/R11 ⋄ Result ← OK (10 Position b) ⋄ →END
+
+      R11: →(0 = 11⊃Cand)/R12
+           (s b) ← CS (11 Offset Track L)
+           →(s ≠ OK)/R12 ⋄ Result ← OK (11 Position b) ⋄ →END
+
+      R12: →(0 = 12⊃Cand)/R13
+           (s b) ← CS (12 Offset Track L)
+           →(s ≠ OK)/R13 ⋄ Result ← OK (12 Position b) ⋄ →END
+
+      R13: →(0 = 13⊃Cand)/R14
+           (s b) ← CS (13 Offset Track L)
+           →(s ≠ OK)/R14 ⋄ Result ← OK (13 Position b) ⋄ →END
+
+      R14: →(0 = 14⊃Cand)/R15
+           (s b) ← CS (14 Offset Track L)
+           →(s ≠ OK)/R15 ⋄ Result ← OK (14 Position b) ⋄ →END
+
+      R15: →(0 = 15⊃Cand)/R16
+           (s b) ← CS (15 Offset Track L)
+           →(s ≠ OK)/R16 ⋄ Result ← OK (15 Position b) ⋄ →END
+
+      R16: →(0 = 16⊃Cand)/R17
+           (s b) ← CS (16 Offset Track L)
+           →(s ≠ OK)/R17 ⋄ Result ← OK (16 Position b) ⋄ →END
+
+      R17: →(0 = 17⊃Cand)/R18
+           (s b) ← CS (17 Offset Track L)
+           →(s ≠ OK)/R18 ⋄ Result ← OK (17 Position b) ⋄ →END
+
+      R18: →(0 = 18⊃Cand)/R19
+           (s b) ← CS (18 Offset Track L)
+           →(s ≠ OK)/R19 ⋄ Result ← OK (18 Position b) ⋄ →END
+
+      R19: →(0 = 19⊃Cand)/R20
+           (s b) ← CS (19 Offset Track L)
+           →(s ≠ OK)/R20 ⋄ Result ← OK (19 Position b) ⋄ →END
+
+      R20: →(0 = 20⊃Cand)/R21
+           (s b) ← CS (20 Offset Track L)
+           →(s ≠ OK)/R21 ⋄ Result ← OK (20 Position b) ⋄ →END
+
+      R21: →(0 = 21⊃Cand)/R22
+           (s b) ← CS (21 Offset Track L)
+           →(s ≠ OK)/R22 ⋄ Result ← OK (21 Position b) ⋄ →END
+
+      R22: →(0 = 22⊃Cand)/R23
+           (s b) ← CS (22 Offset Track L)
+           →(s ≠ OK)/R23 ⋄ Result ← OK (22 Position b) ⋄ →END
+
+      R23: →(0 = 23⊃Cand)/R24
+           (s b) ← CS (23 Offset Track L)
+           →(s ≠ OK)/R24 ⋄ Result ← OK (23 Position b) ⋄ →END
+
+      R24: →(0 = 24⊃Cand)/R25
+           (s b) ← CS (24 Offset Track L)
+           →(s ≠ OK)/R25 ⋄ Result ← OK (24 Position b) ⋄ →END
+
+      R25: →(0 = 25⊃Cand)/R26
+           (s b) ← CS (25 Offset Track L)
+           →(s ≠ OK)/R26 ⋄ Result ← OK (25 Position b) ⋄ →END
+
+      R26: →(0 = 26⊃Cand)/R27
+           (s b) ← CS (26 Offset Track L)
+           →(s ≠ OK)/R27 ⋄ Result ← OK (26 Position b) ⋄ →END
+
+      R27: →(0 = 27⊃Cand)/R28
+           (s b) ← CS (27 Offset Track L)
+           →(s ≠ OK)/R28 ⋄ Result ← OK (27 Position b) ⋄ →END
+
+      R28: →(0 = 28⊃Cand)/R29
+           (s b) ← CS (28 Offset Track L)
+           →(s ≠ OK)/R29 ⋄ Result ← OK (28 Position b) ⋄ →END
+
+      R29: →(0 = 29⊃Cand)/R30
+           (s b) ← CS (29 Offset Track L)
+           →(s ≠ OK)/R30 ⋄ Result ← OK (29 Position b) ⋄ →END
+
+      R30: →(0 = 30⊃Cand)/R31
+           (s b) ← CS (30 Offset Track L)
+           →(s ≠ OK)/R31 ⋄ Result ← OK (30 Position b) ⋄ →END
+
+      R31: →(0 = 31⊃Cand)/FAIL_EXIT
+           (s b) ← CS (31 Offset Track L)
+           →(s ≠ OK)/FAIL_EXIT ⋄ Result ← OK (31 Position b) ⋄ →END
+
+    FAIL_EXIT: Result ← FAIL 0
+    END:
+    ∇
+
+    ∇ Result ← p Position b
+      Result ← (32*2)×p + b
+    ∇
+
+:EndNamespace
+\end{Iscandar}
 
 \clearpage % Ensures the last page of the listing also has no number
 
