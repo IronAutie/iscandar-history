@@ -23,7 +23,7 @@ Traditional heap management architectures do not terminate predictably due to de
 paper introduces Iscandar, a deterministic memory management algorithm based on a Radix-32
 Partitioned Allocator. By mapping the memory heap linear number line to a multidimensional
 geometry of arbitrary radix, Iscandar replaces iterative search with a bounded set of unrolled instructions to resolve the geometry for finding available memory. For three-dimensional geometries
-we formalize the fractal lattice resolution across sizes of sector requests using heuristics that scan row and plane occupancy counts (Huge and Large). For heuristics involving obtaining smaller amounts of memory, we use oracles to locate available memory sectors while minimizing fragmentation. Performance is compared against commonly known memory algorithms such as buddy systems.
+we formalize the fractal lattice resolution across sizes of sector requests using heuristics that scan row and plane occupancy counts (Huge and Large). For heuristics involving obtaining smaller amounts of memory, we use oracles to locate available memory sectors without invoking a search. Performance is compared against commonly known memory algorithms such as buddy systems.
 }
 
 % =========================================================================
@@ -199,7 +199,7 @@ These axioms establish the geometric and mathematical constraints of the lattice
 
 \subsection{Axiom I: The State Map (L) and Structural Arity ($\mathcal{A})$}
 
-For modeling and testing purposes this paper demonstrates an $k$-level lattice $L$ of fixed depth ($n=3$) \textbf{defining} a total memory space. The architecture \textbf{maintains} a constant Arity ($\mathcal{A}$) of 32. A hierarchical progression of tiers \textbf{organizes} the lattice: the atomic Sector ($S_{0}$), the Row of Sectors ($S_{1}$), the Plane of Rows ($S_{2}$), and the Cube of Planes ($S_{3}$). Lattice coordinates ($p, r, s$) \textbf{determine} the address of any specific leaf node, where $p, r, s \in \{0, \dots, \mathcal{A}-1\}$. The geometry \textbf{maintains} invariance regardless of the physical byte-width the sector \textbf{occupies}.\footnote[2]{The Large allocator functions as a cross-tier searcher for sequence resolution, managing the fractal logic across the Plane manifold to satistfy multi-Row requests.}
+For modeling and testing purposes this paper demonstrates an $k$-level lattice $L$ of fixed depth ($n=3$) defining a total memory space. The architecture maintains a constant Arity ($\mathcal{A}$) of 32. A hierarchical progression of tiers organizes the lattice: the atomic Sector ($S_{0}$), the Row of Sectors ($S_{1}$), the Plane of Rows ($S_{2}$), and the Cube of Planes ($S_{3}$). Lattice coordinates ($p, r, s$) determine the address of any specific leaf node, where $p, r, s \in \{0, \dots, \mathcal{A}-1\}$. The geometry maintains invariance regardless of the physical byte-width the sector occupies.\footnote[2]{The Large allocator functions as a cross-tier searcher for sequence resolution, managing the fractal logic across the Plane manifold to satisfy multi-Row requests.}
 
 \subsubsection{The Cube Namespace}
 This listing defines the memory allocator data structure, Iscandar's answer to the buddy system heap, in accordance with Axiom I.
@@ -217,17 +217,13 @@ Discrete occupancy counts ($\Gamma$) at every tier enable constant-time steering
 
 This hierarchical summation lets a Global Registrar at the Cube level execute an admissibility check in a single instruction cycle, imposing a fast-fail condition.
 
-\subsection{Axiom III: Enforcing an Occupancy Limit ($\Phi$)}
+\subsection{Axiom III: The Contiguity Guarantee and Spatial Entropy}
 
-The \textbf{Iscandar} system \textbf{enforces} a mandatory occupancy boundary, the Occupancy Limit ($\Phi$). Traditional allocators search for gaps as memory nears capacity; in contrast, this system \textbf{triggers} a deterministic refusal once $\Gamma_{3}$ reaches the $\Phi$ threshold based on the present occupancy request.
+Any resolved coordinate sequence represents a continuous physical block in the \textbf{Iscandar} lattice. However, functional contiguity does not imply spatial perfection; a perfect Oracle would preclude fragmentation entirely. Our Oracles (Center, Left, and Right) prioritize determinism over maximum packing density. 
 
-\subsection{Axiom IV: The Contiguity Guarantee and Spatial Entropy}
+\subsection{Axiom IV: The Coordinate-Address Identity}
 
-Any resolved coordinate sequence \textbf{represents} a continuous physical block in the \textbf{Iscandar} lattice. However, functional contiguity does not imply spatial perfection; a perfect Oracle would preclude fragmentation entirely. Our Oracles (Center, Left, and Right) prioritize determinism over maximum packing density. 
-
-\subsection{Axiom V: The Coordinate-Address Identity}
-
-The architecture used here rejects the traditional separation of logical address space and physical memory geometry, by establishing a \textbf{Bijective Identity} between a machine-word pointer $P$ (wrapped pointer, see section 5) and its corresponding lattice coordinate $\vec{C}$.\\ 
+The architecture used here rejects the traditional separation of logical address space and physical memory geometry, by establishing a \textbf{Bijective Identity} between a machine-word pointer $P$ (wrapped pointer, see Glossary) and its corresponding lattice coordinate $\vec{C}$.\\ 
 
 In a system of depth $k$ and arity $A$, any specific sector is represented by a coordinate vector:
 \begin{equation}
@@ -239,7 +235,7 @@ The address $P$ is not an arbitrary token, but the scalar projection of this vec
     P = \sum_{n=1}^{k} i_n \cdot A^{k-n}
 \end{equation}
 
-For the demonstration project of this paper, ($A=32, k=3$), the address of a sector located at $(\text{Plane } p, \text{Row } r, \text{Sector } s)$ is clearly enumerable from the geometry:
+With our cube as an example, the address of a sector located at $(p, r, s)$ is clearly enumerable from the geometry:
 \begin{equation}
     P = (p \cdot 32^2) + (r \cdot 32^1) + (s \cdot 32^0)
 \end{equation}
@@ -248,63 +244,54 @@ For the demonstration project of this paper, ($A=32, k=3$), the address of a sec
 
 \section{Formal Proof of Deterministic Path Termination}
 
-\noindent \textbf{Theorem:} A fixed-depth $\mathcal{L}$ of Arity $\mathcal{A}=32$ \textbf{establishes} deterministic resolution by mapping every request to a finite execution path.
+\textbf{Theorem:} A fixed-depth lattice $L$ of Arity $\mathcal{A} = 32$ establishes deterministic resolution by mapping every memory request to a finite, bounded execution path.
 
 \subsection{The Steering-Based Complexity Model}
-The resolution time $T$ in the \textbf{Iscandar} architecture is a discrete function of the sub-lattice depth and the specific heuristic path $\mathcal{P}$ identified by the memory request size in sectors ($L$). Unlike systems where $T = O(\log N)$ or $O(N)$ based on heap fragmentation, the path selection in Iscandar uses a decision table to ensure each heuristic terminates.
+The resolution time $T$ in the Iscandar architecture is a discrete function of the sub-lattice depth and the specific heuristic path $P$ identified by the memory request size in sectors. Unlike legacy systems where $T = \mathcal{O}(\log N)$ or $\mathcal{O}(N)$ based on heap fragmentation, the path selection in Iscandar uses a decision table to ensure every heuristic terminates in bounded time.\\ 
 
+Let $\mathcal{H}$ be the finite set of available resolution paths. The selected path $P$ is a deterministic function of the request length $L$ and the occupancy state $\Gamma$:
 \begin{equation}
-    T(\mathcal{L}) = f(\Gamma) \in \{ \text{Path}_{\text{Nano}}, \text{Path}_{\text{Tiny}}, \text{Path}_{\text{Small}}, \text{Path}_{\text{Large}}, \text{Path}_{\text{Huge}}, \text{Path}
-    _{\text{Cube}}\}
+    P(L, \Gamma) \in \mathcal{H} = \{P_{\text{Nano}}, P_{\text{Tiny}}, P_{\text{Small}}, P_{\text{Large}}, P_{\text{Huge}}, P_{\text{Cube}}\}
 \end{equation}
 
-
+Because each path $P \in \mathcal{H}$ consists of a bounded number of unrolled instructions, the execution time $T$ (measured in operational steps) is strictly capped by the sequence length of the chosen heuristic, denoted as $|P|$:
+\begin{equation}
+    T(P) \le |P| \le \max_{h \in \mathcal{H}} |h|
+\end{equation}
 
 \subsection{Guaranteed Path Termination}
-Every resolution path is constructed from a fixed sequence of \textit{Instruction Groups} that eliminate runtime searching. 
+Every resolution path is constructed from a fixed sequence of instruction groups that mathematically eliminate runtime searching.
 
 \begin{enumerate}
-    \item \textbf{Heuristic Selection:} The Global Registrar and intermediate sentinels use bitmask comparison to select the viable path.
-    \item \textbf{Atomic Resolution:} For leaf-level requests, the system executes either a single-pass (Nano) or a bimodal ``Two-Bite'' probe (Tiny or Small).
-    \item \textbf{Path Invariance:} Once a path is engaged, the algorithm terminates when the physical bit-offset is returned.
+    \item \textbf{Heuristic Selection:} The Global Registrar and intermediate sentinels use strict bitmask comparisons to select the viable path $P \in \mathcal{H}$.
+    \item \textbf{Atomic Resolution:} For leaf-level requests, the system executes either a single-pass extraction (Nano) or a bipartite dual-phase oracle extraction (Tiny or Small).
+    \item \textbf{Path Invariance:} Once a path is engaged, the algorithm navigates via fixed spatial offsets and terminates immediately when the physical bit-coordinate is returned.
 \end{enumerate}
 
 \subsection{Conclusion of Determinism}
-Determinism in Iscandar is defined as the \textbf{guarantee of termination} within a bounded execution window for any given heuristic path, trading away spatial capacity for these predetermined paths.
+Determinism in Iscandar is defined as the absolute guarantee of termination within a bounded execution window for any given heuristic path. By relying on unrolled geometric coordinate resolution, the architecture deliberately trades away maximum spatial packing density in exchange for zero-variance path termination.
 
-\section{Deterministic Coalescence and the Occupancy Limit}
-Maintaining temporal determinism in a dynamic environment \textbf{requires} a deallocation process (coalescence) \textbf{mirroring} the efficiency of the allocation logic. Operational stability of the \textbf{Iscandar} lattice uses discrete enforcement of the Occupancy Limit($\Phi$), \textbf{precluding} the high-entropy states typically associated with conventional allocators [9].
+\section{Deterministic Coalescence}
+Maintaining temporal determinism in a dynamic environment requires a deallocation process (coalescence) mirroring the efficiency of the allocation logic. 
 
 \subsection{Symmetric Coalescence Mechanics}
-To maintain determinism our deallocation process mirrors the efficiency of the allocation logic, a state update performed upon the occupancy counters. The bit-address of any Sector ($S_0$) is a fixed function of its coordinates. Updating the occupancy counters ($\Gamma$) thus consumes a predictable instruction count ($\iota_{base}$) identical to the initial resolution.
+
+To maintain determinism, our deallocation process mirrors the efficiency of the allocation logic via a direct state update performed upon the occupancy counters. Because the wrapped pointer explicitly contains its fixed lattice coordinate (see Axiom IV), it acts as an absolute hardware address. Updating the occupancy counters ($\Gamma$) is thus the dual to the initial resolution:
 
 \begin{enumerate}
-    \item The atomic leaf node state $\Gamma_0$ is toggled to 0 (Available).
+    \item The deallocation interface (\texttt{UnMark.api}) is invoked directly via the wrapped pointer, toggling the atomic leaf node state $\Gamma_0$ to 0 (Available).
     \item The change propagates immediately to the parent Row counter ($\Gamma_1$).
-    \item The Level-2 (Plane) and Level-3 (Cube) counters are updated through integer subtraction.
+    \item The Level-2 (Plane) and Level-3 (Cube) counters are updated through discrete integer subtraction.
 \end{enumerate}
 
-Because the lattice depth is fixed at $n = 3$, the time complexity for deallocation is defined by the same path-specific constraints as allocation.
-
-\subsection{Geometric Feasibility and the Resolution Operator ($\Omega$)}
-Unlike traditional allocators that suffer from $O(N)$ search patterns as utilization approaches 100\% \cite{Knuth98}, the Iscandar lattice treats the heap as a deterministic volume. The system does not utilize a static occupancy limit; instead, it enforces a dynamic gate based on the current requested length ($L$) and the total surviving capacity of the cube ($\Gamma_3$).\\
-
-The Resolution Operator ($\Omega$) acts as a volumetric circuit breaker. By evaluating a request against remaining free sectors before invoking any Oracle, we ensure resolution only proceeds within the feasible region of the memory manifold \cite{Karmarkar84}. The decision logic is defined as:
-
-\begin{equation}
-\Omega(L) = 
-\begin{cases} 
-\text{Resolve}(p, r, s) & \text{if } L \le (\Gamma_3 - \text{Occupancy}) \\
-\text{Refuse} & \text{if } L > (\Gamma_3 - \text{Occupancy}) 
-\end{cases}
-\end{equation}
+Because the lattice depth is fixed at $n = 3$, the time complexity for this \texttt{UnMark} deallocation is defined by the exact same path-specific, constant-time constraints as the \texttt{Mark.api} allocation.
 
 \subsection{Proof of Coalescence Invariant}
 
-Let $\Gamma_{\text{total}}$ be the sum of all leaf nodes $S_{0,i}$. At any discrete time $t$, the hierarchical counters \textbf{must} satisfy the invariant:
+Let $\Gamma_{\text{total}}$ be the sum of all leaf nodes $S_{0,i}$. At any discrete time $t$, the hierarchical counters must satisfy the invariant, where $\Gamma_{\text{Apex}}$ serves as the total cube capacity $\Gamma_{3}$:
 
 \begin{equation}
-    \Gamma_{\text{Apex}} \text{ (a.k.a. } \Gamma_{3}) = \sum \Gamma_{2} = \sum \Gamma_{1} = \sum \Gamma_{0}
+    \Gamma_{\text{Apex}} = \sum \Gamma_{2} = \sum \Gamma_{1} = \sum \Gamma_{0}
 \end{equation}
 
 \vspace{5pt}
@@ -313,7 +300,7 @@ Let $\Gamma_{\text{total}}$ be the sum of all leaf nodes $S_{0,i}$. At any discr
     \Gamma_{x}(t+1) = \Gamma_{x}(t) - 1 \quad \text{for all levels } x \in \{0, 1, 2, 3\}
 \end{equation}
 
-\noindent along the specific resolution path, the invariant is preserved. Because this path is fixed at depth $n$, the lattice is restored to a consistent, deterministic state in $nI_{\text{base}}$ time.
+\noindent along the specific resolution path, the invariant is preserved. Because this path is fixed at depth $n$, the lattice is restored to a consistent state.
 
 \section{Observations}
 
@@ -327,7 +314,7 @@ We generalize buddy system principles to an \textbf{Arbitrary Radix} ($R=\mathca
 \subsection{As a Symmetric Voronoi Partition}
 As detailed in the Architectural Axioms (Section 2.1), this lattice functions as a \textbf{Symmetric Voronoi Partition}, where the adjacency of ``buddies'' is a pre-baked geometric property of the address space rather than a calculated proximity, as shown in Section 5.2.\\ 
 
-In this model, adjacency is defined by a partition's total volume \textbf{associating} with its handle (a wrapped pointer resolved in Section 9.4) rather than the Euclidean distance of individual points from a centroid. rather than the Euclidean distance of individual points from a centroid, as established in the geometric rules of the address space.\\
+In this model, adjacency is defined by a partition's total volume associating with its handle (a wrapped pointer resolved in Section 9.4) rather than the Euclidean distance of individual points from a centroid. rather than the Euclidean distance of individual points from a centroid, as established in the geometric rules of the address space.\\
 
 In a standard Voronoi partition, boundaries are dynamically computed as a function of the Euclidean distance to a specific ``seed'' or generator point. In the Iscandar lattice, while the ``seed'' is represented by the wrapped pointer, the partition boundaries are not computed at runtime, as defined by the invariant geometric properties of the lattice established in the Observations section. Instead, they are architecturally invariant, defined strictly by the Structural Arity ($\mathcal{A}$) and the hierarchical depth ($k$) established in the Axioms. This replaces the need for distance-based calculations with a pre-baked, static coordinate resolution:
 
@@ -347,7 +334,7 @@ In a standard Voronoi partition, boundaries are dynamically computed as a functi
 
 \subsection{As Linear Programming}
 
-The operational stability of the system is maintained via an Interior Point Method---analogous to projective transformations used in Karmarkar’s algorithm [14]. By enforcing an Occupancy Limit ($\Phi$), we ensure the resolution path avoids ``edges'' of the feasible region (the fragmentation trap). Here, the allocator does not merely manage space; it navigates a high-dimensional manifold where the floor serves as a protective barrier against non-deterministic search behaviors.
+The operational stability of the system is maintained via a mechanism analogous to projective transformations used in Karmarkar’s algorithm [14]. By relying on the hierarchical occupancy counters (Γ) to pre-qualify capacity, the resolution path inherently avoids the “edges” of the feasible region (the traditional fragmentation trap). Here, the allocator does not merely manage space; it navigates a high-dimensional manifold where the rigid coordinate geometry serves as a protective barrier against non-deterministic search behaviors.
 
 \subsection{Scalability via Depth Extension}
 The \textbf{Iscandar} architecture scales by increasing the lattice depth up to two additional levels. Because the resolution time is a linear function of depth ($k \times I_{base}$), extending the lattice to $k = 4$ or $k = 5$ provides a massive increase in addressable memory volume while maintaining a strictly deterministic and predictable execution profile.
