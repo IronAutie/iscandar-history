@@ -1534,126 +1534,130 @@ for ([double]$d=0; $d -lt 4gb; $d++) {
 $W.Close(); $S_i.Close()
 \end{Iscandar}
 
+\subsubsection{Wrapped Pointer}
+
 \begin{Iscandar}[WrappedPointer.apl]
 :Namespace WrappedPointer
     (⎕IO ⎕ML) ← 0 1
 
-    ∇ MarkRows(P s);p;r;idx;rem;cur;len
+    ∇ Mark(P s)
       :Access Public Shared
-      ⍝ 1. Linearize Coordinates to 1024-Row Vector
+      ⍝ Top-level orchestration: Commit
+      MarkRows P s          ⍝ 1. Flip bits in Row objects
+      MarkRowCounters P s    ⍝ 2. Sync Row.count
+      MarkPlaneCounters P s  ⍝ 3. Sync Plane.count
+      MarkCubeCounter P s    ⍝ 4. Sync Cube.count
+    ∇
+
+    ∇ Unmark(P s)
+      :Access Public Shared
+      ⍝ Top-level orchestration: Release
+      UnmarkRows P s          ⍝ 1. Clear bits in Row objects
+      UnmarkRowCounters P s    ⍝ 2. Sync Row.count
+      UnmarkPlaneCounters P s  ⍝ 3. Sync Plane.count
+      UnmarkCubeCounter P s    ⍝ 4. Sync Cube.count
+    ∇
+
+    ⍝ --- Marking Drivers ---
+
+    ∇ MarkRows(P s);p;r;idx;rem;cur;len
       (p r idx) ← Unwrap P
       cur ← (p × 32) + r
-      
-      ⍝ 2. Handle Leading Row (Partial)
       len ← 32 ⌊ (32 - idx) ⌊ s
-      MarkLeadingRow p r idx len
-      
+      MarkLeadingRow ##.Rows[cur] idx len
       rem ← s - len ⋄ cur +← 1
-      
-      ⍝ 3. Driver Loop for Entire Rows
       :While rem ≥ 32
-          MarkEntireRow (⌊cur÷32) (32|cur)
+          MarkEntireRow ##.Rows[cur]
           cur +← 1 ⋄ rem -← 32
       :EndWhile
-      
-      ⍝ 4. Handle Trailing Row (Partial)
-      :If rem > 0
-          MarkTrailingRow (⌊cur÷32) (32|cur) rem
-      :EndIf
-      
-      ⍝ 5. Hierarchical Update
-      ##.Γ2[p] +← s
+      :If rem > 0 ⋄ MarkTrailingRow ##.Rows[cur] rem ⋄ :EndIf
     ∇
 
-    ⍝ --- Row Specialists (ArXiv-Safe Literals) ---
-
-    ∇ MarkEntireRow(p r)
-      ⍝ Saturate 32 sectors (0xFFFFFFFF)
-      ##.L[p;r] ← 4294967295
-      ##.Γ1[p;r] ← 32
-    ∇
-
-    ∇ MarkLeadingRow(p r idx s);m
-      m ← ##.BIT.Mask s idx
-      ##.L[p;r] (bitwise_or)← m
-      ##.Γ1[p;r] +← s
-    ∇
-
-    ∇ MarkTrailingRow(p r s);m
-      m ← ##.BIT.Mask s 0
-      ##.L[p;r] (bitwise_or)← m
-      ##.Γ1[p;r] +← s
-    ∇
-
-    ∇ MarkRowCounters(P s);p;r;idx;cur;end;len;rem
-      :Access Public Shared
-      ⍝ 1. Extract Absolute Row Indices
-      (p r idx) ← Unwrap P
-      cur ← (p × 32) + r    ⍝ Starting Row (0-1023)
-      
-      ⍝ 2. Calculate Leading Row Segment
+    ∇ MarkRowCounters(P s);p;r;idx;cur;rem;len
+      (p r idx) ← Unwrap P ⋄ cur ← (p × 32) + r
       len ← 32 ⌊ (32 - idx) ⌊ s
-      ##.Γ1[⌊cur÷32;32|cur] +← len
-      
-      rem ← s - len
-      cur +← 1
-      
-      ⍝ 3. Fast-Forward Full Rows
+      ##.Rows[cur].count +← len
+      rem ← s - len ⋄ cur +← 1
       :While rem ≥ 32
-          ##.Γ1[⌊cur÷32;32|cur] ← 32
-          cur +← 1
-          rem -← 32
+          ##.Rows[cur].count ← 32
+          cur +← 1 ⋄ rem -← 32
       :EndWhile
-      
-      ⍝ 4. Final Trailing Segment
-      :If rem > 0
-          ##.Γ1[⌊cur÷32;32|cur] +← rem
-      :EndIf
+      :If rem > 0 ⋄ ##.Rows[cur].count +← rem ⋄ :EndIf
     ∇
 
     ∇ MarkPlaneCounters(P s);p;r;idx;cur;rem;len
-      :Access Public Shared
-      ⍝ 1. Extract Plane Index
-      (p r idx) ← Unwrap P
-      cur ← p               ⍝ Starting Plane (0-31)
-      
-      ⍝ 2. Calculate Leading Plane Segment
-      ⍝ Plane capacity is 1024 sectors (32*32)
+      (p r idx) ← Unwrap P ⋄ cur ← p
       len ← 1024 ⌊ (1024 - (r × 32) + idx) ⌊ s
-      ##.Γ2[cur] +← len
-      
-      rem ← s - len
-      cur +← 1
-      
-      ⍝ 3. Fast-Forward Full Planes
+      ##.Planes[cur].count +← len
+      rem ← s - len ⋄ cur +← 1
       :While rem ≥ 1024
-          ##.Γ2[cur] ← 1024
-          cur +← 1
-          rem -← 1024
+          ##.Planes[cur].count ← 1024
+          cur +← 1 ⋄ rem -← 1024
       :EndWhile
-      
-      ⍝ 4. Final Trailing Plane Segment
-      :If rem > 0
-          ##.Γ2[cur] +← rem
-      :EndIf
+      :If rem > 0 ⋄ ##.Planes[cur].count +← rem ⋄ :EndIf
     ∇
 
-    ∇ MarkCubeCounter(P s)
-      :Access Public Shared
-      ⍝ Atomic Update to Cube-Level Occupancy
-      ⍝ P: Pointer (Unused here, but kept for interface symmetry)
-      ⍝ s: Total length of the allocation span
-      
-      ##.count +← s
+    ⍝ --- Unmarking Drivers ---
+
+    ∇ UnmarkRows(P s);p;r;idx;rem;cur;len
+      (p r idx) ← Unwrap P
+      cur ← (p × 32) + r
+      len ← 32 ⌊ (32 - idx) ⌊ s
+      UnmarkLeadingRow ##.Rows[cur] idx len
+      rem ← s - len ⋄ cur +← 1
+      :While rem ≥ 32
+          UnmarkEntireRow ##.Rows[cur]
+          cur +← 1 ⋄ rem -← 32
+      :EndWhile
+      :If rem > 0 ⋄ UnmarkTrailingRow ##.Rows[cur] rem ⋄ :EndIf
     ∇
 
-    ∇ Mark(P s)
-      :Access Public Shared
-      ⍝ Top-Level Orchestration: Geometric Commitment
-      MarkRows P s          ⍝ 1. Flip Physical Bitmasks (L)
-      MarkRowCounters P s    ⍝ 2. Sync Row-Level Counters (Γ1)
-      MarkPlaneCounters P s  ⍝ 3. Sync Plane-Level Counters (Γ2)
-      MarkCubeCounter P s    ⍝ 4. Sync Cube-Level Occupancy
+    ∇ UnmarkRowCounters(P s);p;r;idx;cur;rem;len
+      (p r idx) ← Unwrap P ⋄ cur ← (p × 32) + r
+      len ← 32 ⌊ (32 - idx) ⌊ s
+      ##.Rows[cur].count -← len
+      rem ← s - len ⋄ cur +← 1
+      :While rem ≥ 32
+          ##.Rows[cur].count ← 0
+          cur +← 1 ⋄ rem -← 32
+      :EndWhile
+      :If rem > 0 ⋄ ##.Rows[cur].count -← rem ⋄ :EndIf
+    ∇
+
+    ∇ UnmarkPlaneCounters(P s);p;r;idx;cur;rem;len
+      (p r idx) ← Unwrap P ⋄ cur ← p
+      len ← 1024 ⌊ (1024 - (r × 32) + idx) ⌊ s
+      ##.Planes[cur].count -← len
+      rem ← s - len ⋄ cur +← 1
+      :While rem ≥ 1024
+          ##.Planes[cur].count ← 0
+          cur +← 1 ⋄ rem -← 1024
+      :EndWhile
+      :If rem > 0 ⋄ ##.Planes[cur].count -← rem ⋄ :EndIf
+    ∇
+
+    ⍝ --- Cube/Leaf ---
+
+    ∇ MarkCubeCounter(P s) ⋄ ##.count +← s ⋄ ∇
+    ∇ UnmarkCubeCounter(P s) ⋄ ##.count -← s ⋄ ∇
+
+    ∇ MarkEntireRow T ⋄ T.sectors ← 4294967295 ⋄ ∇
+    ∇ UnmarkEntireRow T ⋄ T.sectors ← 0 ⋄ ∇
+
+    ∇ MarkLeadingRow(T i s)
+      T.sectors (bitwise_or)← ##.BIT.Mask s i
+    ∇
+
+    ∇ UnmarkLeadingRow(T i s)
+      T.sectors (bitwise_and)← ∼##.BIT.Mask s i
+    ∇
+
+    ∇ MarkTrailingRow(T s)
+      T.sectors (bitwise_or)← ##.BIT.Mask s 0
+    ∇
+
+    ∇ UnmarkTrailingRow(T s)
+      T.sectors (bitwise_and)← ∼##.BIT.Mask s 0
     ∇
 
 :EndNamespace
