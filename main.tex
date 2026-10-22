@@ -198,42 +198,7 @@ The .tex source for this manuscript functions as a self-organizing research exam
 
 \srclink{Welcome.apl}{src:welcome}
 
-\begin{Iscandar}[Welcome.apl]{src:welcome}
-:Namespace Welcome
 
-    ∇ Run;S;P
-      ⍝ 1. Lifecycle Start: Bootstrap the Iscandar Engine
-      #.Iscandar.Main
-
-      '--- Welcome to Iscandar ---'
-      'Lattice online. Starting verification...'
-
-      ⍝ 2. Execution Phase: Allocate 2 sectors
-      (S P) ← #.Iscandar.Allocate 2
-
-      ⍝ 3. Guard: Exit early if the lattice is full
-      :If S = 0
-          'ERROR: Verification failed.' ⋄ →EXIT
-      :EndIf
-
-      'SUCCESS: Pointer synthesized at Sector ' (P.base P.len)
-
-      ⍝ 4. Reclamation Phase: Return to the Void
-      S ← #.Iscandar.Free P
-      
-      :If S = #.Iscandar.OK
-          'SUCCESS: Sectors reclaimed.'
-      :EndIf
-
-      EXIT:
-      ⍝ 5. Lifecycle End: Formal Teardown
-      #.Iscandar.Cleanup
-      
-      '--- Welcome Routine Complete ---'
-    ∇
-
-:EndNamespace
-\end{Iscandar}
 
 \section{Architectural Axioms}
 
@@ -246,23 +211,7 @@ For modeling and testing purposes this paper demonstrates an $k$-level lattice $
 \subsubsection{The Cube Namespace}
 This listing defines the memory allocator data structure, Iscandar's answer to the buddy system heap, in accordance with Axiom I.
 
-\begin{Iscandar}[Cube.apl]
-:Namespace Cube
-    :Namespace Row
-        :Field Public Shared sectors ← 0   ⍝ 32-bit Unsigned Long
-        :Field Public Shared count   ← 0   ⍝ Population Count (0-32)
-    :EndNamespace
 
-    :Namespace Plane
-        :Field Public Shared count   ← 0   ⍝ Summary of 32 Child Rows
-    :EndNamespace
-
-    ⍝ The Physical Lattice Arrays
-    :Field Public Shared Rows   ← CONSTANTS.PLANE ⍴ ⊂Row
-    :Field Public Shared Planes ← CONSTANTS.ARITY ⍴ ⊂Plane
-    :Field Public Shared count  ← 0      ⍝ Total Cube Population
-:EndNamespace
-\end{Iscandar}
 
 \subsection{Axiom II: Hierarchical Occupancy Counters ($\Gamma$)}
 
@@ -308,85 +257,7 @@ For the demonstration project of this paper, ($A=32, k=3$), the address of a sec
     P = (p \cdot 32^2) + (r \cdot 32^1) + (s \cdot 32^0)
 \end{equation}
 
-\subsection{APL Definitions}
-This listing is the APL implementation of the basic structure of Section 2.
-\begin{Iscandar}[Definitions.apl]
-:Namespace CONSTANTS
-    :Access Public Shared
-    :Field Public Shared ReadOnly ARITY  ← 32
-    :Field Public Shared ReadOnly LEVELS ← 3
-    :Field Public Shared ReadOnly BYTE   ← ARITY ÷ 4   ⍝ Sectors
-    :Field Public Shared ReadOnly WIDTH  ← BYTE + 1
-    :Field Public Shared ReadOnly ROW    ← ARITY
-    :Field Public Shared ReadOnly PLANE  ← ROW × ROW
-    :Field Public Shared ReadOnly CUBE   ← PLANE × ROW
-    :Field Public Shared ReadOnly QUAD   ← 2 * ARITY
-:EndNamespace
 
-:Namespace RANGES
-    :Access Public Shared
-    :Field Public Shared ReadOnly BYTE  ← ⍳CONSTANTS.BYTE
-    :Field Public Shared ReadOnly ROW   ← ⍳CONSTANTS.ROW
-    :Field Public Shared ReadOnly PLANE ← ⍳CONSTANTS.PLANE
-    :Field Public Shared ReadOnly CUBE  ← ⍳CONSTANTS.CUBE
-:EndNamespace
-\end{Iscandar}
-
-\begin{Iscandar}[Iscandar.apl]
-:Namespace Iscandar
-
-    A←32 ⋄ OK←1
-
-    ∇ Pointer ← Allocate Total;S;B
-      ⍝ 1. Search for a starting point that fits the total request
-      (S B) ← ##.Decision.Resolve Total
-
-      ⍝ 2. If the search fails, return a record marked as invalid
-      :If S = 0
-          Pointer ← ⎕NS '' ⋄ Pointer.status ← 0
-          →0
-      :EndIf
-
-      ⍝ 3. Create a record with the location and size
-      Pointer ← ⎕NS ''
-      Pointer.(base len status) ← B Total OK
-
-      ⍝ 4. Mark the selected sectors as occupied in the grid
-      Mark Pointer
-
-      ⍝ 5. Return the record to the caller
-    ∇
-
-    ∇ S ← Free Pointer
-      ⍝ 1. Check if the pointer is valid before proceeding
-      :If 0 = Pointer.status ⋄ S ← 0 ⋄ →0 ⋄ :EndIf
-
-      ⍝ 2. Clear the sectors in the memory grid
-      Unmark Pointer
-
-      ⍝ 3. Reset the pointer status to show it is no longer active
-      Pointer.status ← 0
-      S ← OK
-    ∇
-
-    ∇ Main
-      ⍝ 1. Prepare physical lattice and state maps
-      Initialize_Lattice
-      
-      ⍝ 2. Set environment constants and pathing
-      'Iscandar Engine Online. System initialized.'
-    ∇
-
-    ∇ Cleanup
-      ⍝ 1. Reset all hierarchical occupancy counters
-      { ⍵.sectors ← 0 ⋄ ⍵.count ← 0 }¨ ##.Cube.Rows
-      
-      ⍝ 2. Release oracle handles and clear transient state
-      'Lattice returned to void. Environment clear.'
-    ∇
-
-:EndNamespace
-\end{Iscandar}
 
 \section{Formal Proof of Deterministic Path Termination}
 
@@ -577,108 +448,7 @@ We show here how non-deterministic latency inherent in traditional memory manage
     
     \item[Oracle] A Finite State Automaton, being a precomputed body of polytope seed (Center Oracle) or join (Left or Right Oracle) solutions used by various levels of Iscandar's allocator search heuristics to find available memory in the bitwise geometrical map. 
 
-    \begin{Iscandar}[OracleCenter.apl]
-:Namespace OracleCenter
-
-    (⎕IO ⎕ML) ← 0 1
-    Data ← ⍬  ⍝ Placeholder for the memory-mapped matrix
-
-    ∇ Init Path;tn;size
-      :Access Public
-      ⍝ Initializes the 'Serial Window' into 
-      ⍝ the string pointing to 'OracleCenter.bin'
-      
-      :If 0=⎕NC 'Data'
-      :OrIf 0=≢Data
-          :Trap 0
-              tn ← Path ⎕NTIE 0
-              size ← ⎕NSIZE tn
-              
-              ⍝ Map as (2^32) rows by 9 columns,
-              ⍝ 8-bit unsigned (Type 80)
-              ⍝ a virtual link without consuming 38GB of RAM.
-              Data ← (4294967296 9) ⎕MAP tn 80
-              
-              ⎕NUNTIE tn
-              ⎕←'Center Oracle Initialized: ',Path
-          :Else
-              ⎕←'Failed to map OracleCenter.bin at ',Path
-          :EndTrap
-      :EndIf
-    ∇
-
-    ∇ Pos ← Resolve(State Length)
-      :Access Public
-      ⍝ Deterministic Motorola Big-Endian First-Fit Resolution.
-      ⍝ Wrapper for the memory-mapped lookup.
-      ⍝ State: 32-bit unsigned integer representing occupancy.
-      ⍝ Length: Requested allocation length k (0-8).
-      
-      ⍝ Returns leftmost bit position [0-31] or 255 (Fail).
-      Pos ← Data[State; Length]
-    ∇
-
-:EndNamespace
-\end{Iscandar}
-
-\begin{Iscandar}[OracleLeft.apl]
-:Namespace OracleLeft
-    (⎕IO ⎕ML) ← 0 1
-    Data ← ⍬
-
-    ∇ Init Path;tn
-      :Access Public
-      :If 0=⎕NC 'Data'
-          :Trap 0
-              tn ← Path ⎕NTIE 0
-              ⍝ Map as (2^32) rows by 2 columns (Type 80)
-              Data ← (4294967296 2) ⎕MAP tn 80
-              ⎕NUNTIE tn
-          :Else
-              ⎕←'Failed to map OracleLeft.bin'
-          :EndTrap
-      :EndIf
-    ∇
-
-    ∇ Res ← Resolve State
-      :Access Public
-      ⍝ Returns (Length StartPos)
-      ⍝ Byte A: Length (255 if blocked)
-      ⍝ Byte B: Start Position (32 - Length)
-      Res ← Data[State; 0 1]
-    ∇
-:EndNamespace
-\end{Iscandar}
-
-\begin{Iscandar}[OracleRight.apl]
-:Namespace OracleRight
-    (⎕IO ⎕ML) ← 0 1
-    Data ← ⍬
-
-    ∇ Init Path;tn
-      :Access Public
-      :If 0=⎕NC 'Data'
-          :Trap 0
-              tn ← Path ⎕NTIE 0
-              ⍝ Map as (2^32) rows by 2 columns (Type 80)
-              Data ← (4294967296 2) ⎕MAP tn 80
-              ⎕NUNTIE tn
-          :Else
-              ⎕←'Failed to map OracleRight.bin'
-          :EndTrap
-      :EndIf
-    ∇
-
-    ∇ Res ← Resolve State
-      :Access Public
-      ⍝ Returns (Length StartPos)
-      ⍝ Byte A: Length (255 if blocked)
-      ⍝ Byte B: Start Position (Always 0)
-      Res ← Data[State; 0 1]
-    ∇
-:EndNamespace
-\end{Iscandar}
-
+    
 
     \item[Polytope Formation] The visual representation of the admissible search space within the lattice. Each hierarchical tier (Cube, Plane, Row) can manifest polytopes that collapse as memory occupancy increases.
     
@@ -701,43 +471,7 @@ The 32-bit machine-side implementation of the \textbf{Bijective Identity} (see s
 \end{table}
 \end{description}
 
-\begin{Iscandar}[WrappedPointer.apl]
-:Namespace WrappedPointer
-    ⍝ --- Iscandar Bijective Pointer Implementation ---
-    ⍝ Layout: [V:1][R:1][S:15][L:15]
-    
-    (V R S L) ← 0 0 0 0
 
-    ∇ Status ← Unwrap P;bits
-      ⍝ 1. Extract Length (Bits 0-14)
-      L ← 32767 ∧ P
-      
-      ⍝ 2. Extract Start Index S (Bits 15-29)
-      ⍝ Equivalent to (P bitshift-right 15) AND 32767
-      S ← 32767 ∧ P ⌊ 2*15
-      
-      ⍝ 3. Extract Control Bits
-      R ← 1 ∧ P ⌊ 2*30      ⍝ Reserved
-      V ← 1 ∧ P ⌊ 2*31      ⍝ Virtual/Real Flag
-      
-      Status ← 1 ⍝ STATUS_SUCCESS
-    ∇
-
-    ∇ Coord ← GetCoordinate
-      ⍝ Implementation of Axiom V (Equation 5)
-      ⍝ Decodes the scalar projection S into vector (p,r,s)
-      Coord ← 32 32 32 ⊤ S
-    ∇
-
-    ∇ P ← Wrap(p r s len v);S_field
-      ⍝ 1. Construct Start Index S from coordinate vector
-      S_field ← 32 ⊥ p r s
-      
-      ⍝ 2. Pack into 32-bit Word: (V * 2^31) + (S * 2^15) + L
-      P ← (v × 2*31) + (S_field × 2*15) + len
-    ∇
-:EndNamespace
-\end{Iscandar}
 
 \section{Updating Memory State Spaces by Mating the Oracle Tables}
 
@@ -1810,6 +1544,110 @@ Write-Host "Iscandar Project Verified." -ForegroundColor Cyan
 
 \section{Oracle Manufacture}
 
+\begin{Iscandar}[OracleCenter.apl]
+
+    :Namespace OracleCenter
+
+    (⎕IO ⎕ML) ← 0 1
+    Data ← ⍬  ⍝ Placeholder for the memory-mapped matrix
+
+    ∇ Init Path;tn;size
+      :Access Public
+      ⍝ Initializes the 'Serial Window' into 
+      ⍝ the string pointing to 'OracleCenter.bin'
+      
+      :If 0=⎕NC 'Data'
+      :OrIf 0=≢Data
+          :Trap 0
+              tn ← Path ⎕NTIE 0
+              size ← ⎕NSIZE tn
+              
+              ⍝ Map as (2^32) rows by 9 columns,
+              ⍝ 8-bit unsigned (Type 80)
+              ⍝ a virtual link without consuming 38GB of RAM.
+              Data ← (4294967296 9) ⎕MAP tn 80
+              
+              ⎕NUNTIE tn
+              ⎕←'Center Oracle Initialized: ',Path
+          :Else
+              ⎕←'Failed to map OracleCenter.bin at ',Path
+          :EndTrap
+      :EndIf
+    ∇
+
+    ∇ Pos ← Resolve(State Length)
+      :Access Public
+      ⍝ Deterministic Motorola Big-Endian First-Fit Resolution.
+      ⍝ Wrapper for the memory-mapped lookup.
+      ⍝ State: 32-bit unsigned integer representing occupancy.
+      ⍝ Length: Requested allocation length k (0-8).
+      
+      ⍝ Returns leftmost bit position [0-31] or 255 (Fail).
+      Pos ← Data[State; Length]
+    ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\begin{Iscandar}[OracleLeft.apl]
+:Namespace OracleLeft
+    (⎕IO ⎕ML) ← 0 1
+    Data ← ⍬
+
+    ∇ Init Path;tn
+      :Access Public
+      :If 0=⎕NC 'Data'
+          :Trap 0
+              tn ← Path ⎕NTIE 0
+              ⍝ Map as (2^32) rows by 2 columns (Type 80)
+              Data ← (4294967296 2) ⎕MAP tn 80
+              ⎕NUNTIE tn
+          :Else
+              ⎕←'Failed to map OracleLeft.bin'
+          :EndTrap
+      :EndIf
+    ∇
+
+    ∇ Res ← Resolve State
+      :Access Public
+      ⍝ Returns (Length StartPos)
+      ⍝ Byte A: Length (255 if blocked)
+      ⍝ Byte B: Start Position (32 - Length)
+      Res ← Data[State; 0 1]
+    ∇
+:EndNamespace
+\end{Iscandar}
+
+\begin{Iscandar}[OracleRight.apl]
+:Namespace OracleRight
+    (⎕IO ⎕ML) ← 0 1
+    Data ← ⍬
+
+    ∇ Init Path;tn
+      :Access Public
+      :If 0=⎕NC 'Data'
+          :Trap 0
+              tn ← Path ⎕NTIE 0
+              ⍝ Map as (2^32) rows by 2 columns (Type 80)
+              Data ← (4294967296 2) ⎕MAP tn 80
+              ⎕NUNTIE tn
+          :Else
+              ⎕←'Failed to map OracleRight.bin'
+          :EndTrap
+      :EndIf
+    ∇
+
+    ∇ Res ← Resolve State
+      :Access Public
+      ⍝ Returns (Length StartPos)
+      ⍝ Byte A: Length (255 if blocked)
+      ⍝ Byte B: Start Position (Always 0)
+      Res ← Data[State; 0 1]
+    ∇
+:EndNamespace
+\end{Iscandar}
+
+
 \subsection{Center Oracle}
    
 \begin{Iscandar}[OracleCenter.ps1]
@@ -1943,6 +1781,43 @@ $W.Close(); $S_i.Close()
 
 \section{Dyalog APL Laboratory Listings.}
 
+\begin{Iscandar}[Welcome.apl]{src:welcome}
+:Namespace Welcome
+
+    ∇ Run;S;P
+      ⍝ 1. Lifecycle Start: Bootstrap the Iscandar Engine
+      #.Iscandar.Main
+
+      '--- Welcome to Iscandar ---'
+      'Lattice online. Starting verification...'
+
+      ⍝ 2. Execution Phase: Allocate 2 sectors
+      (S P) ← #.Iscandar.Allocate 2
+
+      ⍝ 3. Guard: Exit early if the lattice is full
+      :If S = 0
+          'ERROR: Verification failed.' ⋄ →EXIT
+      :EndIf
+
+      'SUCCESS: Pointer synthesized at Sector ' (P.base P.len)
+
+      ⍝ 4. Reclamation Phase: Return to the Void
+      S ← #.Iscandar.Free P
+      
+      :If S = #.Iscandar.OK
+          'SUCCESS: Sectors reclaimed.'
+      :EndIf
+
+      EXIT:
+      ⍝ 5. Lifecycle End: Formal Teardown
+      #.Iscandar.Cleanup
+      
+      '--- Welcome Routine Complete ---'
+    ∇
+
+:EndNamespace
+\end{Iscandar}
+
 \begin{Iscandar}[Support.apl]
 :Namespace STATUS
     :Access Public Shared
@@ -1956,6 +1831,159 @@ $W.Close(); $S_i.Close()
     :Field Public Shared ReadOnly FAIL_LARGE  ← 7
     :Field Public Shared ReadOnly FAIL_HUGE   ← 8
     :Field Public Shared ReadOnly FAIL_CUBE   ← 9
+:EndNamespace
+
+\begin{Iscandar}[Cube.apl]
+:Namespace Cube
+    :Namespace Row
+        :Field Public Shared sectors ← 0   ⍝ 32-bit Unsigned Long
+        :Field Public Shared count   ← 0   ⍝ Population Count (0-32)
+    :EndNamespace
+
+    :Namespace Plane
+        :Field Public Shared count   ← 0   ⍝ Summary of 32 Child Rows
+    :EndNamespace
+
+    ⍝ The Physical Lattice Arrays
+    :Field Public Shared Rows   ← CONSTANTS.PLANE ⍴ ⊂Row
+    :Field Public Shared Planes ← CONSTANTS.ARITY ⍴ ⊂Plane
+    :Field Public Shared count  ← 0      ⍝ Total Cube Population
+:EndNamespace
+\end{Iscandar}
+
+\subsection{APL Definitions}
+This listing is the APL implementation of the basic structure of Section 2.
+\begin{Iscandar}[Definitions.apl]
+:Namespace CONSTANTS
+    :Access Public Shared
+    :Field Public Shared ReadOnly ARITY  ← 32
+    :Field Public Shared ReadOnly LEVELS ← 3
+    :Field Public Shared ReadOnly BYTE   ← ARITY ÷ 4   ⍝ Sectors
+    :Field Public Shared ReadOnly WIDTH  ← BYTE + 1
+    :Field Public Shared ReadOnly ROW    ← ARITY
+    :Field Public Shared ReadOnly PLANE  ← ROW × ROW
+    :Field Public Shared ReadOnly CUBE   ← PLANE × ROW
+    :Field Public Shared ReadOnly QUAD   ← 2 * ARITY
+:EndNamespace
+
+:Namespace RANGES
+    :Access Public Shared
+    :Field Public Shared ReadOnly BYTE  ← ⍳CONSTANTS.BYTE
+    :Field Public Shared ReadOnly ROW   ← ⍳CONSTANTS.ROW
+    :Field Public Shared ReadOnly PLANE ← ⍳CONSTANTS.PLANE
+    :Field Public Shared ReadOnly CUBE  ← ⍳CONSTANTS.CUBE
+:EndNamespace
+\end{Iscandar}
+
+\begin{Iscandar}[Iscandar.apl]
+:Namespace Iscandar
+
+    A←32 ⋄ OK←1
+
+    ∇ Pointer ← Allocate Total;S;B
+      ⍝ 1. Search for a starting point that fits the total request
+      (S B) ← ##.Decision.Resolve Total
+
+      ⍝ 2. If the search fails, return a record marked as invalid
+      :If S = 0
+          Pointer ← ⎕NS '' ⋄ Pointer.status ← 0
+          →0
+      :EndIf
+
+      ⍝ 3. Create a record with the location and size
+      Pointer ← ⎕NS ''
+      Pointer.(base len status) ← B Total OK
+
+      ⍝ 4. Mark the selected sectors as occupied in the grid
+      Mark Pointer
+
+      ⍝ 5. Return the record to the caller
+    ∇
+
+    ∇ S ← Free Pointer
+      ⍝ 1. Check if the pointer is valid before proceeding
+      :If 0 = Pointer.status ⋄ S ← 0 ⋄ →0 ⋄ :EndIf
+
+      ⍝ 2. Clear the sectors in the memory grid
+      Unmark Pointer
+
+      ⍝ 3. Reset the pointer status to show it is no longer active
+      Pointer.status ← 0
+      S ← OK
+    ∇
+
+    ∇ Main
+      ⍝ 1. Prepare physical lattice and state maps
+      Initialize_Lattice
+      
+      ⍝ 2. Set environment constants and pathing
+      'Iscandar Engine Online. System initialized.'
+    ∇
+
+    ∇ Cleanup
+      ⍝ 1. Reset all hierarchical occupancy counters
+      { ⍵.sectors ← 0 ⋄ ⍵.count ← 0 }¨ ##.Cube.Rows
+      
+      ⍝ 2. Release oracle handles and clear transient state
+      'Lattice returned to void. Environment clear.'
+    ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\begin{Iscandar}[WrappedPointer.apl]
+:Namespace WrappedPointer
+    ⍝ --- Iscandar Bijective Pointer Implementation ---
+    ⍝ Layout: [V:1][R:1][S:15][L:15]
+    
+    (V R S L) ← 0 0 0 0
+
+    ∇ Status ← Unwrap P;bits
+      ⍝ 1. Extract Length (Bits 0-14)
+      L ← 32767 ∧ P
+      
+      ⍝ 2. Extract Start Index S (Bits 15-29)
+      ⍝ Equivalent to (P bitshift-right 15) AND 32767
+      S ← 32767 ∧ P ⌊ 2*15
+      
+      ⍝ 3. Extract Control Bits
+      R ← 1 ∧ P ⌊ 2*30      ⍝ Reserved
+      V ← 1 ∧ P ⌊ 2*31      ⍝ Virtual/Real Flag
+      
+      Status ← 1 ⍝ STATUS_SUCCESS
+    ∇
+
+    ∇ Coord ← GetCoordinate
+      ⍝ Implementation of Axiom V (Equation 5)
+      ⍝ Decodes the scalar projection S into vector (p,r,s)
+      Coord ← 32 32 32 ⊤ S
+    ∇
+
+    ∇ P ← Wrap(p r s len v);S_field
+      ⍝ 1. Construct Start Index S from coordinate vector
+      S_field ← 32 ⊥ p r s
+      
+      ⍝ 2. Pack into 32-bit Word: (V * 2^31) + (S * 2^15) + L
+      P ← (v × 2*31) + (S_field × 2*15) + len
+    ∇
+:EndNamespace
+\end{Iscandar}
+
+\begin{Iscandar}[Cube.apl]
+:Namespace Cube
+    :Namespace Row
+        :Field Public Shared sectors ← 0   ⍝ 32-bit Unsigned Long
+        :Field Public Shared count   ← 0   ⍝ Population Count (0-32)
+    :EndNamespace
+
+    :Namespace Plane
+        :Field Public Shared count   ← 0   ⍝ Summary of 32 Child Rows
+    :EndNamespace
+
+    ⍝ The Physical Lattice Arrays
+    :Field Public Shared Rows   ← CONSTANTS.PLANE ⍴ ⊂Row
+    :Field Public Shared Planes ← CONSTANTS.ARITY ⍴ ⊂Plane
+    :Field Public Shared count  ← 0      ⍝ Total Cube Population
 :EndNamespace
 \end{Iscandar}
 
