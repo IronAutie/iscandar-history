@@ -27,6 +27,20 @@ The paper was hand-assembled by the author with cut and paste. Gemini
 assisted with literature search, grammar, and organizing. The argument
 and the assembly are the author's.
 
+## Provenance
+
+This allocator was first designed in 1998, as proprietary industry work.
+It was developed without access to the published literature, and it was
+never published: when the author walked away, the work stayed behind.
+What survived was the author's memory of the design, including its
+drawings, kept from 1998 onward. In 2026, the copyright in the original
+work having lapsed, the author reconstructed the design from memory; the
+paper and this history are that reconstruction. Similarities to
+published work the author had not seen, such as Brent (1989), are
+independent invention. The 1998 design predates the closest later works
+(Agun & Chang 2003; TLSF 2004), and the reconstruction borrows from
+none of them: it descends from the 1998 design alone.
+
 ## Design intent
 
 The unrolled fixed-width drivers are a specification for parallel silicon
