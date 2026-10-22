@@ -349,30 +349,6 @@ In a standard Voronoi partition, boundaries are dynamically computed as a functi
 
 The operational stability of the system is maintained via an Interior Point Method---analogous to projective transformations used in Karmarkar’s algorithm [14]. By enforcing an Occupancy Limit ($\Phi$), we ensure the resolution path avoids ``edges'' of the feasible region (the fragmentation trap). Here, the allocator does not merely manage space; it navigates a high-dimensional manifold where the floor serves as a protective barrier against non-deterministic search behaviors.
 
-\subsection{Amortized Performance: Constant Time}
-The \textbf{Iscandar} architecture utilizes a \textit{Seamless Sack} model that achieves amortized constant time for memory operations through a Next-Fit Circular Cursor mechanism.
-
-\begin{itemize}
-    \item \textbf{Mechanism:} The cursor maintains forward momentum across the $\mathcal{A}^k$-sector manifold. By never re-scanning fragmented entropy within a single ``lap,'' the system distributes the metabolic cost of search across its entire operational lifecycle.
-    \item \textbf{Principle:} The system offsets the latency of filtering fragmented sectors by performing high-efficiency, contiguous allocations in reclaimed or vacant regions.
-\end{itemize}
-
-\subsection{Worst Case Performance: Sub-Linear Time}
-The architecture maintains determinism through hierarchical skip-logic at intermediate levels. This mechanism constrains the worst-case search complexity to the $k$-th root of the total lattice volume, where $k$ represents the depth of the fractal hierarchy.
-
-\begin{itemize}
-    \item \textbf{Mechanism: Dimensional Collapse.} The architecture maps the 1D address space to a $k$-dimensional manifold ($\mathcal{A}^k$). Metadata sentinels at the Plane and Row levels enable the search engine to bypass saturated volumes without bit-level interrogation.
-    \item \textbf{Logic for the Geometry:}
-    \begin{enumerate}
-        \item \textbf{Plane-Skip:} Evaluates $\mathcal{A}^2$-sector planes; skipping when free space is less than request.
-        \item \textbf{Row-Skip:} Evaluates $\mathcal{A}$-sector rows; skipping when row density proves prohibitive.
-        \item \textbf{Bit-Scan:} The engine restricts final verification to a single bit-vector of magnitude $\mathcal{A}$.
-    \end{enumerate}
-    \item \textbf{Ceiling:} For a lattice of volume $N = \mathcal{A}^k$, the architecture caps the maximum investigation path at $k \times \mathcal{A}$, limiting the worst-case cost to $k \times \mathcal{A}$ operations.
-\end{itemize}
-
-\subsection{As Supporting Six Sigma Design}99
-As detailed in the appendices, the compactness of the \textbf{Iscandar} kernel enables \textbf{complete path coverage testing} that operates in tandem with the previously established formal methods.
 \subsection{Scalability via Depth Extension}
 The \textbf{Iscandar} architecture scales by increasing the lattice depth up to two additional levels. Because the resolution time is a linear function of depth ($k \times I_{base}$), extending the lattice to $k = 4$ or $k = 5$ provides a massive increase in addressable memory volume while maintaining a strictly deterministic and predictable execution profile.
 
