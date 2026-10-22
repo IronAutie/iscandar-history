@@ -6,6 +6,8 @@ commit per version, so the development can be reviewed diff by diff.
 Copied from the author's Overleaf projects and his email escrows on
 2026-10-22.
 
+**Read the paper:** [Iscandar-24c.pdf](Iscandar-24c.pdf) is the compiled PDF of the newest version (24c), rendered by Overleaf on 2026-10-22. Its source is `main.tex` at the tip of this history.
+
 ## How to read this history
 
 Ordering is the reverse of the Overleaf project-list order (the list runs
