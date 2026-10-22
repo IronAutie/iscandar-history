@@ -1868,136 +1868,534 @@ for ([double]$d=0; $d -lt 4gb; $d++) {
 $W.Close(); $S_i.Close()
 \end{Iscandar}
 
-\subsubsection{Wrapped Pointer}
-
-\begin{Iscandar}[WrappedPointer.apl]
+\thispagestyle{empty}
+\begin{Iscandar}[MarkPlanes.apl]
 :Namespace WrappedPointer
-    (⎕IO ⎕ML) ← 0 1
 
-    ∇ Mark(P s)
-      :Access Public Shared
-      ⍝ Top-level orchestration: Commit
-      MarkRows P s          ⍝ 1. Flip bits in Row objects
-      MarkRowCounters P s    ⍝ 2. Sync Row.count
-      MarkPlaneCounters P s  ⍝ 3. Sync Plane.count
-      MarkCubeCounter P s    ⍝ 4. Sync Cube.count
-    ∇
-
-    ∇ Unmark(P s)
-      :Access Public Shared
-      ⍝ Top-level orchestration: Release
-      UnmarkRows P s          ⍝ 1. Clear bits in Row objects
-      UnmarkRowCounters P s    ⍝ 2. Sync Row.count
-      UnmarkPlaneCounters P s  ⍝ 3. Sync Plane.count
-      UnmarkCubeCounter P s    ⍝ 4. Sync Cube.count
-    ∇
-
-    ⍝ --- Marking Drivers ---
-
-    ∇ MarkRows(P s);p;r;idx;rem;cur;len
-      (p r idx) ← Unwrap P
-      cur ← (p × 32) + r
-      len ← 32 ⌊ (32 - idx) ⌊ s
-      MarkLeadingRow ##.Rows[cur] idx len
-      rem ← s - len ⋄ cur +← 1
-      :While rem ≥ 32
-          MarkEntireRow ##.Rows[cur]
-          cur +← 1 ⋄ rem -← 32
-      :EndWhile
-      :If rem > 0 ⋄ MarkTrailingRow ##.Rows[cur] rem ⋄ :EndIf
-    ∇
-
-    ∇ MarkRowCounters(P s);p;r;idx;cur;rem;len
-      (p r idx) ← Unwrap P ⋄ cur ← (p × 32) + r
-      len ← 32 ⌊ (32 - idx) ⌊ s
-      ##.Rows[cur].count +← len
-      rem ← s - len ⋄ cur +← 1
-      :While rem ≥ 32
-          ##.Rows[cur].count ← 32
-          cur +← 1 ⋄ rem -← 32
-      :EndWhile
-      :If rem > 0 ⋄ ##.Rows[cur].count +← rem ⋄ :EndIf
-    ∇
-
-    ∇ MarkPlaneCounters(P s);p;r;idx;cur;rem;len
-      (p r idx) ← Unwrap P ⋄ cur ← p
-      len ← 1024 ⌊ (1024 - (r × 32) + idx) ⌊ s
-      ##.Planes[cur].count +← len
-      rem ← s - len ⋄ cur +← 1
-      :While rem ≥ 1024
-          ##.Planes[cur].count ← 1024
-          cur +← 1 ⋄ rem -← 1024
-      :EndWhile
-      :If rem > 0 ⋄ ##.Planes[cur].count +← rem ⋄ :EndIf
-    ∇
-
-    ⍝ --- Unmarking Drivers ---
-
-    ∇ UnmarkRows(P s);p;r;idx;rem;cur;len
-      (p r idx) ← Unwrap P
-      cur ← (p × 32) + r
-      len ← 32 ⌊ (32 - idx) ⌊ s
-      UnmarkLeadingRow ##.Rows[cur] idx len
-      rem ← s - len ⋄ cur +← 1
-      :While rem ≥ 32
-          UnmarkEntireRow ##.Rows[cur]
-          cur +← 1 ⋄ rem -← 32
-      :EndWhile
-      :If rem > 0 ⋄ UnmarkTrailingRow ##.Rows[cur] rem ⋄ :EndIf
-    ∇
-
-    ∇ UnmarkRowCounters(P s);p;r;idx;cur;rem;len
-      (p r idx) ← Unwrap P ⋄ cur ← (p × 32) + r
-      len ← 32 ⌊ (32 - idx) ⌊ s
-      ##.Rows[cur].count -← len
-      rem ← s - len ⋄ cur +← 1
-      :While rem ≥ 32
-          ##.Rows[cur].count ← 0
-          cur +← 1 ⋄ rem -← 32
-      :EndWhile
-      :If rem > 0 ⋄ ##.Rows[cur].count -← rem ⋄ :EndIf
-    ∇
-
-    ∇ UnmarkPlaneCounters(P s);p;r;idx;cur;rem;len
-      (p r idx) ← Unwrap P ⋄ cur ← p
-      len ← 1024 ⌊ (1024 - (r × 32) + idx) ⌊ s
-      ##.Planes[cur].count -← len
-      rem ← s - len ⋄ cur +← 1
-      :While rem ≥ 1024
-          ##.Planes[cur].count ← 0
-          cur +← 1 ⋄ rem -← 1024
-      :EndWhile
-      :If rem > 0 ⋄ ##.Planes[cur].count -← rem ⋄ :EndIf
-    ∇
-
-    ⍝ --- Cube/Leaf ---
-
-    ∇ MarkCubeCounter(P s) ⋄ ##.count +← s ⋄ ∇
-    ∇ UnmarkCubeCounter(P s) ⋄ ##.count -← s ⋄ ∇
-
-    ∇ MarkEntireRow T ⋄ T.sectors ← 4294967295 ⋄ ∇
-    ∇ UnmarkEntireRow T ⋄ T.sectors ← 0 ⋄ ∇
-
-    ∇ MarkLeadingRow(T i s)
-      T.sectors (bitwise_or)← ##.BIT.Mask s i
-    ∇
-
-    ∇ UnmarkLeadingRow(T i s)
-      T.sectors (bitwise_and)← ∼##.BIT.Mask s i
-    ∇
-
-    ∇ MarkTrailingRow(T s)
-      T.sectors (bitwise_or)← ##.BIT.Mask s 0
-    ∇
-
-    ∇ UnmarkTrailingRow(T s)
-      T.sectors (bitwise_and)← ∼##.BIT.Mask s 0
-    ∇
+  ∇ Status ← MarkPlanes Pointer;plane;row;sector;length
+    ∇ start_offset;lead_avail;lead_sectors;leftover
+    ∇ sandwich_count;Delta;NewCounts;target_plane
+  
+    ⍝ 1. Find starting position and length
+    (plane row sector length) ← Unwrap Pointer
+    
+    start_offset ← (row × ROW) + sector
+    lead_avail ← PLANE - start_offset
+    Delta ← ROW ⍴ 0
+  
+    ⍝ 2. Calculate sectors for each plane
+    lead_sectors ← length ⌊ lead_avail
+    Delta[plane + 1] ← lead_sectors
+    
+    leftover ← length - lead_sectors
+    target_plane ← plane + 1
+  
+    :If leftover ≥ PLANE
+        sandwich_count ← ⌊ leftover ÷ PLANE
+        Delta[target_plane + ⍳sandwich_count] ← PLANE
+        leftover ← leftover - (sandwich_count × PLANE)
+        target_plane +← sandwich_count
+    :EndIf
+  
+    :If leftover > 0
+        Delta[target_plane + 1] ← leftover
+    :EndIf
+  
+    ⍝ 3. Check for overflow
+    NewCounts ← ##.Cube.Planes.count + Delta
+  
+    :If ∨/ NewCounts > PLANE
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+  
+    ⍝ 4. Save new counts and return success
+    ##.Cube.Planes.count ← NewCounts
+    Status ← 'STATUS_MARK_SUCCESS'
+  ∇
 
 :EndNamespace
 \end{Iscandar}
 
 \thispagestyle{empty}
+
+\begin{Iscandar}[UnMarkPlanes.apl]
+:Namespace WrappedPointer
+
+  ∇ Status ← UnMarkPlanes Pointer;plane;row;sector;length
+    ∇ start_offset;lead_avail;lead_sectors;leftover
+    ∇ sandwich_count;Delta;NewCounts;target_plane
+  
+    ⍝ 1. Find starting position and length
+    (plane row sector length) ← Unwrap Pointer
+    
+    start_offset ← (row × ROW) + sector
+    lead_avail ← PLANE - start_offset
+    Delta ← ROW ⍴ 0
+  
+    ⍝ 2. Calculate sectors for each plane
+    lead_sectors ← length ⌊ lead_avail
+    Delta[plane + 1] ← lead_sectors
+    
+    leftover ← length - lead_sectors
+    target_plane ← plane + 1
+  
+    :If leftover ≥ PLANE
+        sandwich_count ← ⌊ leftover ÷ PLANE
+        Delta[target_plane + ⍳sandwich_count] ← PLANE
+        leftover ← leftover - (sandwich_count × PLANE)
+        target_plane +← sandwich_count
+    :EndIf
+  
+    :If leftover > 0
+        Delta[target_plane + 1] ← leftover
+    :EndIf
+  
+    ⍝ 3. Check for underflow
+    NewCounts ← ##.Cube.Planes.count - Delta
+  
+    :If ∨/ NewCounts < 0
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+  
+    ⍝ 4. Save new counts and return success
+    ##.Cube.Planes.count ← NewCounts
+    Status ← 'STATUS_MARK_SUCCESS'
+  ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\thispagestyle{empty}
+\begin{Iscandar}[MarkSingleRow.apl]
+:Namespace WrappedPointer
+
+  ∇ Status ← MarkSingleRow(plane row sector length);Mask
+    ∇ RowBits;OverlapCount;global_row
+  
+    ⍝ 1. Calculate the global row index (0-1023)
+    global_row ← (plane × ROW) + row
+  
+    ⍝ 2. Generate the allocation mask
+    Mask ← sector ⌽ ROW ↑ length ⍴ 1
+  
+    ⍝ 3. Fetch the target row bits
+    RowBits ← ##.Cube.Rows[global_row].sectors
+  
+    ⍝ 4. Verify the intersection is zero
+    OverlapCount ← +/ RowBits ∧ Mask
+    :If OverlapCount > 0
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+  
+    ⍝ 5. Verify row count won't breach limit
+    :If (##.Cube.Rows[global_row].count + length) > SECTORS
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+  
+    ⍝ 6. Commit via bitwise OR
+    ##.Cube.Rows[global_row].sectors ← RowBits ∨ Mask
+  
+    ⍝ 7. Commit count via addition
+    ##.Cube.Rows[global_row].count +← length
+    Status ← 'STATUS_MARK_SUCCESS'
+  ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\thispagestyle{empty}
+\begin{Iscandar}[UnMarkSingleRow.apl]
+:Namespace WrappedPointer
+
+  ∇ Status ← UnMarkSingleRow(plane row sector length);Mask
+    ∇ RowBits;OverlapCount;global_row
+  
+    ⍝ 1. Calculate the global row index (0-1023)
+    global_row ← (plane × ROW) + row
+  
+    ⍝ 2. Generate the allocation mask
+    Mask ← sector ⌽ ROW ↑ length ⍴ 1
+  
+    ⍝ 3. Fetch the target row bits
+    RowBits ← ##.Cube.Rows[global_row].sectors
+  
+    ⍝ 4. Verify the mask matches allocated sectors
+    ⍝    (Ensure we are only clearing bits that are actually set)
+    OverlapCount ← +/ RowBits ∧ Mask
+    :If OverlapCount ≠ length
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+  
+    ⍝ 5. Verify row count won't underflow below zero
+    :If (##.Cube.Rows[global_row].count - length) < 0
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+  
+    ⍝ 6. Commit via bitwise AND with inverted mask
+    ##.Cube.Rows[global_row].sectors ← RowBits ∧ ~Mask
+  
+    ⍝ 7. Commit count via subtraction
+    ##.Cube.Rows[global_row].count -← length
+    Status ← 'STATUS_MARK_SUCCESS'
+  ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\thispagestyle{empty}
+\begin{Iscandar}[MarkRows.apl]
+:Namespace WrappedPointer
+
+  ∇ Status ← MarkRows(plane row sector length);A;Z;L_A;L_Z;Sequence;RowMatrix
+    ∇ OverlapCounts
+
+    ⍝ 1. Route Scenario A if the allocation fits inside a single row
+    :If (sector + length) ≤ SECTORS
+        Status ← MarkSingleRow plane row sector length
+        :Return
+    :EndIf
+
+    ⍝ 2. Calculate global boundary row indices (0-1023)
+    A ← (plane × ROW) + row
+    Z ← A + ⌊(sector + length - 1) ÷ SECTORS
+
+    ⍝ 3. Compute fractional edge lengths for boundary rows
+    L_A ← SECTORS - sector
+    L_Z ← SECTORS ∣ (sector + length)
+
+    ⍝ 4. Initialize bulk sequence with intermediate rows
+    Sequence ← (A + 1) + ⍳(Z - A - 1)
+
+    ⍝ 5. Evaluate and process Head Row A
+    :If sector = 0
+        Sequence ← A, Sequence
+    :Else
+        Status ← MarkFirstRow A sector L_A
+        :If Status ≡ 'STATUS_MARK_FAILURE' ⋄ :Return ⋄ :EndIf
+    :EndIf
+
+    ⍝ 6. Evaluate and process Tail Row Z
+    :If L_Z = 0
+        Sequence ← Sequence, Z
+    :Else
+        Status ← MarkFinalRow Z L_Z
+        :If Status ≡ 'STATUS_MARK_FAILURE' ⋄ :Return ⋄ :EndIf
+    :EndIf
+
+    ⍝ 7. Vectorized Collision Check using Index Projection
+    ⍝    Extracts an [⍴Sequence × SECTORS] boolean matrix
+    RowMatrix ← ↑##.Cube.Rows[Sequence].sectors
+
+    ⍝ Sum across rows (horizontal reduction) to check for set bits
+    OverlapCounts ← +/ RowMatrix
+    :If ∨/ OverlapCounts > 0
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+
+    ⍝ 8. Vectorized Commit and Count Update
+    ##.Cube.Rows[Sequence].sectors ← ⊂SECTORS ⍴ 1
+    ##.Cube.Rows[Sequence].count ← SECTORS
+
+    Status ← 'STATUS_MARK_SUCCESS'
+  ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\thispagestyle{empty}
+\begin{Iscandar}[UnMarkRows.apl]
+:Namespace WrappedPointer
+
+  ∇ Status ← UnMarkRows(plane row sector length);A;Z;L_A;L_Z;Sequence;RowMatrix
+    ∇ OverlapCounts
+
+    ⍝ 1. Route Scenario A if the allocation fits inside a single row
+    :If (sector + length) ≤ SECTORS
+        Status ← UnMarkSingleRow plane row sector length
+        :Return
+    :EndIf
+
+    ⍝ 2. Calculate global boundary row indices (0-1023)
+    A ← (plane × ROW) + row
+    Z ← A + ⌊(sector + length - 1) ÷ SECTORS
+
+    ⍝ 3. Compute fractional edge lengths for boundary rows
+    L_A ← SECTORS - sector
+    L_Z ← SECTORS ∣ (sector + length)
+
+    ⍝ 4. Initialize bulk sequence with intermediate rows
+    Sequence ← (A + 1) + ⍳(Z - A - 1)
+
+    ⍝ 5. Evaluate and process Head Row A
+    :If sector = 0
+        Sequence ← A, Sequence
+    :Else
+        Status ← UnMarkFirstRow A sector L_A
+        :If Status ≡ 'STATUS_MARK_FAILURE' ⋄ :Return ⋄ :EndIf
+    :EndIf
+
+    ⍝ 6. Evaluate and process Tail Row Z
+    :If L_Z = 0
+        Sequence ← Sequence, Z
+    :Else
+        Status ← UnMarkFinalRow Z L_Z
+        :If Status ≡ 'STATUS_MARK_FAILURE' ⋄ :Return ⋄ :EndIf
+    :EndIf
+
+    ⍝ 7. Vectorized Allocation Check using Index Projection
+    ⍝    Extracts an [⍴Sequence × SECTORS] boolean matrix
+    RowMatrix ← ↑##.Cube.Rows[Sequence].sectors
+
+    ⍝ Sum across rows to ensure all targeted sectors are fully allocated
+    OverlapCounts ← +/ RowMatrix
+    :If ∨/ OverlapCounts ≠ SECTORS
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+
+    ⍝ 8. Vectorized Commit and Count Update (Clear Bits)
+    ##.Cube.Rows[Sequence].sectors ← ⊂SECTORS ⍴ 0
+    ##.Cube.Rows[Sequence].count ← 0
+
+    Status ← 'STATUS_MARK_SUCCESS'
+  ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\thispagestyle{empty}
+\begin{Iscandar}[MarkFirstRow]
+:Namespace WrappedPointer
+
+  ∇ Status ← MarkFirstRow(global_row sector length);Mask;RowBits
+    ∇ OverlapCount
+
+    ⍝ 1. Generate the trailing-edge allocation mask
+    ⍝    (Shifts 'length' bits to align with the starting sector)
+    Mask ← sector ⌽ SECTORS ↑ length ⍴ 1
+
+    ⍝ 2. Fetch the target global row bits
+    RowBits ← ##.Cube.Rows[global_row].sectors
+
+    ⍝ 3. Verify the intersection is zero (Collision Detection)
+    OverlapCount ← +/ RowBits ∧ Mask
+    :If OverlapCount > 0
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+
+    ⍝ 4. Verify row count won't breach limit
+    :If (##.Cube.Rows[global_row].count + length) > SECTORS
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+
+    ⍝ 5. Commit via bitwise OR
+    ##.Cube.Rows[global_row].sectors ← RowBits ∨ Mask
+
+    ⍝ 6. Commit count via addition
+    ##.Cube.Rows[global_row].count +← length
+    Status ← 'STATUS_MARK_SUCCESS'
+  ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\thispagestyle{empty}
+\begin{Iscandar}[UnMarkFirstRow.apl]
+:Namespace WrappedPointer
+
+  ∇ Status ← UnMarkFirstRow(global_row sector length);Mask;RowBits
+    ∇ OverlapCount
+
+    ⍝ 1. Generate the trailing-edge allocation mask
+    ⍝    (Shifts 'length' bits to align with the starting sector)
+    Mask ← sector ⌽ SECTORS ↑ length ⍴ 1
+
+    ⍝ 2. Fetch the target global row bits
+    RowBits ← ##.Cube.Rows[global_row].sectors
+
+    ⍝ 3. Verify the mask matches allocated sectors
+    ⍝    (Ensure we are only clearing bits that are actually set)
+    OverlapCount ← +/ RowBits ∧ Mask
+    :If OverlapCount ≠ length
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+
+    ⍝ 4. Verify row count won't underflow below zero
+    :If (##.Cube.Rows[global_row].count - length) < 0
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+
+    ⍝ 5. Commit via bitwise AND with inverted mask
+    ##.Cube.Rows[global_row].sectors ← RowBits ∧ ~Mask
+
+    ⍝ 6. Commit count via subtraction
+    ##.Cube.Rows[global_row].count -← length
+    Status ← 'STATUS_MARK_SUCCESS'
+  ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\thispagestyle{empty}
+\begin{Iscandar}[MarkFinalRow.apl]
+:Namespace WrappedPointer
+
+  ∇ Status ← MarkFinalRow(global_row length);Mask;RowBits
+    ∇ OverlapCount
+
+    ⍝ 1. Generate the front-aligned allocation mask
+    ⍝    (Claims bits from index 0 up to 'length')
+    Mask ← SECTORS ↑ length ⍴ 1
+
+    ⍝ 2. Fetch the target global row bits
+    RowBits ← ##.Cube.Rows[global_row].sectors
+
+    ⍝ 3. Verify the intersection is zero (Collision Detection)
+    OverlapCount ← +/ RowBits ∧ Mask
+    :If OverlapCount > 0
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+
+    ⍝ 4. Verify row count won't breach limit
+    :If (##.Cube.Rows[global_row].count + length) > SECTORS
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+
+    ⍝ 5. Commit via bitwise OR
+    ##.Cube.Rows[global_row].sectors ← RowBits ∨ Mask
+
+    ⍝ 6. Commit count via addition
+    ##.Cube.Rows[global_row].count +← length
+    Status ← 'STATUS_MARK_SUCCESS'
+  ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\thispagestyle{empty}
+\begin{Iscandar}[UnMarkFinalRow.apl]
+:Namespace WrappedPointer
+
+  ∇ Status ← UnMarkFinalRow(global_row length);Mask;RowBits
+    ∇ OverlapCount
+
+    ⍝ 1. Generate the front-aligned allocation mask
+    ⍝    (Claims bits from index 0 up to 'length')
+    Mask ← SECTORS ↑ length ⍴ 1
+
+    ⍝ 2. Fetch the target global row bits
+    RowBits ← ##.Cube.Rows[global_row].sectors
+
+    ⍝ 3. Verify the mask matches allocated sectors
+    ⍝    (Ensure we are only clearing bits that are actually set)
+    OverlapCount ← +/ RowBits ∧ Mask
+    :If OverlapCount ≠ length
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+
+    ⍝ 4. Verify row count won't underflow below zero
+    :If (##.Cube.Rows[global_row].count - length) < 0
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+
+    ⍝ 5. Commit via bitwise AND with inverted mask
+    ##.Cube.Rows[global_row].sectors ← RowBits ∧ ~Mask
+
+    ⍝ 6. Commit count via subtraction
+    ##.Cube.Rows[global_row].count -← length
+    Status ← 'STATUS_MARK_SUCCESS'
+  ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\thispagestyle{empty}
+\begin{Iscandar}[Mark.apl]
+:Namespace WrappedPointer
+
+  ∇ Status ← Mark pointer;plane;row;sector;length
+
+    ⍝ 1. Unwrap the structural geometry from the pointer
+    (plane row sector length) ← Unwrap pointer
+
+    ⍝ 2. Verify global cube count won't breach structural limits
+    :If (##.Cube.count + length) > CUBE
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+
+    ⍝ 3. Run high-level plane volume tracking (The Radar Tier)
+    Status ← ##.Cube MarkPlanes plane row sector length
+    :If Status ≡ 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+
+    ⍝ 4. Run low-level structural bit allocation (The Actuator Tier)
+    Status ← MarkRows plane row sector length
+    :If Status ≡ 'STATUS_MARK_FAILURE'
+        ⍝ Note: In a transactional failure state, a rollback of 
+        ⍝ the planes may be required if MarkPlanes modifies state
+        :Return
+    :EndIf
+
+    ⍝ 5. Update global structural count upon absolute success
+    ##.Cube.count +← length
+    Status ← 'STATUS_MARK_SUCCESS'
+  ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\thispagestyle{empty}
+\begin{Iscandar}[UnMark.apl]
+:Namespace WrappedPointer
+
+  ∇ Status ← UnMark pointer;plane;row;sector;length
+
+    ⍝ 1. Unwrap the structural geometry from the pointer
+    (plane row sector length) ← Unwrap pointer
+
+    ⍝ 2. Verify global cube count won't underflow below zero
+    :If (##.Cube.count - length) < 0
+        Status ← 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+
+    ⍝ 3. Run high-level plane volume tracking rollback
+    Status ← ##.Cube UnMarkPlanes plane row sector length
+    :If Status ≡ 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+
+    ⍝ 4. Run low-level structural bit deallocation
+    Status ← UnMarkRows plane row sector length
+    :If Status ≡ 'STATUS_MARK_FAILURE'
+        :Return
+    :EndIf
+
+    ⍝ 5. Update global structural count upon absolute success
+    ##.Cube.count -← length
+    Status ← 'STATUS_MARK_SUCCESS'
+  ∇
+
+:EndNamespace
+\end{Iscandar}
+
 \begin{Iscandar}[HeuristicNull.apl]
 :Namespace Heuristic
     :Namespace Null
