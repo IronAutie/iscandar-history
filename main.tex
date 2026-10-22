@@ -79,6 +79,8 @@
 \newcounter{marginfig}
 \renewcommand{\themarginfig}{\Alph{marginfig}}
 
+\renewcommand{\thefigure}{\Alph{figure}}
+
 \begin{document}
 
 \pagenumbering{roman} % Start Roman sequence here (Title = i)
@@ -889,7 +891,6 @@ A stress-test audit was performed utilizing a $K=3$ fractal depth configuration.
 \subsection{Graphical Verification}
 
 Figure \ref{fig:touches_plot} documents the stability of \textbf{Iscandar} across its full volumetric range. By sampling data at 500-sector intervals, the visualization maintains the characteristic "flat" trendline of the Radix-32 steering logic, confirming determinism as the system approaches the 32,768 sector limit.
-
 \vspace{1em}
 \noindent
 \begin{minipage}{\linewidth}
@@ -897,7 +898,6 @@ Figure \ref{fig:touches_plot} documents the stability of \textbf{Iscandar} acros
     \stepcounter{marginfig}
     \begin{tikzpicture}
         % --- THE MARGIN ANCHOR ---
-        % Positioned relative to the tikzpicture origin, outside the axis box
         \node[anchor=east, font=\bfseries] at (15.5, 7) {(\themarginfig)};
 
         \begin{axis}[
@@ -914,7 +914,7 @@ Figure \ref{fig:touches_plot} documents the stability of \textbf{Iscandar} acros
             ymajorgrids=true,
             grid style=dashed,
             width=0.95\textwidth,
-            height=7cm
+            height=6.8cm
         ]
         
         \addplot[only marks, blue, mark=*, mark size=1.5pt, opacity=0.6] coordinates {
@@ -929,14 +929,17 @@ Figure \ref{fig:touches_plot} documents the stability of \textbf{Iscandar} acros
             (32500,10) (32750,30)
         };
         \addlegendentry{Sampled Data Points from Test Harness}
-        
         \end{axis}
     \end{tikzpicture}
     
-    \captionof{}{Distribution demonstrating bounded search for sectors.}
+    \refstepcounter{figure} % Explicitly move from D to E
+    \small \textbf{Figure \thefigure}: Distribution demonstrating bounded search for sectors.
     \label{fig:touches_plot}
+    
+    % --- THE FORCE HOOK ---
+    \addcontentsline{lof}{figure}{\protect\numberline{\thefigure}Iscandar Performance: Bounded Sector Search}
 \end{minipage}
-\vspace{2em}
+\vspace{1.5em}
 
 \subsection{Buddy System Comparison Simulation}
 
