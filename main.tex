@@ -1026,117 +1026,100 @@ For immediate demonstration: this listing can be copied directly from the LaTeX 
 \begin{HonestLab}
 \addcontentsline{lol}{lstlisting}{Section 11: Iscandar Laboratory Source Code}
 
-⍝ === ISCANDAR-OZ: VOLUMETRIC LABORATORY (VER 16.4.1) ===
-⍝ ARCHIVE VERSION: 2026-04-19
-⍝ AUTHORED BY: ANDREW JONATHAN FINE
-⍝ PURPOSE: O(1) DETERMINISM PROOF VIA RADIX-32 SENTINEL STEERING
-⎕IO ← 1
-
-⍝ --- [G01-G02] ARCHITECTURAL CONSTANTS ---
-⍝ A=32 (Radix), K=3 (Fractal Depth), V=32768 (Manifold Volume)
-A ← 32 ⋄ K ← 3 ⋄ V ← A*K
+⍝ --- ISCANDAR-OZ: MASTER ARCHIVE LISTING 16.4.2 ---
+⍝ Geometry: 32 Planes, 1024 Rows, 32768 Sectors
 
 ∇ INIT_GEOMETRY
-  LATTICE ← (V⍴0)      ⍝ 1D Volumetric Manifold (Physical Bit-Stream)
-  PMASK ← (A⍴0)        ⍝ Level 2 Sentinels: 32 Planes
-  RMASK ← (1024⍴0)     ⍝ Level 1 Sentinels: 1024 Rows (A*2)
-  SCAN_OVERHEAD ← 0    ⍝ metabolic "Touch Count" (The Invariance Metric)
-  ⎕ ← 'ISCANDAR-OZ 16.4.1: ARCHIVE MASTER ONLINE'
+  ⎕IO ← 1 ⋄ A ← 32
+  LATTICE ← 32768⍴0
+  RMASK ← 1024⍴0
+  PMASK ← 32⍴0
+  occ ← 0
+  ⎕ ← 'ISCANDAR-OZ: MANIFOLD INITIALIZED (32768 SECTORS)'
 ∇
 
-⍝ --- [G03-G07] THE VOLUMETRIC ORACLE (SENTINEL RESOLUTION) ---
-⍝ This function mimics the hardware steering logic.
-⍝ It avoids bit-scanning to maintain deterministic O(1) performance.
-∇ Z ← ALLOC_K13 Size;p;r;found;row_start;r_idx;rows_needed;check_range
-  SCAN_OVERHEAD ← 0 ⋄ found ← 0 ⋄ Z ← 0
- 
-  ⍝ Calculate footprint in blocks (Radix units)
-  rows_needed ← ⌈Size ÷ A
+∇ Z ← ALLOC Size;r_idx;row_start;offset;p;r;eligible_rows;i
+  Z ← 0 ⋄ i ← 1
+  
+  ⍝ --- THE PREDICTIVE IRON GATE ---
+  ⍝ O(0) refusal if physical overflow is mathematically certain
+  →((occ + Size) > 32768)/REFUSE_HARD
 
-  :For p :In ⍳A
-    SCAN_OVERHEAD +← 1 ⍝ [G03] Plane Sentinel Steering Tax
-    :If PMASK[p] = 0
-      :For r :In ⍳A
-        r_idx ← ((p-1)×A)+r
-        SCAN_OVERHEAD +← 1 ⍝ [G05] Row Sentinel Steering Tax
-       
-        ⍝ Verify that the request does not exceed manifold boundaries
-        :If (r_idx + rows_needed - 1) ≤ 1024
-         
-          ⍝ [G07] HONEST RESOLUTION: Check Sentinels (Not Bits)
-          ⍝ This is the key to O(1) determinism.
-          check_range ← RMASK[r_idx + ⍳rows_needed - 1]
-          SCAN_OVERHEAD +← ⍴check_range ⍝ Metabolic cost = Sentinel span
-         
-          :If ∧/ check_range = 0
-            row_start ← ((r_idx-1)×A) + 1
-           
-            ⍝ [G08] ATOMIC WRITE: Bits are touched only for commit
-            LATTICE[row_start + ⍳Size - 1] ← 1
-            SCAN_OVERHEAD +← 1
-           
-            ⍝ [G09-G12] SENTINEL BACK-PROPAGATION
-            ⍝ Updates the skip-fire registers to maintain zero-jitter integrity
-            RMASK ← ∨/ (1024 32 ⍴ LATTICE)
-            PMASK ← ∨/ (32 32 ⍴ RMASK)
-           
-            Z ← row_start Size ⋄ found ← 1 ⋄ :Leave
-          :EndIf
-        :EndIf
-      :EndFor
-    :EndIf
-    :If found ⋄ :Leave ⋄ :EndIf
-  :EndFor
+  ⍝ Deterministic Search via Sentinels
+  eligible_rows ← (⍳1024)/⍨RMASK=0
+  →(0=⍴eligible_rows)/REFUSE_SOFT 
+
+ROW_LOOP: 
+  r_idx ← eligible_rows[i]
+  row_start ← ((r_idx-1)×32)+1
+  offset ← 0
+
+OFF_LOOP:
+  ⍝ Sliding window bit-check within the 32-bit row
+  →(∨/LATTICE[row_start + offset + ⍳Size-1])/NEXT_OFF
+  
+  ⍝ SUCCESS: Physical Write
+  LATTICE[row_start + offset + ⍳Size-1] ← 1
+  
+  ⍝ Update Sentinels: Row is only full if no single-sector gaps remain
+  RMASK[r_idx] ← ∧/LATTICE[row_start + ⍳32-1]
+  p ← ⌈r_idx÷32
+  PMASK[p] ← ∧/RMASK[((p-1)×32) + ⍳32]
+  
+  Z ← (row_start + offset) 4 ⋄ →0
+
+NEXT_OFF:
+  offset +← 1 ⋄ →(offset ≤ (32-Size))/OFF_LOOP
+
+NEXT_ROW:
+  i +← 1 ⋄ →(i ≤ ⍴eligible_rows)/ROW_LOOP
+
+REFUSE_SOFT:
+  Z ← 0 4 ⋄ →0 ⍝ Refusal by fragmentation/exhaustion
+
+REFUSE_HARD:
+  Z ← 0 0 ⋄ →0 ⍝ Refusal by predictive boundary check
 ∇
 
-⍝ --- DEALLOCATION: ENTROPY REVERSAL ---
-∇ FREE_K13 Data;idx;sz
-  :If 0 = ⍴,Data ⋄ :Return ⋄ :EndIf
-  (idx sz) ← ,Data
-  LATTICE[idx + ⍳sz - 1] ← 0
-  RMASK ← ∨/ (1024 32 ⍴ LATTICE)
-  PMASK ← ∨/ (32 32 ⍴ RMASK)
+∇ FREE(Addr Size);r_idx;p;row_start
+  LATTICE[Addr+⍳Size-1] ← 0
+  r_idx ← ⌈Addr÷32
+  p ← ⌈r_idx÷32
+  
+  ⍝ Re-open Sentinels
+  row_start ← ((r_idx-1)×32)+1
+  RMASK[r_idx] ← ∧/LATTICE[row_start + ⍳32-1]
+  PMASK[p] ← ∧/RMASK[((p-1)×32) + ⍳32]
+  
+  ⍝ Adjust Global Accounting
+  occ -← Size
 ∇
 
-⍝ --- [G13] ANALYTICS HARNESS ---
-⍝ Simulates a chaotic memory load with high churn to prove O(1) invariance.
-∇ RUN_LAB;SACK;sz;res;history;occ;c;stats;t;m;s;idx
-  INIT_GEOMETRY ⋄ SACK ← ⍬ ⋄ history ← 0 3⍴0 ⋄ occ ← 0
- 
-  :For c :In ⍳500
-      ⍝ Random requests from 1 to 15,000 sectors
-      sz ← 1 + (?1024) + (0 = ?10) × ?14000
-     
-      res ← ALLOC_K13 sz
-      :If res ≢ 0
-          history ← history ⍪ occ sz SCAN_OVERHEAD
-          SACK ,← ⊂res ⋄ occ +← sz
-      :EndIf
-     
-      ⍝ Maintain 'Swiss Cheese' manifold density (High Churn)
-      :If (0 = 5 | c) ∧ (⍴SACK) > 0
-          idx ← ?⍴SACK
-          FREE_K13 ⊃SACK[idx]
-          occ -← (⊃SACK[idx])[2]
-          SACK ← ((⍳⍴SACK) ≠ idx) / SACK
-      :EndIf
-  :EndFor
- 
-  ⍝ --- STATISTICAL AUDIT ---
-  ⎕ ← ' Usage (Sect) | Request | Touches '
-  ⎕ ← (-50 ⌊ 1↑⍴history) ↑ history
- 
-  t ← history[;3] ⋄ m ← (+/t)÷(⍴t)⌈1
-  s ← (((+/(t-m)*2)÷(⍴t)⌈1)*0.5)
-  v ← s*2
-  ⎕ ← '--- AUDIT COMPLETE ---'
-  ⎕ ← 'MEAN OVERHEAD (METABOLIC COST): ',⍕m
-  ⎕ ← 'SIGMA (JITTER): ',⍕s
-  ⎕ ← 'VARIANCE: ',⍕v
+∇ trace ← PRESSURE_TEST Target;counter;sz;R;cost;stat;addr
+  counter ← 0 ⋄ trace ← 0 4⍴0
+  ⎕ ← '--- PHASE I: PRIMING ---'
+
+P1: sz ← ?12 ⋄ R ← ALLOC sz
+  addr ← 1↑R
+  →(addr = 0)/P2 ⍝ Exit priming on first hard/soft refusal
+  occ +← sz ⋄ →(occ < Target)/P1
+
+P2: ⎕ ← '--- PHASE II: 50-POINT AUDIT ---'
+
+LOOP: sz ← ?12 ⋄ R ← ALLOC sz
+  addr ← 1↑R ⋄ cost ← 2⊃R
+  :If addr > 0
+      occ +← sz ⋄ stat ← 1
+  :Else
+      stat ← 0
+  :EndIf
+  trace ← trace ⍪ occ sz cost stat
+  counter +← 1 ⋄ →(counter < 50)/LOOP
+  ⎕ ← '   OCC      REQ     COST    STAT'
 ∇
 
 INIT_GEOMETRY
-RUN_LAB
+PRESSURE_TEST 32768
 
 \end{HonestLab}
 
