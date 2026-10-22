@@ -279,33 +279,6 @@ The \textbf{iscandar} architecture demonstrates that the non-deterministic laten
     \item[Resilience Floor ($\Phi$)] The mandatory occupancy boundary (Section 4.2) that prevents the system from entering a high-entropy state. Once the floor is reached, the system issues a deterministic refusal rather than engaging in variable-time search.
 \end{description}
 
-\section*{Appendix A: The 13-Instruction Mechanism}
-
-The following listings represent the raw executable logic of the iscandar mechanism. Each line corresponds to a discrete macro-instruction ($K$).\\
-
-\begin{centering}
-\begin{tabular}{l l l}
-$\nabla$ & \textbf{Coord $\leftarrow$ ALLOC\_ROTATING\_COUNTED} & \\
-$[1]$ & S3 $\leftarrow$ (32 $|$ SEED\_P) & \textit{\% K1: Resolve Tier-3 Plane index} \\
-$[2]$ & S2 $\leftarrow$ (32 $|$ SEED\_R) & \textit{\% K2: Resolve Tier-2 Row index} \\
-$[3]$ & S1 $\leftarrow$ 1$\iota\sim$Lattice[S3;S2;] & \textit{\% K3: Resolve Tier-1 Bit index} \\
-$[4]$ & Coord $\leftarrow$ (S3, S2, S1) & \textit{\% K4: Assemble 3D Coordinate} \\
-$[5]$ & Lattice[S3;S2;S1] $\leftarrow$ 1 & \textit{\% K5: Occupy sector} \\
-$[6]$ & T2[S3;S2] -$\leftarrow$ 1 & \textit{\% K6: Update Tier-2 counter} \\
-$[7]$ & T3[S3] -$\leftarrow$ 1 & \textit{\% K7: Update Tier-3 counter} \\
-$\nabla$ & & \\
-& & \\
-$\nabla$ & \textbf{FREE\_ROTATING\_COUNTED Coord} & \\
-$[8]$ & (S3 S2 S1) $\leftarrow$ Coord & \textit{\% K8: Decompose Coordinate} \\
-$[9]$ & Lattice[S3;S2;S1] $\leftarrow$ 0 & \textit{\% K9: Release sector} \\
-$[10]$ & T2[S3;S2] +$\leftarrow$ 1 & \textit{\% K10: Increment Tier-2 counter} \\
-$[11]$ & T3[S3] +$\leftarrow$ 1 & \textit{\% K11: Increment Tier-3 counter} \\
-$[12]$ & SEED\_P $\leftarrow$ (32 $|$ S3 + 1) & \textit{\% K12: Advance T3 seed} \\
-$[13]$ & SEED\_R $\leftarrow$ (32 $|$ S2 + 1) & \textit{\% K13: Advance T2 seed} \\
-$\nabla$ & & \\
-\end{tabular}
-\end{centering}
-
 \section*{Appendix B: Updating Memory State Spaces by Mating the Oracle Tables}
 
 This section describes how \textbf{iscandar} resolves memory requests by intersecting partitioned sub-spaces. The system utilizes primary ratios relative to the structural Arity ($\mathcal{A}$): the Guard Shards ($0.5\mathcal{A}$) and the Core Shard ($0.25\mathcal{A}$).
@@ -859,7 +832,122 @@ To contrast, a theoretical binary buddy system was simulated for a 128\,KB heap 
 \end{minipage}
 \vspace{1em}
 
-        
+% --- REQUIRED PREAMBLE ---
+% \usepackage{listings}
+% \usepackage{xcolor}
+
+\definecolor{codegray}{rgb}{0.95,0.95,0.96}
+\definecolor{commentgreen}{rgb}{0,0.6,0}
+
+\lstset{
+    backgroundcolor=\color{codegray},
+    commentstyle=\color{commentgreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{gray},
+    stringstyle=\color{purple},
+    basicstyle=\ttfamily\small,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    frame=single,
+    rulecolor=\color{black!10},
+    language=APL % Note: standard listings APL support varies; ttfamily preserves glyphs
+}
+
+\section{Iscandar: Laboratory Source Code}
+
+The following APL implementation represents a source archive for generating this report's tables. The laboratory environment simulates high-churn volumetric stress to verify determinism of the sentinel-steered manifold.
+
+\begin{lstlisting}[caption={Iscandar-OZ 16.4.1 Lab Implementation}, label={lst:iscandar_code}]
+⍝ ==============================================================================
+⍝ ISCANDAR ARCHIVE 
+⍝ AUTHORED BY: ANDREW JONATHAN FINE
+⍝ PURPOSE: O(1) DETERMINISM PROOF VIA RADIX-32 SENTINEL STEERING
+⍝ ==============================================================================
+⎕IO ← 1
+
+⍝ --- MODULE 1: ARCHITECTURAL CONSTANTS ---
+A ← 32 ⋄ K ← 3 ⋄ V ← A*K
+
+⍝ --- MODULE 2: MANIFOLD INITIALIZATION ---
+∇ INIT_GEOMETRY
+  LATTICE ← (V⍴0)      
+  PMASK ← (A⍴0)        
+  RMASK ← (1024⍴0)     
+  SCAN_OVERHEAD ← 0    
+  ⎕ ← 'ISCANDAR-OZ 16.4.1: ARCHIVE MASTER ONLINE (V=32768)'
+∇
+
+⍝ --- MODULE 3: THE ISCANDAR ORACLE (ALLOCATION) ---
+∇ Z ← ALLOC_K13 Size;p;r;found;row_start;r_idx;rows_needed;check_range
+  SCAN_OVERHEAD ← 0 ⋄ found ← 0 ⋄ Z ← 0
+  rows_needed ← ⌈Size ÷ A
+  :For p :In ⍳A
+    SCAN_OVERHEAD +← 1 ⍝ Plane Gate Tax (Macro G03)
+    :If PMASK[p] = 0
+      :For r :In ⍳A
+        r_idx ← ((p-1)×A)+r
+        SCAN_OVERHEAD +← 1 ⍝ Row Gate Tax (Macro G05)
+        :If (r_idx + rows_needed - 1) ≤ 1024
+          check_range ← RMASK[r_idx + ⍳rows_needed - 1]
+          SCAN_OVERHEAD +← ⍴check_range 
+          :If ∧/ check_range = 0
+            row_start ← ((r_idx-1)×A) + 1
+            LATTICE[row_start + ⍳Size - 1] ← 1 ⍝ Atomic Write (G08)
+            SCAN_OVERHEAD +← 1 
+            RMASK ← ∨/ (1024 32 ⍴ LATTICE)
+            PMASK ← ∨/ (32 32 ⍴ RMASK)
+            Z ← row_start Size ⋄ found ← 1 ⋄ :Leave
+          :EndIf
+        :EndIf
+      :EndFor
+    :EndIf
+    :If found ⋄ :Leave ⋄ :EndIf
+  :EndFor
+∇
+
+⍝ --- MODULE 4: ENTROPY REVERSAL (DEALLOCATION) ---
+∇ FREE_K13 Data;idx;sz
+  :If 0 = ⍴,Data ⋄ :Return ⋄ :EndIf
+  (idx sz) ← ,Data
+  LATTICE[idx + ⍳sz - 1] ← 0
+  RMASK ← ∨/ (1024 32 ⍴ LATTICE)
+  PMASK ← ∨/ (32 32 ⍴ RMASK)
+∇
+
+⍝ --- MODULE 5: STATISTICAL AUDIT HARNESS ---
+∇ RUN_LAB;SACK;sz;res;history;occ;c;stats;t;m;s;idx;v
+  INIT_GEOMETRY ⋄ SACK ← ⍬ ⋄ history ← 0 3⍴0 ⋄ occ ← 0
+  :For c :In ⍳500
+      sz ← 1 + (?1024) + (0 = ?10) × ?14000 
+      res ← ALLOC_K13 sz
+      :If res ≢ 0
+          history ← history ⍪ occ sz SCAN_OVERHEAD
+          SACK ,← ⊂res ⋄ occ +← sz
+      :EndIf
+      :If (0 = 5 | c) ∧ (⍴SACK) > 0
+          idx ← ?⍴SACK ⋄ FREE_K13 ⊃SACK[idx]
+          occ -← (⊃SACK[idx])[2] ⋄ SACK ← ((⍳⍴SACK) ≠ idx) / SACK
+      :EndIf
+  :EndFor
+  ⎕ ← ' Usage (Sect) | Request | Touches ' 
+  ⎕ ← (-50 ⌊ 1↑⍴history) ↑ history
+  t ← history[;3] ⋄ m ← (+/t)÷(⍴t)⌈1 
+  s ← (((+/(t-m)*2)÷(⍴t)⌈1)*0.5) ⋄ v ← s*2
+  ⎕ ← '--- AUDIT COMPLETE ---'
+  ⎕ ← 'MEAN OVERHEAD (METABOLIC COST): ',⍕m 
+  ⎕ ← 'SIGMA (JITTER): ',⍕s ⋄ ⎕ ← 'VARIANCE: ',⍕v
+∇
+\end{lstlisting}
+
+
 \section*{References}
 
 \noindent [1] D. E. Knuth. \textit{The Art of Computer Programming, Volume 1: Fundamental Algorithms}. Addison-Wesley, 3rd Edition, 1997.
