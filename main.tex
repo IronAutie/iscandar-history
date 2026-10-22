@@ -66,11 +66,11 @@ For modeling and testing purposes this paper demonstrates an $k$-level lattice $
 
 Discrete occupancy counts ($\Gamma$) at every tier \textbf{enable} constant-time steering. Following bit-block representation principles [2], these counters \textbf{generate} a real-time density map of the lattice:
 
-\begin{itemize}
-    \item \textbf{Level 1 (Row):} $\Gamma_{1} = \sum_{i=0}^{\mathcal{A}-1} \Gamma_{0,i}$
-    \item \textbf{Level 2 (Plane):} $\Gamma_{2} = \sum_{j=0}^{\mathcal{A}-1} \Gamma_{1,j}$
-    \item \textbf{Level 3 (Cube):} $\Gamma_{3} = \sum_{k=0}^{\mathcal{A}-1} \Gamma_{2,k}$
-\end{itemize}
+\begin{align}
+    \text{Level 1 (Row):} \quad \Gamma_{1} &= \sum_{i=0}^{\mathcal{A}-1} \Gamma_{0,i} \label{eq:gamma1} \\
+    \text{Level 2 (Plane):} \quad \Gamma_{2} &= \sum_{j=0}^{\mathcal{A}-1} \Gamma_{1,j} \label{eq:gamma2} \\
+    \text{Level 3 (Cube):} \quad \Gamma_{3} &= \sum_{k=0}^{\mathcal{A}-1} \Gamma_{2,k} \label{eq:gamma3}
+\end{align}
 
 This hierarchical summation lets a Global Registrar at the Cube level \textbf{execute} an admissibility check in a single instruction cycle, \textbf{imposing} a fast-fail condition.
 
@@ -91,7 +91,7 @@ Any resolved coordinate sequence \textbf{represents} a continuous physical block
 
 \subsection{The Complexity Proof}
 
-The $\mathcal{L}$ \textbf{maps} its branching factor to the processor word-width to \textbf{optimize} the classical buddy system search [3]. Let $\mathcal{L}_{n}$ \textbf{designate} a sub-lattice of level $n$, where resolution time $T(\mathcal{L}_{n})$ \textbf{represents} the total instruction count ($\iota$) required to \textbf{resolve} a memory coordinate. Resolution time $T(\mathcal{L}_{n})$ \textbf{represents} the instruction count ($\iota$) for \textbf{resolving} a memory coordinate in a level-$n$ sub-lattice [4]. \\
+The $\mathcal{L}$ \textbf{maps} its branching factor to the processor word-width to \textbf{optimize} the classical buddy system search [4]. Let $\mathcal{L}_{n}$ \textbf{designate} a sub-lattice of level $n$, where resolution time $T(\mathcal{L}_{n})$ \textbf{represents} the total instruction count ($\iota$) required to \textbf{resolve} a memory coordinate. Resolution time $T(\mathcal{L}_{n})$ \textbf{represents} the instruction count ($\iota$) for \textbf{resolving} a memory coordinate in a level-$n$ sub-lattice [5]. \\
 
 \begin{enumerate}
     \item \textbf{Base Case ($n = 1$):} At the Row level ($L_1$), a pre-calculated \textbf{Instruction Group mapping} resolves a free sector via a static Look-Up Table. This operation maintains atomicity by collapsing the resolution into a single-cycle, table-driven state transition.
@@ -101,7 +101,7 @@ The $\mathcal{L}$ \textbf{maps} its branching factor to the processor word-width
 
     \item \textbf{Inductive Step:} Given the invariant that resolution time for a level-$k$ structure is $T(\mathcal{L}_{k}) = kI_{base}$, resolving a request at level $k+1$ (e.g., the Plane level) \textbf{requires}:
     \begin{itemize}
-        \item The occupancy sum $\Gamma_{k+1}$ is \textbf{evaluated} via bitmask comparison to \textbf{select} a viable Level-$k$ child. When $\mathcal{A}$ \textbf{aligns} with a power of 2, this lookup and steering operation \textbf{consumes} a single table lookup [4].
+        \item The occupancy sum $\Gamma_{k+1}$ is \textbf{evaluated} via bitmask comparison to \textbf{select} a viable Level-$k$ child. When $\mathcal{A}$ \textbf{aligns} with a power of 2, this lookup and steering operation \textbf{consumes} a single table lookup [6].
         \item The resolution operation \textbf{descends} to the level-$k$ $\mathcal{L}$ identified by the steering vector from the Oracle.
         \item The resulting recurrence relation is:
         \begin{equation}
@@ -113,14 +113,14 @@ The $\mathcal{L}$ \textbf{maps} its branching factor to the processor word-width
 
 
 \subsection{Conclusion of Determinism}
-By induction, the resolution time for any $n$-level $\mathcal{L}$ structure is strictly $nI_{base}$. While standard stochastic allocators exhibit execution times as a function of free-block count ($N$)—typically yielding $O(\log N)$ or worse in fragmented states [5]—the \textbf{Iscandar} architecture \textbf{collapses} this complexity. $n$ as a constant \textbf{enforces} deterministic latency of resolution regardless of heap saturation.\\
+By induction, the resolution time for any $n$-level $\mathcal{L}$ structure is strictly $nI_{base}$. While standard stochastic allocators exhibit execution times as a function of free-block count ($N$)—typically yielding $O(\log N)$ or worse in fragmented states [7]—the \textbf{Iscandar} architecture \textbf{collapses} this complexity. $n$ as a constant \textbf{enforces} deterministic latency of resolution regardless of heap saturation.\\
 
 In our model, $n$ is an architectural constant (e.g., $n = 3$); so total execution time is:
 \begin{equation}
     T_{total} = 3I_{base}
 \end{equation}
 
-This result confirms that for a Cube of $\mathcal{A}^k$ Sectors, the time required to resolve an address is invariant. This performance is maintained provided the system stays in the operational domain of the Occupancy Limit ($\Phi$). By trading spatial capacity for temporal certainty, the architecture \textbf{eliminates} the ``temporal jitter'' that characterizes non-deterministic real-time systems. [5]
+This result confirms that for a Cube of $\mathcal{A}^k$ Sectors, the time required to resolve an address is invariant. This performance is maintained provided the system stays in the operational domain of the Occupancy Limit ($\Phi$). By trading spatial capacity for temporal certainty, the architecture \textbf{eliminates} the ``temporal jitter'' that characterizes non-deterministic real-time systems. [8]
 
 \subsection{Temporal Consistency and Boundary Management}
 To \textbf{preclude} latency variability during boundary-straddling, \textbf{Iscandar} \textbf{utilizes} a computational handshake or ``Oracle,'' a precomputed resolution-path for non-aligned straddle cases, \textbf{ensuring} the instruction count for a $\mathcal{A}$-sector block remains \textbf{isochronous} regardless of its alignment relative to the Tier-1 registers. By \textbf{eliminating} the alignment-check penalty, the architecture \textbf{preserves} a deterministic execution window across the entire addressable space.\\
@@ -142,7 +142,7 @@ The Core Shard utilizes a 2D matrix ($2^{\mathcal{A}/4} \times \mathcal{A}/4$) t
 \end{itemize}
 
 \section{Deterministic Coalescence and the Occupancy Limit}
-Maintaining temporal determinism in a dynamic environment \textbf{requires} a deallocation process (coalescence) \textbf{mirroring} the efficiency of the allocation logic. Operational stability of the \textbf{Iscandar} lattice uses discrete enforcement of the Occupancy Limit($\Phi$), \textbf{precluding} the high-entropy states typically associated with conventional allocators [5].
+Maintaining temporal determinism in a dynamic environment \textbf{requires} a deallocation process (coalescence) \textbf{mirroring} the efficiency of the allocation logic. Operational stability of the \textbf{Iscandar} lattice uses discrete enforcement of the Occupancy Limit($\Phi$), \textbf{precluding} the high-entropy states typically associated with conventional allocators [9].
 
 \subsection{Symmetric Coalescence Mechanics}
 Here, coalescence is not a variable-time search for adjacent free blocks, but a deterministic state update. Whether the Oracle descends to clear a bit-position or propagates the release upward through the hierarchy, the operation remains isochronous. Because the bit-address of any Sector ($S_0$) is a fixed function of its coordinates, the update to the occupancy counters ($\Gamma$) consumes the same instruction count ($I_{base}$) as the initial resolution. \textbf{The alignment is self-similar across all hierarchical depths, a property derived from the Structural Arity ($\mathcal{A}$) rather than a pre-defined set of size-classes.}
@@ -153,10 +153,10 @@ Here, coalescence is not a variable-time search for adjacent free blocks, but a 
     \item The Level-2 (Plane) and Level-3 (Cube) counters are updated through integer subtraction.
 \end{enumerate}
 
-Because the lattice depth is fixed at $n = 3$, time complexity for allocation is identical to deallocation ($3I_{base}$). This symmetry ensures that system overhead remains constant regardless of memory ``churn,'' eliminating the temporal spikes typically made by coalescing algorithms. [6]
+Because the lattice depth is fixed at $n = 3$, time complexity for allocation is identical to deallocation ($3I_{base}$). This symmetry ensures that system overhead remains constant regardless of memory ``churn,'' eliminating the temporal spikes typically made by coalescing algorithms. [10]
 
 \subsection{Operational Enforcement of $\Omega$}
-The Occupancy Limit ($\Phi$) \textbf{serves} as the authoritative boundary of the system’s operational domain. While traditional allocators attempt to satisfy requests until the address space is 100\% utilized---leading to $O(N)$ search patterns as fragmentation increases [7]---our  lattice uses the $\Gamma_{3}$ counter as a deterministic ``circuit breaker,'' depending on the memory request of the moment.\\
+The Occupancy Limit ($\Phi$) \textbf{serves} as the authoritative boundary of the system’s operational domain. While traditional allocators attempt to satisfy requests until the address space is 100\% utilized---leading to $O(N)$ search patterns as fragmentation increases [11]---our  lattice uses the $\Gamma_{3}$ counter as a deterministic ``circuit breaker,'' depending on the memory request of the moment.\\
 
 The decision logic for the Resolution Operator ($\Omega$) is:
 \begin{equation}
@@ -195,7 +195,7 @@ Let $\Gamma_{total}$ be the sum of all leaf nodes $S_{0,i}$. At any discrete tim
 Earlier sections established \textbf{Iscandar} as deterministic within the primary scope of this paper. However, it exhibits properties warranting distinct architectural observations.
 
 \subsection{As an Extension to Binary Buddy Systems}
-The binary buddy system, pioneered by Knowlton [8] and Knuth [9], sought to minimize search latency through a power-of-two partitioning scheme ($R=2$). While this approach facilitates efficient coalescence, its search complexity remains fundamentally constrained to $O(\log_{2} n)$. As modern memory address spaces scale alongside processor word sizes, the increasing logarithmic depth of these trees drives significant latency. Furthermore, at high utilization, binary buddy systems trigger ``stalling'' behaviors; the search algorithm must traverse increasingly fragmented leaf nodes, which inevitably erodes deterministic performance.\\
+The binary buddy system, pioneered by Knowlton [12] and Knuth [13], sought to minimize search latency through a power-of-two partitioning scheme ($R=2$). While this approach facilitates efficient coalescence, its search complexity remains fundamentally constrained to $O(\log_{2} n)$. As modern memory address spaces scale alongside processor word sizes, the increasing logarithmic depth of these trees drives significant latency. Furthermore, at high utilization, binary buddy systems trigger ``stalling'' behaviors; the search algorithm must traverse increasingly fragmented leaf nodes, which inevitably erodes deterministic performance.\\
 
 We generalize buddy system principles to an \textbf{Arbitrary Radix} ($R=\mathcal{A}$). By shifting from a binary tree to a high-radix fractal lattice, we collapse the depth of the search space to a fixed architectural constant $n$. This structural shift moves memory management from the domain of probabilistic searching to the domain of \textbf{Geometric Coordinate Resolution}.
 
@@ -212,7 +212,7 @@ In a standard Voronoi partition, boundaries are dynamically computed as a functi
 
 \subsection{As Linear Programming}
 
-The operational stability of the system is maintained via an Interior Point Method}---analogous to projective transformations used in Karmarkar’s algorithm [10]. By enforcing a \textbf Occupancy Limit ($\Phi$), we \textbf{ensure} the resolution path avoids ``edges'' of the feasible region (the fragmentation trap). Here, the allocator does not merely manage space; it \textbf{navigates} a high-dimensional manifold where the floor serves as a protective barrier against non-deterministic search behaviors.
+The operational stability of the system is maintained via an Interior Point Method}---analogous to projective transformations used in Karmarkar’s algorithm [14]. By enforcing a \textbf Occupancy Limit ($\Phi$), we \textbf{ensure} the resolution path avoids ``edges'' of the feasible region (the fragmentation trap). Here, the allocator does not merely manage space; it \textbf{navigates} a high-dimensional manifold where the floor serves as a protective barrier against non-deterministic search behaviors.
 
 \subsection{Amortized Performance: Constant Time}
 The \textbf{Iscandar} architecture utilizes a \textit{Seamless Sack} model that achieves amortized constant time for memory operations through a Next-Fit Circular Cursor mechanism.
@@ -253,7 +253,7 @@ We show here how non-deterministic latency inherent in traditional memory manage
 \begin{description}
     \item[Atomic Polytope] The leaf-level search polytope within a Row manifold (Level 0). It represents the geometric isolation of a specific bit-offset within the lattice through a single Handshake Oracle's Finite State Automaton (FSA) cycle.
     
-    \item[Coefficient of Variation (CV)] A statistical measure of the dispersion of data points. In the \textbf{Iscandar} context, having a CV of zero would in theory confirm that the instruction path length is identical across all execution cycles. [7]
+    \item[Coefficient of Variation (CV)] A statistical measure of the dispersion of data points. In the \textbf{Iscandar} context, having a CV of zero would in theory confirm that the instruction path length is identical across all execution cycles. [15]
     
     \item[Contiguity Guarantee] The formal assurance (Section 2.5) that any resolved coordinate sequence represents a continuous physical block within the lattice, maintained by the Handshake Oracle.
     
@@ -277,8 +277,11 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \begin{description}
     \item[Domain:] Total Cube Volume resolution (addressable at $\mathcal{A}^k$).
     
-    \item[Summation Predicate:] 
-    \[ |C| = \sum_{i=0}^{\mathcal{A}-1} (\text{Sector Count of Plane } i) \]
+\setcounter{equation}{9} % This sets the counter so the NEXT equation is 10
+\noindent \textbf{Summation Predicate:} 
+\begin{equation}
+    C_{plane} = \sum_{i=0}^{\mathcal{A}-1} (C_{row,i} \cdot [y_{i} = 1]) \label{eq:sum_predicate}
+\end{equation}
     
     \item[Discussion:] The Cube Scale Allocator computes the unique  \textbf{``Gatekeeper''} sector count of the architecture. It provides the primary fast-fail heuristic for the system; if a request $(S, M)$ is determined to be non-admissible at this tier, the algorithm immediately terminates without initiating a descent. This makes the registrar the most efficient filter in the hierarchy, ensuring that the cost of coordinate resolution is only paid when success is mathematically guaranteed.
 \end{description}
@@ -290,8 +293,14 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \begin{description}
     \item[Domain:] Row-join and sequence resolution within an $\mathcal{A}^2$-sector Plane manifold.
     
-    \item[Summation Predicate:] 
-    \[ C_{plane} = \sum_{i=0}^{\mathcal{A}-1} (C_{row,i} \cdot [y_{i} = 1]) \]
+\vspace{12pt}
+\setcounter{equation}{10}
+\noindent \textbf{Summation Predicate:} 
+\begin{equation}
+    C_{plane} = \sum_{i=0}^{\mathcal{A}-1} (C_{row,i} \cdot [y_{i} = 1])
+    \label{eq:sum_predicate}
+\end{equation}
+\vspace{12pt}
     
     \item[Discussion:] 
     
@@ -309,8 +318,14 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \begin{description}
     \item[Domain:] Plane-join and sequence resolution within an $\mathcal{A}^k$ Cube manifold.
     
-    \item[Summation Predicate:] 
-    \[ C_{huge} = \sum_{i=0}^{\mathcal{A}-1} ( C_{plane,i} \cdot [z_{i} = 1] ) \]
+\vspace{12pt}
+\setcounter{equation}{11}
+\noindent \textbf{Summation Predicate:} 
+\begin{equation}
+    C_{huge} = \sum_{i=0}^{\mathcal{A}-1} ( C_{plane,i} \cdot [z_{i} = 1] )
+    \label{eq:sum_predicate_huge}
+\end{equation}
+\vspace{12pt}
     
     \item[Discussion:] \hfill \\
 \begin{itemize}
@@ -453,8 +468,14 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \begin{description}
     \item[Domain:] Sector-join and sequence resolution within an $\mathcal{A}$-sector Row manifold.
     
-    \item[Summation Predicate:] 
-    \[ C_{row} = \sum_{j=0}^{\mathcal{A}-1} (C_{bits,j} \cdot [x_{j} = 1]) \]
+\vspace{12pt}
+\setcounter{equation}{12}
+\noindent \textbf{Summation Predicate:} 
+\begin{equation}
+    C_{row} = \sum_{j=0}^{\mathcal{A}-1} (C_{bits,j} \cdot [x_{j} = 1])
+    \label{eq:sum_predicate_row}
+\end{equation}
+\vspace{12pt}
     
     \item[Discussion:] \hfill \\
 \begin{itemize}
@@ -542,8 +563,14 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \begin{description}
     \item[Domain:] The bit-lattice contained within a single Row manifold.
     
-    \item[Summation Predicate:] 
-    \[ C_{bits} = \sum_{i=0}^{\mathcal{A}-1} (\neg b_{i} \cdot [w_{i} = 1]) \] 
+\vspace{12pt}
+\setcounter{equation}{13}
+\noindent \textbf{Summation Predicate:} 
+\begin{equation}
+    C_{bits} = \sum_{i=0}^{\mathcal{A}-1} (\neg b_{i} \cdot [w_{i} = 1])
+    \label{eq:sum_predicate_bits}
+\end{equation}
+\vspace{12pt}
     
     \item[Discussion:] \hfill \\
 \begin{itemize}
@@ -608,7 +635,15 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 We map each instruction group to a specific predicate of the \textbf{Iscandar} hierarchy established in the Architectural Axioms. This ensures the hardware execution is a transparent reflection of the underlying mathematics. Here, we assume a 32-radix descent where each level acts as a ``Gate'' that must be cleared to reach the subsequent tier.
 
 \subsection{Phase I: The Admissibility Gate (Level 3)}
-\textbf{Predicate:} $L \in \Gamma_{Apex} \iff \Gamma_{Apex} \leftarrow \Gamma_{Apex} + L$
+
+\vspace{12pt}
+\setcounter{equation}{14}
+\noindent \textbf{Predicate:} 
+\begin{equation}
+    L \in \Gamma_{Apex} \iff \Gamma_{Apex} \leftarrow \Gamma_{Apex} + L
+    \label{eq:predicate_apex}
+\end{equation}
+\vspace{12pt}
 
 \begin{enumerate}
     \item \textbf{Instruction Group 1:} Load Global Registrar: Fetch the 16-bit register located at the Apex sector address as defined in the Cube Scale Allocator.
@@ -616,7 +651,15 @@ We map each instruction group to a specific predicate of the \textbf{Iscandar} h
 \end{enumerate}
 
 \subsection{Phase II: The Plane-Level Resolution (Level 2)}
-\textbf{Predicate:} $P_{Plane} \iff \sum_{i \in Plane} (Row [Inclusion]) \ge L$ 
+
+\vspace{12pt}
+\setcounter{equation}{15}
+\noindent \textbf{Predicate:} 
+\begin{equation}
+    P_{Plane} \iff \sum_{i \in Plane} (Row [Inclusion]) \ge L
+    \label{eq:predicate_plane}
+\end{equation}
+\vspace{12pt}
 
 \begin{enumerate}
     \setcounter{enumi}{2}
@@ -627,7 +670,15 @@ We map each instruction group to a specific predicate of the \textbf{Iscandar} h
 \end{enumerate}
 
 \subsection{Phase III: The Row-Level Weld (Level 1)}
-\textbf{Predicate:} $Weld \iff RHL(Row_n) + Intermediates + LHL(Row_{n+m}) \ge L$ 
+
+\vspace{12pt}
+\setcounter{equation}{16}
+\noindent \textbf{Predicate:} 
+\begin{equation}
+    Weld \iff RHL(Row_n) + Intermediates + LHL(Row_{n+m}) \ge L
+    \label{eq:predicate_weld}
+\end{equation}
+\vspace{12pt}
 
 \begin{enumerate}
     \setcounter{enumi}{6}
@@ -638,7 +689,15 @@ We map each instruction group to a specific predicate of the \textbf{Iscandar} h
 \end{enumerate}
 
 \subsection{Phase IV: The Bit-Lattice Isolation (Level 0)}
-\textbf{Predicate:} $P_{Tiny} \iff \sum_{i=start}^{end} \neg b_i = L$ 
+
+\vspace{12pt}
+\setcounter{equation}{17}
+\noindent \textbf{Predicate:} 
+\begin{equation}
+    P_{Tiny} \iff \sum_{i=start}^{end} \neg b_i = L
+    \label{eq:predicate_tiny}
+\end{equation}
+\vspace{12pt}
 
 \begin{enumerate}
     \setcounter{enumi}{10}
@@ -947,36 +1006,37 @@ A ← 32 ⋄ K ← 3 ⋄ V ← A*K
   ⎕ ← 'SIGMA (JITTER): ',⍕s ⋄ ⎕ ← 'VARIANCE: ',⍕v
 ∇
 \end{lstlisting}
+\begin{thebibliography}{99}
 
-\section*{References}
+\bibitem{1} P. R. Wilson, M. S. Johnstone, M. Neely, and D. Boles. \textit{Dynamic Storage Allocation: A Survey and Critical Review}. International Workshop on Memory Management, Springer, 1995. This survey establishes the baseline for traditional memory allocation challenges, providing a foil for the deterministic performance of the Iscandar lattice.
 
-\noindent [1] P. R. Wilson, M. S. Johnstone, M. Neely, and D. Boles. \textit{Dynamic Storage Allocation: A Survey and Critical Review}. International Workshop on Memory Management, Springer, 1995. This survey establishes the baseline for traditional memory allocation challenges, providing a foil for the deterministic performance of the Iscandar lattice. \medskip
+\bibitem{2} D. E. Knuth. \textit{The Art of Computer Programming, Volume 1: Fundamental Algorithms}. Addison-Wesley, 3rd Edition, 1997. This foundational text is cited to ground the bit-block management principles and deterministic axioms used in the lattice design.
 
-\noindent [2] D. E. Knuth. \textit{The Art of Computer Programming, Volume 1: Fundamental Algorithms}. Addison-Wesley, 3rd Edition, 1997. This foundational text is cited to ground the bit-block management principles and deterministic axioms used in the lattice design. \medskip
+\bibitem{3} J. S. Vitter. \textit{External Memory Algorithms and Data Structures}. ACM Computing Surveys, Vol. 33, No. 2, 2001. This reference provides the theoretical basis for distributing entropy across hierarchical levels to ensure search resolution remains constant.
 
-\noindent [3] J. S. Vitter. \textit{External Memory Algorithms and Data Structures}. ACM Computing Surveys, Vol. 33, No. 2, 2001. This reference provides the theoretical basis for distributing entropy across hierarchical levels to ensure search resolution remains constant. \medskip
+\bibitem{4} K. C. Knowlton. \textit{A Fast Storage Allocator}. Communications of the ACM, Vol. 8, No. 10, 1965. This citation anchors the optimization of branching factors relative to processor word-width, a critical alignment for the Iscandar buddy system.
 
-\noindent [4] K. C. Knowlton. \textit{A Fast Storage Allocator}. Communications of the ACM, Vol. 8, No. 10, 1965. This citation anchors the optimization of branching factors relative to processor word-width, a critical alignment for the Iscandar buddy system. \medskip
+\bibitem{5} M. A. Bender and M. Farach-Colton. \textit{The B-Level: A Cache-Oblivious Data Structure}. Proceedings of the 41st Annual Symposium on Foundations of Computer Science, 2000. This work formalizes the instruction count ($\iota$) required to resolve memory coordinates within a hierarchical sub-lattice.
 
-\noindent [5] M. A. Bender and M. Farach-Colton. \textit{The B-Level: A Cache-Oblivious Data Structure}. Proceedings of the 41st Annual Symposium on Foundations of Computer Science, 2000. This work formalizes the instruction count ($\iota$) required to resolve memory coordinates within a hierarchical sub-lattice. \medskip
+\bibitem{6} T. J. Anderson. \textit{The Efficiency of Bit-Map Indexing}. Statistical and Scientific Database Management, Vol. 3, 1987. This citation provides mathematical justification for single-cycle table lookups when the occupancy sum aligns with a power of 2.
 
-\noindent [6] T. J. Anderson. \textit{The Efficiency of Bit-Map Indexing}. Statistical and Scientific Database Management, Vol. 3, 1987. This citation provides mathematical justification for single-cycle table lookups when the occupancy sum aligns with a power of 2. \medskip
+\bibitem{7} J. M. Robson. \textit{An Estimating of the Store Size Necessary for Dynamic Storage Allocation}. Journal of the ACM, Vol. 18, No. 3, 1971. This reference establishes the $O(\log N)$ complexity bounds of stochastic allocators, against which the Iscandar architecture’s $O(1)$ performance is compared.
 
-\noindent [7] J. M. Robson. \textit{An Estimating of the Store Size Necessary for Dynamic Storage Allocation}. Journal of the ACM, Vol. 18, No. 3, 1971. This reference establishes the $O(\log N)$ complexity bounds of stochastic allocators, against which the Iscandar architecture’s $O(1)$ performance is compared. \medskip
+\bibitem{8} E. D. Jensen, C. D. Locke, and H. Tokuda. \textit{A Time-Driven Scheduling Model for Real-Time Operating Systems}. Proceedings of the IEEE Real-Time Systems Symposium, 1985. This paper defines temporal jitter in real-time systems, validating the need for the Iscandar's deterministic latency.
 
-\noindent [8] E. D. Jensen, C. D. Locke, and H. Tokuda. \textit{A Time-Driven Scheduling Model for Real-Time Operating Systems}. Proceedings of the IEEE Real-Time Systems Symposium, 1985. This paper defines temporal jitter in real-time systems, validating the need for the Iscandar's deterministic latency. \medskip
+\bibitem{9} T. A. Standish. \textit{Data Structure Techniques}. Addison-Wesley, 1980. This text is used to explain high-entropy states and fragmentation walls that occur as heap utilization increases in conventional systems.
 
-\noindent [9] T. A. Standish. \textit{Data Structure Techniques}. Addison-Wesley, 1980. This text is used to explain high-entropy states and fragmentation walls that occur as heap utilization increases in conventional systems. \medskip
+\bibitem{10} I. Puaut. \textit{Real-Time Performance of Dynamic Memory Allocators}. Proceedings of the 14th Euromicro Conference on Real-Time Systems, 2002. This work is cited to highlight the temporal spikes typical of coalescence algorithms, which the Iscandar architecture avoids through symmetric resolution.
 
-\noindent [10] I. Puaut. \textit{Real-Time Performance of Dynamic Memory Allocators}. Proceedings of the 14th Euromicro Conference on Real-Time Systems, 2002. This work is cited to highlight the temporal spikes typical of coalescence algorithms, which the Iscandar architecture avoids through symmetric resolution. \medskip
+\bibitem{11} D. E. Knuth. \textit{The Art of Computer Programming, Volume 3: Sorting and Searching}. Addison-Wesley, 2nd Edition, 1998. This reference provides the $O(N)$ saturation model used to demonstrate the catastrophic failure of linear search as memory pools approach 100\% utilization.
 
-\noindent [11] D. E. Knuth. \textit{The Art of Computer Programming, Volume 3: Sorting and Searching}. Addison-Wesley, 2nd Edition, 1998. This reference provides the $O(N)$ saturation model used to demonstrate the catastrophic failure of linear search as memory pools approach 100\% utilization. \medskip
+\bibitem{12} K. C. Knowlton. \textit{Methods for Data Structure Management in Hierarchical Systems}. Bell System Technical Journal, 1965. This citation acknowledges the early power-of-two partitioning schemes that preceded the Iscandar’s high-radix lattice.
 
-\noindent [12] K. C. Knowlton. \textit{Methods for Data Structure Management in Hierarchical Systems}. Bell System Technical Journal, 1965. This citation acknowledges the early power-of-two partitioning schemes that preceded the Iscandar’s high-radix lattice. \medskip
+\bibitem{13} D. E. Knuth. \textit{Fundamental Algorithms (The Buddy System Formalization)}. Addison-Wesley, 3rd Edition, 1997. This formalization of binary buddy system constraints serves to differentiate the Iscandar’s constant-depth tree from logarithmic search trees.
 
-\noindent [13] D. E. Knuth. \textit{Fundamental Algorithms (The Buddy System Formalization)}. Addison-Wesley, 3rd Edition, 1997. This formalization of binary buddy system constraints serves to differentiate the Iscandar’s constant-depth tree from logarithmic search trees. \medskip
+\bibitem{14} N. Karmarkar. \textit{A New Polynomial-Time Algorithm for Linear Programming}. Combinatorica, Vol. 4, No. 4, 1984. This reference provides the analogy for Interior Point Methods, justifying the use of the Occupancy Limit ($\Phi$) to stay within the feasible region of the memory manifold.
 
-\noindent [14] N. Karmarkar. \textit{A New Polynomial-Time Algorithm for Linear Programming}. Combinatorica, Vol. 4, No. 4, 1984. This reference provides the analogy for Interior Point Methods, justifying the use of the Occupancy Limit ($\Phi$) to stay within the feasible region of the memory manifold. \medskip
+\bibitem{15} B. S. Everitt. \textit{The Cambridge Dictionary of Statistics}. Cambridge University Press, 1998. This statistical reference defines the Coefficient of Variation (CV) used to empirically measure the system’s isochronous performance.
 
-\noindent [15] B. S. Everitt. \textit{The Cambridge Dictionary of Statistics}. Cambridge University Press, 1998. This statistical reference defines the Coefficient of Variation (CV) used to empirically measure the system’s isochronous performance.
+\end{thebibliography}
 \end{document}
