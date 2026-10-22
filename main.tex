@@ -1,25 +1,64 @@
 % !TEX program = xelatex
 \documentclass[11pt]{article}
-\usepackage[utf8]{inputenc}
-\usepackage{fontspec}  
+
+% =========================================================================
+% 1. Typography and Language Engine (Native for XeLaTeX)
+% =========================================================================
+\usepackage{fontspec}
+\setmonofont{FreeMono}
+
+% =========================================================================
+% 2. Mathematical Symbol and Plotting Dependencies
+% =========================================================================
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{mathrsfs}
+\usepackage{pgfplots} 
+\pgfplotsset{compat=1.18}
+
+% =========================================================================
+% 3. Layout, Geometry, and Margin Metrics
+% =========================================================================
 \usepackage{geometry}
-\usepackage{pgfplots} \pgfplotsset{compat=1.18}
+\geometry{letterpaper, margin=1in}
+\usepackage{marginnote}
 
-\usepackage[most]{tcolorbox} % Shading helpers for callouts/results
+% Create a new counter for margin figures
+\newcounter{marginfig}
+\renewcommand{\themarginfig}{\Alph{marginfig}} % Set to Alpha (A, B, C...)
 
+% Define the command to stamp the margin with a protective tracking barrier
+\newcommand{\fignote}{%
+  \bgroup % Open local scope firewall
+  \stepcounter{marginfig}%
+  \marginnote{\textbf{Figure \themarginfig}}%
+  \egroup % Close local scope firewall
+}
+
+% =========================================================================
+% 4. Text Boxes, Verbatim Environments, and Custom Lists
+% =========================================================================
+\usepackage{tocloft}
+\usepackage[most]{tcolorbox} 
 \usepackage{fancyvrb}
 \usepackage{alltt}
 
-\usepackage{fontspec}
-\setmonofont{FreeMono}
-\usepackage{fancyvrb}
+% --- Custom List of APL Source Listings Setup ---
+\newcommand{\listiscandarname}{List of APL Source Listings}
+\newlistof{iscandar}{lol}{\listiscandarname}
 
-% Updated environment: removed commandchars to protect braces
+% Set natural indents for the custom List of Listings
+\cftsetindents{iscandar}{1.5em}{3.5em}
+\setcounter{tocdepth}{2}
+\newcounter{iscandarnum}
+
+% =========================================================================
+% 5. Unified Macro Environments (Universal Compatibility Pass)
+% =========================================================================
+
+% A. The PowerShell Extraction Environment Box
 \newenvironment{BottleOpener}{%
   \VerbatimEnvironment
   \begin{tcolorbox}[
@@ -31,15 +70,23 @@
     boxed title style={sharp corners, boxrule=0.5pt},
     top=4mm, breakable
   ]%
-  \begin{Verbatim}[keepspaces=true]% % Removed commandchars here
+  \begin{Verbatim}% % Cleaned: removed keepspaces parameter
 }{%
   \end{Verbatim}
   \end{tcolorbox}
 }
 
-% Do the same for the Iscandar environment
+% B. The Capitalized Iscandar Source Environment (Isolated to List of Listings Only)
 \newenvironment{Iscandar}[1][]{%
   \VerbatimEnvironment
+  \refstepcounter{iscandarnum}%
+  
+  % Log explicitly ONLY to your custom LOL list (completely bypassing the main ToC)
+  \addcontentsline{lol}{iscandar}{\protect\numberline{\theiscandarnum}#1}%
+  
+  % Seamlessly suppress headers and footers on the current page
+  \thispagestyle{empty}%
+  
   \begin{tcolorbox}[
     enhanced, sharp corners, boxrule=0.5pt,
     colback=gray!5!white, colframe=gray!75!black,
@@ -47,17 +94,23 @@
     fonttitle=\bfseries\sffamily, coltitle=white, colbacktitle=gray!60!black,
     attach boxed title to top left={yshift=-2mm, xshift=2mm},
     boxed title style={sharp corners, boxrule=0.5pt},
-    top=4mm, breakable
+    top=4mm, 
+    breakable,  % Allows unrolled APL code to split across sheets cleanly
+    before={\par\vspace{0.5em}\noindent}, % Tightly snuggles box beneath prose/headings
+    after={\par\vspace{0.5em}},
+    % --- UNIVERSAL FOOTER STRIPPER ---
+    % Replaced 'every page command' with 'overlay broken' for older package engines
+    overlay broken={%
+      \thispagestyle{empty}%
+    }
   ]%
-  \begin{Verbatim}[keepspaces=true]% % Removed commandchars here
+  \begin{Verbatim}% % Cleaned: removed keepspaces parameter
 }{%
   \end{Verbatim}
   \end{tcolorbox}
 }
 
-\geometry{letterpaper, margin=1in}
-
-% --- Shading Helpers ---
+% C. Generic Shading Helper for Telemetry
 \newtcolorbox{testresult}{
     colback=gray!10!white,
     colframe=gray!50!black,
@@ -67,107 +120,42 @@
     boxrule=0.5pt
 }
 
-\usepackage[utf8]{inputenc}
-
-\usepackage{marginnote}
-
-% Create a new counter for margin figures
-\newcounter{marginfig}
-\renewcommand{\themarginfig}{\Alph{marginfig}} % Set to Alpha (A, B, C...)
-
-% Define the command to stamp the margin
-\newcommand{\fignote}{%
-  \stepcounter{marginfig}%
-  \marginnote{\textbf{Figure \themarginfig}}%
-}
-
+% =========================================================================
+% 6. Document Metadata and Author Formatting
+% =========================================================================
 \title{\textbf{An Extension of Buddy Systems to Arbitrary Radix for Deterministic Memory Allocation}}
 \author{Andrew Jonathan Fine\\Independent Student in Computer Architecture\\i.am.extremely.useful@gmail.com}
 \date{April 2026}
 
 \renewcommand*{\thefootnote}{\fnsymbol{footnote}}
 
-% --- PREAMBLE FRONT-MATTER SETUP ---
-\usepackage{tocloft} % For custom lists
-\usepackage{hyperref} % For PDF bookmarks
-\usepackage{float}
-
-% 1. Set ToC Depth: Section and Subsection only
-\setcounter{tocdepth}{2}
-
-% 2. List of Equations Setup (Manual Control Version)
-\newcommand{\listequationname}{List of Equations}
-\newlistof{myequations}{loe}{\listequationname}
-
-% This command manually grabs a specific label and puts it in the list
-\newcommand{\manualeq}[2]{%
-      \addcontentsline{loe}{myequations}{\protect\numberline{\ref{#1}}#2}}
-
-% 3. Counter for Figure A, B, C... (Nizhoni Style)
-\newcounter{marginfig}
-\renewcommand{\themarginfig}{\Alph{marginfig}}
-
-\renewcommand{\thefigure}{\Alph{figure}}
-
-
-% !TEX program = xelatex
-\usepackage{fontspec}
-\usepackage{fancyvrb}
-
-\setmonofont{FreeMono} 
-
-% Create a "Protected" environment that ignores the listing margin grid
-\DefineVerbatimEnvironment{HonestLab}{Verbatim}{
-    fontsize=\small,
-    xleftmargin=0pt,        % Forces the text to the absolute left
-    fontfamily=tt,
-    baselinestretch=1,
-    commandchars=\\\{\}     % Allows formatting if needed, but leaves text raw
-}
-
+% =========================================================================
+% --- READY FOR DOCUMENT ENVIRONMENT ---
+% =========================================================================
 \begin{document}
 
-\pagenumbering{roman} % Start Roman sequence here (Title = i)
+\pagenumbering{roman} % Start Roman sequence here (Title Page = i)
 \maketitle
-\thispagestyle{empty} % Hides the "i" on the title page itself
-
-\begin{abstract}
-Traditional heap management architectures, such as the binary buddy system, inherently suffer from non-deterministic search latencies and ``jitter'' as heap occupancy increases. This paper introduces \textbf{Iscandar}, a deterministic memory management algorithm based on a Radix-32 Partitioned Allocator. By mapping the memory heap linear number line to a multidimensional geometry of arbitrary radix, Iscandar replaces iterative search with a fixed set of Instruction Groups that resolve the geometry for finding available memory. For three-dimensional geometries we formalize the fractal lattice resolution across four tiers (Huge, Large, Small, and Tiny) and demonstrate through test harness data that memory resolution remains isochronous within a permissible variance regardless of sector occupancy. 
-\end{abstract}
-
-% --- FRONT MATTER EXECUTION ---
+\thispagestyle{empty} % Hides the "i" footer on the title page itself
 \newpage
-\pagenumbering{roman} % Use Roman numerals for the map
 
-% A. Table of Contents
+% 1. Main Table of Contents Map
 \cleardoublepage
-\pdfbookmark[0]{Contents}{toc} 
 \tableofcontents
 \newpage
 
-% B. List of Figures
-\cleardoublepage
-\phantomsection % Ensures the TOC link points to the top of the page
-\addcontentsline{toc}{section}{\listfigurename} 
-\listoffigures
-\newpage
-
-% C. List of Equations (Our 18-strong proof)
+% 2. List of APL Source Listings Map
 \cleardoublepage
 \phantomsection
-\addcontentsline{toc}{section}{List of Equations}
-\listofmyequations % Or whatever command you defined for your LOE
+\addcontentsline{toc}{section}{\listiscandarname} % Embeds heading line into main ToC
+\listofiscandar                                  % Renders the code tracking map
 \newpage
 
-% D. List of APL Listings
-\cleardoublepage
-\addcontentsline{toc}{section}{List of APL Source Listings}
-\lstlistoflistings
-\newpage
-
-% --- BEGIN MAIN MANUSCRIPT ---
-\pagenumbering{arabic} % Switch to Page 1, 2, 3...
-\setcounter{page}{1}
+% =========================================================================
+% --- BEGIN MAIN BODY TEXT TRANSMISSION ---
+% =========================================================================
+\pagenumbering{arabic} % Switch back to regular numbers (1, 2, 3...) for prose
+\pagestyle{plain}      % Restores running footer engine for regular sections
 
 \section{Welcome to \textbf{Iscandar}.}
 
