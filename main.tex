@@ -1,602 +1,83 @@
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
-\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{booktabs}
+\usepackage{enumitem}
 \usepackage{geometry}
-\usepackage{xcolor}
-\usepackage{listings}
-\usepackage{qrcode}
-\usepackage[most]{tcolorbox} % Shading helpers for callouts/results
+\usepackage{graphicx}
+\geometry{a4paper, margin=1in}
 
-\geometry{letterpaper, margin=1in}
-
-% --- Shading Helpers ---
-\newtcolorbox{testresult}{
-    colback=gray!10!white,
-    colframe=gray!50!black,
-    fonttitle=\bfseries,
-    title=Telemetry Output,
-    arc=0mm,
-    boxrule=0.5pt
-}
-
-% --- The "Primitive" APL Character Mapper ---
-% This allows you to type the keywords in code, and LaTeX draws the APL
-\lstdefinelanguage{APL}{
-    basicstyle=\small\ttfamily,
-    columns=flexible,
-    mathescape=true, 
-    frame=single,
-    backgroundcolor=\color{gray!5},
-    literate={<-}{{$\leftarrow$}}1 
-             {rho}{{$\rho$}}1 
-             {iota}{{$\iota$}}1 
-             {AND/}{{$\wedge/ \!$}}2 
-             {diamond}{{$\diamond$}}1 
-             {quad}{{$\square$}}1 
-             {comment}{{$\text{\color{gray} \small $\dashv$}$}}1 % 1994-style comment flag
-}
-
-\title{\textbf{An Extension of Buddy Systems to Arbitrary Radix for Deterministic Memory Allocation}}
-\author{Andrew Jonathan Fine\\Independent Student in Computer Architecture\\i.am.extremely.useful@gmail.com}
+\title{An Extension of Buddy Systems to Arbitrary Radix for Deterministic Memory Allocation \\ \large Project Iscandar-OZ: Architectural Equivalence Report}
+\author{Andrew Jonathan Fine \\ \small Independent Systems Architect}
 \date{April 2026}
 
 \begin{document}
+
 \maketitle
 
 \section{Introduction}
+The Iscandar memory management system is defined by a fixed-depth, Radix-32 lattice. Unlike stochastic allocation models, this architecture utilizes a hierarchical occupancy map and hardware-aligned branching to achieve deterministic coordinate resolution.
 
 \section{Architectural Axioms}
-
-The \textit{iscandar} memory management system is defined by a fixed-depth, Radix-32 lattice. Unlike stochastic allocation models that rely on variable-time search algorithms \cite{knuth1997art, knowlton1965fast}, this architecture utilizes a hierarchical occupancy map and hardware-aligned branching to achieve deterministic coordinate resolution.
-
-\subsection{Axiom I: The State Map ($\mathcal{L}$) and Structural Arity ($\mathcal{A}$)}
-The memory space is defined as an $n$-level lattice $\mathcal{L}$ of fixed depth, where $n=3$. The architecture is characterized by a constant Arity ($\mathcal{A}$) of 32. The lattice is composed of a hierarchical progression of tiers: the atomic Sector ($S_0$), the Row ($S_1$), the Plane ($S_2$), and the Cube ($S_3$). The address of any specific leaf node is a direct function of its lattice coordinates $(p, r, s)$, where $p, r, s \in \{0, \dots, \mathcal{A}-1\}$. This geometric structure remains invariant regardless of the physical byte-width of the sector.
-
-\subsection{Axiom II: Hierarchical Occupancy Counters ($\Gamma$)}
-To facilitate constant-time steering, the lattice maintains discrete occupancy counts ($\Gamma$) at every tier. Following the principles of bit-block representation \cite{hamming1950error}, these counters provide a real-time density map of the lattice:
-\begin{itemize}
-    \item \textbf{Level 1 (Row):} $\Gamma_1 = \sum_{i=0}^{31} \Gamma_{0,i}$ 
-    \item \textbf{Level 2 (Plane):} $\Gamma_2 = \sum_{j=0}^{31} \Gamma_{1,j}$ 
-    \item \textbf{Level 3 (Cube):} $\Gamma_3 = \sum_{k=0}^{31} \Gamma_{2,k}$ 
-\end{itemize}
-
-\subsection{Axiom III: Discrete Enforcement of the Resilience Floor ($\Phi$)}
-The Resilience Floor ($\Phi$) represents the spatial cost required to guarantee temporal predictability \cite{wilson1995dynamic}. It is enforced via a discrete integer comparison at the Cube level ($\Gamma_3$). The system enforces an occupancy bound $K = 32,768 \times (1 - \Phi)$. Any allocation request initiated when $\Gamma_3 \ge K$ results in an immediate, constant-time refusal, preventing the saturational entropy that compromises $O(1)$ execution.
-
-\subsection{Axiom IV: Rotational Steering ($\vec{R}$)}
-To maintain global equilibrium across the lattice, the resolution operator $\Omega$ utilizes a rotational starting index for each $\Gamma$ tier. This prevents localized fragmentation and ensures that saturational entropy is distributed uniformly across all planes and rows within the 512 KB Cube.
-
-\subsection*{2.X The Contiguity Guarantee}
-The discrete nature of the Radix-32 registers does not imply a fragmented physical space. Through the \textit{Principle of Boundary Transparency}, ISCANDAR ensures that any request can straddle adjacent registers. This maintains a unified memory map where the "seams" of the metadata are invisible to the application. (See Appendix A.4 for the formal Lemma).
-
-\section{Inductive Proof of Deterministic Resolution}
-
-\noindent \textbf{Theorem:} For a fixed-depth \textit{iscandar} lattice of Arity $\mathcal{A}=32$, the time complexity of the resolution operator $\Omega$ is strictly bounded by $O(1)$.
-
-\subsection{The Complexity Proof}
-
-The \textit{iscandar} architecture optimizes the classical buddy system search by mapping the branching factor directly to the processor's word-width \cite{knuth1997art}. Let $L_n$ represent a lattice structure of level $n$. We define the resolution time $T(L_n)$ as the number of hardware clock cycles ($\omega$) required to resolve a memory coordinate.
-
-\begin{enumerate}
-    \item \textbf{Base Case ($n=1$):} 
-    At the Row level ($L_1$), the resolution of a free sector is performed via a hardware bit-scan primitive (e.g., \textit{Bit Field Find First One}). This operation is atomic on 32-bit architectures.
-    \begin{equation}
-        T(L_1) = \omega
-    \end{equation}
-
-    \item \textbf{Inductive Step:} 
-    Assume that for a structure of level $k$, the resolution time is $T(L_k) = k\omega$. To resolve a request at level $k+1$ (e.g., the Plane level):
-    \begin{itemize}
-        \item The occupancy sum $\Gamma_{k+1}$ is evaluated using a parallel bitmask comparison to select a viable Level $k$ child. Because $\mathcal{A}=32$ matches the hardware word-width, this lookup and steering operation is completed in a single cycle \cite{hamming1950error}.
-        \item The resolution logic then descends to the Level $k$ structure identified by the steering vector.
-        \item The resulting recurrence relation is:
-        \begin{equation}
-            T(L_{k+1}) = \omega + T(L_k) = \omega + k\omega = (k+1)\omega
-        \end{equation}
-    \end{itemize}
-\end{enumerate}
-
-\subsection{Conclusion of Determinism}
-
-By induction, the resolution time for any $n$-level lattice is strictly $n\omega$. In standard stochastic allocators, the execution time is a function of the number of free blocks ($N$), typically yielding $O(\log N)$ or worse in fragmented states \cite{knowlton1965fast, wilson1995dynamic}. 
-
-In the \textit{iscandar} model, $n$ is an architectural constant ($n=3$). Therefore, the total execution time is:
-\begin{equation}
-    T_{total} = 3\omega
-\end{equation}
-
-This result confirms that for a 512 KB Cube, the time required to resolve an address is invariant. This absolute $O(1)$ performance is maintained provided the system remains within the operational domain defined by the Resilience Floor ($\Phi$). By trading spatial capacity for temporal certainty, the architecture eliminates the "temporal jitter" that often compromises mission-critical real-time systems.
-
-\subsection*{3.3 Theoretical $O(1)$ Consistency}
-To prevent boundary-straddling from introducing a temporal penalty, the kernel utilizes a "Computational Handshake" via the packed ROM Oracle. This ensures that the search time for a 32-sector block is identical regardless of its alignment relative to the Tier 1 registers. This mathematical determinism is the core of the ISCANDAR $O(1)$ proof. (Detailed performance curves are provided in Appendix A).
-
-\section{Deterministic Coalescence and the Resilience Floor}
-
-The maintenance of temporal determinism in a dynamic environment requires that the deallocation process (coalescence) mirrors the efficiency of the allocation logic. Furthermore, the operational stability of the \textit{iscandar} lattice is predicated on the discrete enforcement of the Resilience Floor ($\Phi$), which prevents the system from entering high-entropy states associated with traditional heap exhaustion \cite{wilson1995dynamic}.
-
-\subsection{Symmetric Coalescence Mechanics}
-
-In the \textit{iscandar} architecture, coalescence is not a background "garbage collection" task or a variable-time search for adjacent free blocks. Instead, it is an inverse steering operation. When a Sector ($S_0$) is released, the system performs a hierarchical update of the occupancy counters ($\Gamma$) in a top-down symmetric path:
-
-\begin{enumerate}
-    \item The atomic leaf node state $\Gamma_0$ is toggled to 0 (Available).
-    \item The change propagates immediately to the parent Row counter ($\Gamma_1$).
-    \item The Level 2 (Plane) and Level 3 (Cube) counters are updated through single-cycle integer subtraction.
-\end{enumerate}
-
-Because the lattice depth is fixed at $n=3$, the time complexity for deallocation is identical to allocation ($3\omega$). This symmetry ensures that the system overhead remains constant regardless of the frequency of memory "churn," eliminating the temporal spikes found in traditional coalescing algorithms \cite{knuth1997art}.
-
-\subsection{Operational Enforcement of $\Phi$}
-
-The Resilience Floor is the authoritative boundary of the system's operational domain. While traditional allocators attempt to satisfy requests until the address space is 100\% utilized—leading to $O(N)$ search patterns as fragmentation increases \cite{knowlton1965fast}—the \textit{iscandar} lattice utilizes the $\Gamma_3$ counter as a deterministic "circuit breaker."
-
-The decision logic for the Resolution Operator ($\Omega$) is defined as:
-\begin{equation}
-    \Omega(request) = 
-    \begin{cases} 
-      Resolve(p, r, s) & \text{if } \Gamma_3 < K \\
-      Refuse(Constant\_Time) & \text{if } \Gamma_3 \ge K 
-    \end{cases}
-\end{equation}
-where $K$ represents the discrete sector count at which the Resilience Floor is triggered ($K = 32,768 \times (1 - \Phi)$).
-
-\subsection{Summary of Empirical Performance}
-
-As detailed in the comparative analysis provided in Appendix A, this enforcement mechanism ensures that the system never enters the "fragmentation trap." By refusing to allocate beyond the floor, the system guarantees that the internal density of the 32-way branching structures never reaches a threshold where bit-mask steering would degrade into a linear probe. The results of these tests, comparing the lattice against standard binary buddy heaps and file allocation systems (scaled to 4096-byte sectors), confirm that the \textit{iscandar} system provides a flat temporal profile until the moment of refusal.\\
-
-\noindent \textbf{Proof of Coalescence Invariant:} \\
-Let $\Gamma_{total}$ be the sum of all leaf nodes $S_{0,i}$. At any discrete time $t$, the hierarchical counters must satisfy the invariant:
-\begin{equation}
-    \Gamma_3 = \sum \Gamma_2 = \sum \Gamma_1 = \sum \Gamma_0
-\end{equation}
-Since deallocation is defined as $\Gamma_x(t+1) = \Gamma_x(t) - 1$ for all levels $x \in \{0, 1, 2, 3\}$ along the specific resolution path, the invariant is preserved. Because this path is fixed at depth $n$, the state of the lattice is restored to a consistent, deterministic state in $O(n)$ time.
-
-\section{Observations}
-
-Earlier sections had already proven the Iscandar algorithm as deterministic for the main thrust of this paper. However, the Iscandar algorithm has properties explainable as useful observations.
-
-\subsection{As an extension to Binary Buddy Systems}
-The binary buddy system, originally proposed by Knowlton \cite{knowlton1965} and Knuth \cite{knuth1968}, attempted to mitigate search latency by utilizing a power-of-two partitioning scheme ($R=2$). While the binary buddy system offers efficient coalescence, its search complexity remains $O(\log_2 n)$. As memory address spaces have expanded from 16-bit to 32-bit and 64-bit architectures, the logarithmic depth of these trees has become a source of significant latency. Furthermore, at high utilization, binary buddy systems often suffer from "stalling" behaviors as the search algorithm traverses increasingly fragmented leaf nodes.\\
-
-This paper presents a generalization of buddy system principles to an \textbf{Arbitrary Radix} ($R=32$). By shifting from a binary tree to a high-radix fractal lattice, the depth of the search space is collapsed to a fixed architectural constant $k$. This structural shift moves memory management from the domain of probabilistic searching to the domain of \textbf{Geometric Coordinate Resolution}.
-
-\subsection{As a Symmetric Voronoi Partition}
-
-Per appendices we will show this lattice functions as a \textbf{Symmetric Voronoi Partition}, where the adjacency of "buddies" is a pre-baked geometric property of the address space rather than a calculated proximity. The adjacency graphed by the partition is in terms of the partition's total space "associating" with its handle, a wrapped pointer, rather than by each point in the partition's distance from the partition's centroid (such as homes next to a post office).
-
-\subsection{As Linear Programming}
-
-The operational stability of the system is maintained via an \textbf{Interior Point Method}---analogous to the projective transformations utilized in Karmarkar’s algorithm \cite{karmarkar1984}. By enforcing a mandatory \textbf{Resilience Floor} ($\Phi$), we ensure that the system avoids the "edges" of the feasible region, 
-
-\subsection{As Performing at Constant Time}
-
-Per appendices we will show this guarantees constant time allocation and deallocation under all specified operating conditions.
-
-
-\subsection{As Supporting Six Sigma Design.}
-
-Per appendices we will show that the compactness of this algorithm allows complete path coverage testing that works hand-in-hand with the earlier mentioned formal methods. Complete path coverage and formal methods together can be used to help certify this algorithm as a fault tolerant memory system.
-
-\section{Appendices}
-
-\subsection{Memory State Spaces}
-
-6.1.1.  Polytope formation at Cube level.\\
-
-6.1.1.1. The Cube Scale Allocator (Global Registrar)\\
-
-\begin{description}
-    \item[Domain:] Total Cube Volume resolution (addressable at $32^3$).
-    
-    \item[Summation Predicate:] 
-    \[ |C| = \sum_{i=0}^{31} (\text{Sector Count of Plane } i) \]
-    
-    \item[Discussion:] The Cube Scale Allocator serves as the unique 16-bit \textbf{"Gatekeeper"} of the architecture. It provides the primary fast-fail heuristic for the system; if a request $(S, M)$ is determined to be non-admissible at this tier, the algorithm immediately terminates without initiating a descent. This makes the registrar the most efficient filter in the hierarchy, ensuring that the cost of coordinate resolution is only paid when success is mathematically guaranteed.
-\end{description}
-
-
-The memory state space of the algorithm is in two dimensions, a pair of intersecting number lines, one number along the horizontal axis being the starting address of a wrapped pointer being granted by the algorithm, the other number along the vertical axis being the amount of memory under control by the wrapped pointer.  Both quantities are in units of memory allocation sectors.\\
-
-This first illustration shows a trivial Voronoi partition where the entire space controllable by a cube (32 * 32 * 32) sectors of memory can be associated by a wrapped pointer beginning at sector address zero (bottom left). This represents the only search polytope possible for an empty cube.\\
-
-The diagonal line represents the locus of points where a new wrapped pointer can occur, in an inverse relationship between the starting address and its permissible magnitude.\\
-
-
-\begin{tikzpicture}[x=0.4cm, y=0.4cm]
-    % Axes
-    \draw[->, thick] (0,0) -- (33,0) node[right, font=\small] {Sector Address ($S$)};
-    \draw[->, thick] (0,0) -- (0,33) node[above, font=\small] {Magnitude ($M$)};
-
-    % --- THE APEX ADMISSIBILITY POLYTOPE ---
-    % Admissible Space: The physical reality of the Cube.
-    \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (0,0) -- (32,0) -- (0,32) -- cycle;
-    
-    % The Rejection Zone
-    \fill[red!10, opacity=0.5] (0,32) -- (32,32) -- (32,0) -- cycle;
-
-    % --- 16-BIT REGISTER INSET ---
-    % The unique 16-bit register for the 32768 capacity check.
-    \node[draw, fill=white, thick, inner sep=5pt, font=\bfseries\tiny, align=center] at (10,10) {CUBE REGISTRAR\\16-BIT SECTOR COUNT\\(0 to 32768)};
-
-    % Logic Annotations
-    \node[green!80!black, font=\bfseries\tiny, align=center] at (10,4) {ADMISSIBLE\\SEARCH SPACE};
-    \node[red!70!black, font=\tiny, align=center, rotate=-45] at (21,21) {OUT OF BOUNDS\\(Immediate Reject)};
-    
-    % Hard Wall (S + M = 32768)
-    \draw[dashed, gray!60, thick] (0,32) -- (32,0); 
-
-    % Ticks
-    \draw[thick] (0,0.1) -- (0,-0.1) node[below=4pt, font=\tiny] {0};
-    \draw[thick] (32,0.1) -- (32,-0.1) node[below=4pt, font=\tiny] {32767};
-    \draw[thick] (0.1,0) -- (-0.1,0) node[left, font=\tiny] {1};
-    \draw[thick] (0.1,32) -- (-0.1,32) node[left, font=\tiny] {32768};
-
-\end{tikzpicture}
-
-\clearpage
-
-6.1.1 Polytope Formation At Row and Plane Levels
-
-6.1.1.1 The Large Allocator (Rows in Plane)
-
-\begin{description}
-    \item[Domain:] Row-join and sequence resolution within a 1,024-sector Plane manifold.
-    
-    \item[Summation Predicate:] 
-    \[ C_{plane} = \sum_{k=0}^{31} (C_{row,k} \cdot [y_{k} = 1]) \]
-    
-    \item[Discussion:] This tier represents a fractal expansion of the Level 1 logic. It treats individual rows as the atomic units of resolution, welding row-sequences to satisfy multi-row allocation requests. By utilizing the same \textbf{FSA submachine} logic as lower tiers, the Large Allocator maintains absolute $O(1)$ determinism across the plane's 1,024-sector domain.
-\end{description}
-
-6.1.1.2 The Huge Allocator (Planes in Cube)
-
-
-\begin{description}
-    \item[Domain:] Plane-join and sequence resolution within a 32,768-sector Cube manifold.
-    
-    \item[Summation Predicate:] 
-    \[ C_{huge} = \sum_{l=0}^{31} ( C_{plane,l} \cdot [z_{l} = 1] ) \]
-    
-    \item[Discussion:] This represents the final join-level resolution of the hierarchy. It manages the 32-radix plane counts, welding 2D plane segments into a unified 3D volume request. By treating planes as the fundamental unit of resolution at this tier, the system ensures that even the largest possible allocations are resolved through the same \textbf{FSA submachine} logic used at the atomic level, maintaining absolute $O(1)$ temporal parity.
-\end{description}
-
-\begin{tikzpicture}[x=0.42cm, y=0.42cm]
-    % Axes: Row Position vs Row Magnitude
-    \draw[->, thick] (0,0) -- (33,0) node[right, font=\small] {Row Position};
-    \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Row Magnitude};
-
-    % --- THE PLANE-LEVEL LATTICE (Rows as Bits) ---
-    % Normalizing the 10-row joined region to P=10 to P=20
-    
-    % Plane N: Busy Rows (0-9) - PINK
-    \foreach \x in {0,1,...,9} \fill[magenta!20, draw=white] (\x,-1) rectangle (\x+1,-2);
-    
-    % Plane N: Tail Fracture (Rows 10-14) - GREEN
-    \foreach \x in {10,11,...,14} \fill[green!25, draw=white] (\x,-1) rectangle (\x+1,-2);
-    
-    % RED WELD at P=15 (The Plane Boundary)
-    \draw[ultra thick, red, line cap=round] (15,-0.5) -- (15,-2.5);
-    
-    % Plane N+1: Head Fracture (Rows 15-19) - GREEN
-    \foreach \x in {15,16,...,19} \fill[green!25, draw=white] (\x,-1) rectangle (\x+1,-2);
-    
-    % Plane N+1: Busy Rows (20-31) - PINK
-    \foreach \x in {20,21,...,31} \fill[magenta!20, draw=white] (\x,-1) rectangle (\x+1,-2);
-    
-    % Frame
-    \draw[thick] (0,-1) rectangle (32,-2);
-    \node[below, font=\tiny] at (16,-2.2) {LARGE ALLOCATOR: PLANE BOUNDARY ROW JOIN};
-
-    % --- THE HONEST FRACTAL GEOMETRY (Locked to Row Indices) ---
-
-    % LEFT PINK TRIANGLE (Busy Row Space)
-    % Locked to: P=0 to P=10.
-    \fill[magenta!15, draw=magenta!50, thick] (0,1) -- (10,1) -- (0,11) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (3.5,6) {CLOSED};
-
-    % CENTER GREEN TRIANGLE (The 10-Row Joined Gap)
-    % Locked to: P=10 to P=20.
-    \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,1) -- (20,1) -- (10,11) -- cycle;
-    \draw[dashed, red, thick] (15,1) -- (15,6); % Weld continuation through search space
-    
-    \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,4) {JOINED\\ROW-SPACE};
-    \node[green!60!black, font=\tiny, rotate=-45] at (16.5,7) {$P+M=20$};
-
-    % RIGHT PINK TRIANGLE (Busy Row Space)
-    % Locked to: P=20 to P=32.
-    \fill[magenta!15, draw=magenta!50, thick] (20,1) -- (32,1) -- (20,13) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (23.5,6) {CLOSED};
-
-    % --- VERIFICATION ALIGNMENT ---
-    \draw[dashed, gray!40] (10,0) -- (10,1); % Left boundary
-    \draw[dashed, gray!40] (20,0) -- (20,1); % Right boundary
-    \draw[dashed, red!40] (15,0) -- (15,1);  % Symmetry center
-
-    % Ticks
-    \draw[thick] (10,0.1) -- (10,-0.1) node[below=4pt, font=\tiny] {10};
-    \draw[thick] (15,0.1) -- (15,-0.1) node[below=4pt, red, font=\tiny] {Weld};
-    \draw[thick] (20,0.1) -- (20,-0.1) node[below=4pt, font=\tiny] {20};
-    \draw[thick] (0.1,10) -- (-0.1,10) node[left, font=\tiny] {10};
-
-\end{tikzpicture}
-
-\begin{tikzpicture}[x=0.42cm, y=0.42cm]
-    % Axes: Plane Position vs Plane Magnitude
-    \draw[->, thick] (0,0) -- (33,0) node[right, font=\small] {Plane Position};
-    \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Plane Magnitude};
-
-    % --- THE VOLUME LATTICE (Planes as Bits) ---
-    % Fusing two memory segments at the Plane boundary (P=15)
-    
-    % Volume N: Busy Planes (0-9) - PINK
-    \foreach \x in {0,1,...,9} \fill[magenta!20, draw=white] (\x,-1) rectangle (\x+1,-2);
-    
-    % Volume N: Tail Fracture (Planes 10-14) - GREEN
-    % (Verified as boundary-clear by Large/Small Helpers)
-    \foreach \x in {10,11,...,14} \fill[green!25, draw=white] (\x,-1) rectangle (\x+1,-2);
-    
-    % RED WELD at P=15 (The Segment/Volume Boundary)
-    \draw[ultra thick, red, line cap=round] (15,-0.5) -- (15,-2.5);
-    
-    % Volume N+1: Head Fracture (Planes 15-19) - GREEN
-    % (Verified as boundary-clear by Large/Small Helpers)
-    \foreach \x in {15,16,...,19} \fill[green!25, draw=white] (\x,-1) rectangle (\x+1,-2);
-    
-    % Volume N+1: Busy Planes (20-31) - PINK
-    \foreach \x in {20,21,...,31} \fill[magenta!20, draw=white] (\x,-1) rectangle (\x+1,-2);
-    
-    % Frame
-    \draw[thick] (0,-1) rectangle (32,-2);
-    \node[below, font=\tiny] at (16,-2.2) {HUGE ALLOCATOR: VOLUME BOUNDARY PLANE JOIN};
-
-    % --- THE HONEST FRACTAL GEOMETRY (Locked to Plane Indices) ---
-
-    % LEFT PINK TRIANGLE (Busy Plane Space)
-    \fill[magenta!15, draw=magenta!50, thick] (0,1) -- (10,1) -- (0,11) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (3.5,6) {CLOSED};
-
-    % CENTER GREEN TRIANGLE (The 10-Plane Joined Gap)
-    \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,1) -- (20,1) -- (10,11) -- cycle;
-    \draw[dashed, red, thick] (15,1) -- (15,6); % Weld continuation
-    
-    \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,4) {JOINED\\PLANE-SPACE};
-    \node[green!60!black, font=\tiny, rotate=-45] at (16.5,7) {$P_{plane}+M_{plane}=20$};
-
-    % RIGHT PINK TRIANGLE (Busy Plane Space)
-    \fill[magenta!15, draw=magenta!50, thick] (20,1) -- (32,1) -- (20,13) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (23.5,6) {CLOSED};
-
-    % --- VERIFICATION ALIGNMENT ---
-    \draw[dashed, gray!40] (10,0) -- (10,1); 
-    \draw[dashed, gray!40] (20,0) -- (20,1); 
-    \draw[dashed, red!40] (15,0) -- (15,1);  
-
-    % Ticks
-    \draw[thick] (10,0.1) -- (10,-0.1) node[below=4pt, font=\tiny] {Plane 10};
-    \draw[thick] (15,0.1) -- (15,-0.1) node[below=4pt, red, font=\tiny] {Weld};
-    \draw[thick] (20,0.1) -- (20,-0.1) node[below=4pt, font=\tiny] {Plane 20};
-    \draw[thick] (0.1,10) -- (-0.1,10) node[left, font=\tiny] {10};
-
-\end{tikzpicture}
-
-\clearpage
-
-6.1.2. Polytope Formation Between Rows\\
-
-6.1.2.1. The Small Allocator (Sector-Join)\\
-
-\begin{description}
-    \item[Domain:] Sector-join and sequence resolution within a 32-sector Row manifold.
-    
-    \item[Summation Predicate:] 
-    \[ C_{row} = \sum_{j=0}^{31} (C_{bits,j} \cdot [x_{j} = 1]) \]
-    
-    \item[Discussion:] This tier resolves the "fracture" typically found at sector boundaries. It functions as the primary submachine for the first level of welding, utilizing the \textbf{LHL/RHL Handshake Oracle} to join partial sector tails and heads into a single contiguous magnitude. By treating the row as a unified geometric manifold, the system ensures that boundary seams are transparent to the resolution logic.
-\end{description}
-
-
-\begin{tikzpicture}[x=0.42cm, y=0.42cm]
-    % Axes
-    \draw[->, thick] (0,0) -- (33,0) node[right, font=\small] {Joined Position ($P_{total}$)};
-    \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Magnitude ($M$)};
-
-    % --- LOGICAL BIT-ROW (The Ground Truth) ---
-    % Normalizing the 10-bit joined region to P=10 to P=20
-    
-    % Section N: (Bits 0-9) - BUSY/CLOSED (Pink)
-    \foreach \x in {0,1,...,9} \fill[magenta!15, draw=black!40] (\x,-1) rectangle (\x+1,-2);
-    
-    % Section N: Tail Fracture (Bits 10-14) - AVAILABLE (Green)
-    \foreach \x in {10,11,...,14} \fill[green!20, draw=black!40] (\x,-1) rectangle (\x+1,-2);
-    
-    % RED WELD at P=15 (The Sector Boundary)
-    \draw[ultra thick, red, line cap=round] (15,-0.5) -- (15,-2.5);
-    
-    % Section N+1: Head Fracture (Bits 15-19) - AVAILABLE (Green)
-    \foreach \x in {15,16,...,19} \fill[green!20, draw=black!40] (\x,-1) rectangle (\x+1,-2);
-    
-    % Section N+1: (Bits 20-29) - BUSY/CLOSED (Pink)
-    \foreach \x in {20,21,...,29} \fill[magenta!15, draw=black!40] (\x,-1) rectangle (\x+1,-2);
-    
-    % Labels
-    \node[below, font=\tiny, color=magenta!80] at (5,-2) {Sector $N$ (Busy)};
-    \node[below, font=\tiny, color=green!80!black] at (15,-2.5) {Joined Gap (10-bit)};
-    \node[below, font=\tiny, color=magenta!80] at (25,-2) {Sector $N+1$ (Busy)};
-
-
-    % --- THE HONEST GEOMETRY (The Triangles) ---
-    
-    % FLANKING CLOSED SPACE (Left - Sector N)
-    % Base at 0 (internal), P_base = 0. Apex P=0, M=10.
-    % Boundary ends exactly at P=10.
-    \fill[magenta!15, draw=magenta!50, thick] (0,1) -- (10,1) -- (0,11) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (3.5,6) {CLOSED};
-
-    % THE JOINED UNITES POLYTOPE (The 10-bit target)
-    % Base starts exactly at P=10 and ends at P=20.
-    % Base width=10. Apex P=10, M=10.
-    % Hypotenuse equation: P + M = 20.
-    \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,1) -- (20,1) -- (10,11) -- cycle;
-    
-    % Weld continuing through the Polytope
-    \draw[dashed, red, thick] (15,1) -- (15,6);
-    
-    % Annotations
-    \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,4) {JOINED\\SPACE};
-    \node[green!60!black, font=\tiny, rotate=-45] at (16.5,7) {$P+M=20$};
-
-    % FLANKING CLOSED SPACE (Right - Sector N+1)
-    % Base starts exactly at P=20 and ends at P=32 (max radix).
-    % Boundary starts exactly at P=20.
-    \fill[magenta!15, draw=magenta!50, thick] (20,1) -- (32,1) -- (20,13) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (23.5,6) {CLOSED};
-
-
-    % Ticks for the 10-bit proof
-    \draw[thick] (10,0.1) -- (10,-0.1) node[below=2pt, font=\tiny] {10};
-    \draw[thick] (15,0.1) -- (15,-0.1) node[below=2pt, red, font=\tiny] {15};
-    \draw[thick] (20,0.1) -- (20,-0.1) node[below=2pt, font=\tiny] {20};
-    \draw[thick] (0.1,10) -- (-0.1,10) node[left, font=\tiny] {10};
-
-\end{tikzpicture}
-
-\clearpage
-
-6.1.3. Polytope Formation Within Row\\
-
-6.1.3.1 The Tiny Allocator (Intra-Row)\\
-
-\begin{description}
-    \item[Domain:] The bit-lattice contained within a single Row manifold.
-    
-    \item[Summation Predicate:] 
-    \[ C_{bits} = \sum_{i=0}^{31} (\neg b_{i} \cdot [w_{i} = 1]) \]
-    
-    \item[Discussion:] This represents the leaf-level execution of the deterministic descent. The submachine utilizes the \textbf{Center LUT} as a Finite State Automaton (FSA) to identify contiguous zero-bit sequences within a sector. This isolation forms the atomic \textit{green triangle} of the search polytope, resolving the physical bit-offset in a fixed hardware cycle.
-\end{description}
-
-\begin{tikzpicture}[x=0.4cm, y=0.4cm]
-    % Axes
-    \draw[->, thick] (0,0) -- (15,0) node[right, font=\small] {Joined Position};
-    \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Magnitude ($M$)};
-
-    % REPRESENTATION OF THE "FRACTURE" WELD (The Ground Truth)
-    % We normalize the view to focus only on the 10-bit join (5 Tail + 5 Head)
-    
-    % The Left Fracture (Sector N Tail - Bits 27--31)
-    \foreach \x in {0,1,...,4} \fill[green!25, draw=black!50] (\x,-1) rectangle (\x+1,-2);
-    % Broken end on the left
-    \draw[dashed, black!50] (-0.5,-1) -- (0,-1);
-    \draw[dashed, black!50] (-0.5,-2) -- (0,-2);
-    \node[left, font=\tiny, color=blue!80] at (0,-1.5) {Sector $N$ Tail\ \ };
-
-    % The Right Fracture (Sector N+1 Head - Bits 0--4)
-    \foreach \x in {5,6,7,8,9} \fill[green!25, draw=black!50] (\x,-1) rectangle (\x+1,-2);
-    % Broken end on the right
-    \draw[dashed, black!50] (9.5,-1) -- (10,-1);
-    \draw[dashed, black!50] (9.5,-2) -- (10,-2);
-    \node[right, font=\tiny, color=blue!80] at (10,-1.5) {\ \ Sector $N+1$ Head};
-
-    % THE ULTRA-THICK WELD POINT (The Proof of Continuity)
-    \draw[ultra thick, red, line cap=round] (5,-0.8) -- (5,-2.2);
-    \node[below, red, font=\bfseries\tiny] at (5,-2.2) {WELD};
-
-    % THE JOINED UNITES POLYTOPE (M=1 to 10)
-    % Normalized: Base 0--10. Apex (0,10).
-    \fill[green!20, draw=green!60, ultra thick] (0,1) -- (10,1) -- (0,11) -- cycle;
-
-    % Logic Annotations
-    \node[green!80!black, font=\bfseries\tiny, align=center] at (3.5,4) {FRACTURED\\WELD\\POLYTOPE};
-    \node[green!60!black, font=\tiny, rotate=-45] at (6.5,7) {$P+M=10$};
-    
-    % Weld Continuing Through the Polytope
-    \draw[dashed, red, thick] (5,1) -- (5,6);
-
-    % Ticks for the 10-unit proof
-    \draw[thick] (0,0.1) -- (0,-0.1) node[below=2pt, font=\tiny] {0};
-    \draw[thick] (5,0.1) -- (5,-0.1) node[below=2pt, red, font=\tiny] {5};
-    \draw[thick] (10,0.1) -- (10,-0.1) node[below=2pt, font=\tiny] {10};
-    \draw[thick] (0.1,10) -- (-0.1,10) node[left, font=\tiny] {10};
-
-\end{tikzpicture}
-
-6.3 Performing at Constant Time
+The memory space is defined as an $n$-level lattice $L$ of fixed depth ($n=3$) and a constant Arity ($A=32$). This geometric structure remains invariant regardless of physical sector width.
+
+\section{The Formal Hierarchy of Resolution}
+
+\subsection{Level 0: The Tiny Allocator (Intra-Row)}
+\textbf{Domain:} Bit-lattice within a single Row manifold. \\
+\textbf{Summation Predicate:} 
+\[ C_{bits} = \sum_{i=0}^{31} (\neg b_{i} \cdot [w_{i} = 1]) \]
+\textbf{Discussion:} Leaf-level execution using the Center LUT as a Finite State Automaton (FSA). This identifies contiguous zero-bit sequences (the ``Atomic Green Triangle'') to resolve the physical bit-offset.
+
+
+\subsection{Level 1: The Small Allocator (Sector-Join)}
+\textbf{Domain:} Sector-join and sequence resolution within a 32-sector Row manifold. \\
+\textbf{Summation Predicate:} 
+\[ C_{row} = \sum_{j=0}^{31} (C_{bits,j} \cdot [x_{j} = 1]) \]
+\textbf{Discussion:} Resolves fractures at sector boundaries using the LHL/RHL Handshake Oracle, ensuring boundary transparency in the search polytope.
+
+
+\subsection{Level 2: The Large Allocator (Rows in Plane)}
+\textbf{Domain:} Row-join and sequence resolution within a 1,024-sector Plane manifold. \\
+\textbf{Summation Predicate:} 
+\[ C_{plane} = \sum_{k=0}^{31} (C_{row,k} \cdot [y_{k} = 1]) \]
+\textbf{Discussion:} A fractal expansion treating rows as units, maintaining $O(1)$ determinism across the plane manifold.
+
+\subsection{Level 3: The Huge Allocator (Planes in Cube)}
+\textbf{Domain:} Plane-join and sequence resolution within a 32,768-sector Cube. \\
+\textbf{Summation Predicate:} 
+\[ C_{huge} = \sum_{l=0}^{31} (C_{plane,l} \cdot [z_{l} = 1]) \]
+\textbf{Discussion:} Final join-level resolution welding 2D plane segments into a 3D volume request.
+
+\subsection{Level 4: The Cube Scale Allocator (Global Registrar)}
+\textbf{Domain:} Total Cube Volume resolution (Address $32^3$). \\
+\textbf{Summation Predicate:} 
+\[ |C| = \sum_{i=0}^{31} (\text{Sector Count of Plane } i) \]
+\textbf{Discussion:} The 16-bit ``Gatekeeper.'' It provides the fast-fail heuristic; if a request is not admissible here, the algorithm never pays the cost to descend.
 
 \section{The $K=13$ Formal Technical Audit}
+To perform an honest audit, we map the 13 macro-instructions to the discrete predicates of the Iscandar hierarchy.
 
-To perform an "honest" audit for the monograph, we must map each of the 13 macro-instructions ($K=13$) to the specific discrete predicates of the Iscandar hierarchy. This ensures the hardware execution is a transparent reflection of the underlying mathematics. The audit assumes a 32-radix descent where each level acts as a "Gate" that must be cleared to reach the subsequent tier.
-
-\subsection{Phase I: The Admissibility Gate (Level 3)}
-\textbf{Predicate:} $P_{Apex} \iff |C| \ge M$
-
-\begin{enumerate}[label=\textbf{Instruction \arabic*:}, leftmargin=4em]
-    \item \textbf{Load Global Registrar:} Fetch the 16-bit register located at the Apex sector address. This register holds the absolute scalar sum $|C|$.
-    \item \textbf{Admissibility Comparison:} Compare $|C|$ against the requested magnitude $M$. 
-    \begin{itemize}
-        \item \textit{If False:} Immediate Exit (Fast-Fail).
-        \item \textit{If True:} The domain is guaranteed to contain the requested magnitude.
-    \end{itemize}
+\begin{enumerate}[label=\textbf{Instruction \arabic*:}, leftmargin=3.5em]
+    \item \textbf{Load Global Registrar:} Fetch the 16-bit register at the Apex.
+    \item \textbf{Admissibility Comparison:} Compare $|C|$ against requested magnitude $M$.
+    \item \textbf{Index Plane Metadata:} Index into the 32-radix plane metadata table.
+    \item \textbf{Load Row-Summary:} Fetch 15-bit metadata for the target plane.
+    \item \textbf{Candidate Selection:} Identify the first row-sequence satisfying the weld.
+    \item \textbf{Heuristic Branch/Scan:} $O(1)$ scan on remaining 31 row-metadata entries.
+    \item \textbf{RHL Access:} Perform LUT lookup on the starting row's tail.
+    \item \textbf{LHL Access:} Perform LUT lookup on the final row's head.
+    \item \textbf{Scalar Summation:} Add $Lead + Intermediates + Trail$.
+    \item \textbf{Weld Validation:} Finalize inter-row continuity check.
+    \item \textbf{Center LUT Index:} Access bit-occupancy for the target sector.
+    \item \textbf{Triangle Projection:} Map LUT result to physical bit-offset.
+    \item \textbf{Commitment/Return:} Write 15-bit metadata and return address $S$.
 \end{enumerate}
 
-\subsection{Phase II: The Plane-Level Resolution (Level 2)}
-\textbf{Predicate:} $P_{Plane} \iff \sum_{i \in \text{Plane}} (\text{Row}_i \cdot [\text{Inclusion}_i]) \ge M$
+\section{Uranus 5 Verification: Source and Report}
 
-\begin{enumerate}[label=\textbf{Instruction \arabic*::}, start=3, leftmargin=4em]
-    \item \textbf{Index Plane Metadata:} Using the address bits, index into the 32-radix plane metadata table.
-    \item \textbf{Load Row-Summary:} Fetch the 15-bit metadata for the target plane (summarizing the 32 constituent rows).
-    \item \textbf{Candidate Selection:} Evaluate the plane-state to identify the first row-sequence that satisfies the weld.
-    \item \textbf{Heuristic Branch/Scan:} If the primary candidate has a "local excessive count," scan the remaining 31 row-metadata entries (an $O(1)$ operation on 15-bit scalars).
-\end{enumerate}
-
-\subsection{Phase III: The Row-Level Weld (Level 1)}
-\textbf{Predicate:} $\Phi_{Weld} \iff RHL(\text{Row}_n) + \text{Intermediates} + LHL(\text{Row}_{n+m}) \ge M$
-
-\begin{enumerate}[label=\textbf{Instruction \arabic*::}, start=7, leftmargin=4em]
-    \item \textbf{Leading Fragment Access (RHL):} Perform a Look-Up Table (LUT) lookup on the starting row's tail.
-    \item \textbf{Trailing Fragment Access (LHL):} Perform a LUT lookup on the final row's head.
-    \item \textbf{Scalar Summation:} Add $Lead + Intermediates + Trail$. (Intermediates are added as pre-verified constants).
-    \item \textbf{Weld Validation:} Compare the result against $M$ to finalize the inter-row continuity.
-\end{enumerate}
-
-\subsection{Phase IV: The Bit-Lattice Isolation (Level 0)}
-\textbf{Predicate:} $P_{Tiny} \iff \sum_{i=start}^{end} \neg b_i = M$
-
-\begin{enumerate}[label=\textbf{Instruction \arabic*::}, start=11, leftmargin=4em]
-    \item \textbf{Center LUT Index:} Access the bit-occupancy table for the target sector.
-    \item \textbf{Triangle Projection:} Map the LUT result to the physical bit-offset (the 1D "Green Triangle").
-    \item \textbf{Commitment/Return:} Write the new occupancy to the 15-bit metadata and return the start address $S$.
-\end{enumerate}
-
-\subsection{Summary of Hardware Operations}
-
-\begin{table}[h]
-\centering
-\begin{tabular}{@{}llcl@{}}
-\toprule
-\textbf{Level} & \textbf{Predicate} & \textbf{Count} & \textbf{Hardware Operation} \\ \midrule
-3 (Apex) & Global Admissibility & 2 & 16-bit Load/Compare \\
-2 (Huge) & Plane-Row Continuity & 4 & 32-Radix Metadata Scan \\
-1 (Small) & Inter-Row Weld & 4 & LHL/RHL + Scalar Add \\
-0 (Tiny) & Bit-Isolation & 3 & Center LUT + Offset \\ \midrule
-\textbf{Total} & & \textbf{13} & \textbf{Fixed Time $K$} \\ \bottomrule
-\end{tabular}
-\caption{Fixed Instruction Tax across the Iscandar Hierarchy}
-\end{table}
-
-\subsection{Critical Observations}
-\begin{itemize}
-    \item \textbf{The 16-bit Divergence:} Only Instruction 1 interacts with the 16-bit width; all subsequent metadata fetches (3, 4, 7, 8) are 15-bit, preserving the 32-radix symmetry.
-    \item \textbf{Instruction Density:} The "Small Allocator" (Level 1) is the densest part of the math because it manages the fracture between rows.
-    \item \textbf{Zero-Jitter Execution:} Because every path through this audit results in exactly 13 instructions (or a fast-fail at Instruction 2), the "Wicked Witch" of non-deterministic latency is mathematically eliminated.
-\end{itemize}
-
-\section{Uranus 5 Verification: Source and Performance Report}
-
-The following section presents the raw APL test harness used within the Uranus 5 environment alongside the resulting architectural equivalence report. This documentation serves as the empirical verification of the $O(1)$ constant-path architecture.
-
-\subsection{Uranus 5 Source Code (APL)}
-
+\subsection{Uranus 5 Source Code (APL Verbatim)}
 \begin{verbatim}
 ⍝ === PROJECT ISCANDAR-OZ: URANUS 5 INSTRUCTIONAL SUITE ===
 ⍝ Geometry: 32-Radix (32,768 Sectors) | Determinism: Verified
@@ -636,7 +117,6 @@ CV ← Std_Dev ÷ (Mean_Ops + 1E¯10)
 \end{verbatim}
 
 \subsection{Uranus 5 Performance Report}
-
 \begin{verbatim}
 '------------------------------------------------'
 ' ISCANDAR-OZ: ARCHITECTURAL EQUIVALENCE REPORT '
@@ -656,5 +136,8 @@ CV ← Std_Dev ÷ (Mean_Ops + 1E¯10)
 'DETERMINISM         | O(1) CONSTANT PATH CONFIRMED'
 '------------------------------------------------'
 \end{verbatim}
+
+\section{Conclusion}
+The absolute lack of variance (Flux = 0) in the Uranus 5 audit proves that the Iscandar-OZ architecture eliminates the non-deterministic ``Wicked Witch'' of search latency. By maintaining a constant 13-instruction tax across all manifolds, the system provides an honest projection for high-availability, real-time environments.
 
 \end{document}
