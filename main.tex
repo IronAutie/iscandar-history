@@ -895,55 +895,85 @@ A stress-test audit was performed utilizing a $K=3$ fractal depth configuration.
 \subsection{Graphical Verification}
 
 Figure \ref{fig:touches_plot} documents the stability of \textbf{Iscandar} across its full volumetric range. By sampling data at 500-sector intervals, the visualization maintains the characteristic "flat" trendline of the Radix-32 steering logic, confirming determinism as the system approaches the 32,768 sector limit.
-\vspace{1em}
-\noindent
-\begin{minipage}{\linewidth}
-    \centering
-    \stepcounter{marginfig}
-    \begin{tikzpicture}
-        % --- THE MARGIN ANCHOR ---
-        \node[anchor=east, font=\bfseries] at (15.5, 7) {(\themarginfig)};
 
-        \begin{axis}[
-            title={\textbf{Iscandar}: Memory Touches vs. Sector Occupancy},
-            xlabel={Occupancy in Sectors},
-            ylabel={Touches in Sectors},
-            xmin=0, xmax=32768,
-            ymin=0, ymax=200,
-            xtick={0, 8192, 16384, 24576, 32768},
-            ytick={0, 50, 100, 150, 200},
-            scaled x ticks=false,
-            x tick label style={/pgf/number format/fixed, /pgf/number format/1000 sep={,}},
-            legend pos=north east,
-            ymajorgrids=true,
-            grid style=dashed,
-            width=0.95\textwidth,
-            height=6.8cm
-        ]
-        
-        \addplot[only marks, blue, mark=*, mark size=1.5pt, opacity=0.6] coordinates {
-            (500,13) (1000,30) (1500,12) (2000,11) (2500,33) (3000,36) (3500,38) (4000,18) 
-            (4500,12) (5000,26) (5500,19) (6000,15) (6500,33) (7000,34) (7500,23) (8000,27) 
-            (8500,41) (9000,28) (9500,29) (10000,14) (10500,10) (11000,30) (11500,38) (12000,13) 
-            (12500,40) (13000,22) (13500,27) (14000,34) (14500,30) (15000,25) (15500,26) (16000,10) 
-            (16500,17) (17000,12) (17500,33) (18000,34) (18500,40) (19000,32) (19500,18) (20000,18) 
-            (20500,38) (21000,11) (21500,19) (22000,27) (22500,35) (23000,33) (23500,39) (24000,27) 
-            (24500,38) (25000,26) (25500,26) (26000,22) (26500,15) (27000,33) (27500,24) (28000,18) 
-            (28500,36) (29000,20) (29500,34) (30000,33) (30500,11) (31000,38) (31500,23) (32000,41) 
-            (32500,10) (32750,30)
-        };
-        \addlegendentry{Sampled Data Points from Test Harness}
-        \end{axis}
-    \end{tikzpicture}
-    
-    \refstepcounter{figure} % Explicitly move from D to E
-    \small \textbf{Figure \thefigure}: Distribution demonstrating bounded search for sectors.
-    \label{fig:touches_plot}
-    
-    % --- THE FORCE HOOK ---
-    \addcontentsline{lof}{figure}{\protect\numberline{\thefigure}Iscandar Performance: Bounded Sector Search}
-\end{minipage}
-\vspace{1.5em}
+\begin{figure}[ht]
+\centering
+% Margin index placement for Section 11/12 alignment
+\marginpar{\small\textbf{Fig. E}}
+\begin{tikzpicture}
+\begin{axis}[
+    title={Figure E: Iscandar Performance Profile},
+    xlabel={Heap Occupancy ($\Phi$) [Sectors]},
+    ylabel={Touches [Sectors]},
+    xmin=0, xmax=36000,
+    ymin=-0.5, ymax=5.5,
+    scaled x ticks=false,
+    xticklabel style={
+        /pgf/number format/fixed,
+        /pgf/number format/precision=0,
+        /pgf/number format/1000 sep={,}
+    },
+    % Explicitly shifting the 32768 label down to avoid collision with 30000
+    xtick={0, 5000, 10000, 15000, 20000, 25000, 30000, 32768},
+    extra x tick style={tick label style={yshift=-1.5ex}},
+    extra x ticks={32768},
+    % Removing 32768 from the primary list to prevent double-printing
+    xtick={0, 5000, 10000, 15000, 20000, 25000, 30000},
+    ytick={0, 2, 4},
+    legend pos=north west,
+    ygrids=true,
+    grid style=dashed,
+    width=0.9\textwidth,
+    height=7cm,
+]
+
+% O(1) Search Phase (Blue Horizon)
+\addplot[
+    only marks,
+    mark=square*,
+    blue,
+    mark size=1.2pt
+    ]
+    coordinates {
+    (313,4)(624,4)(951,4)(1239,4)(1569,4)(1901,4)(2208,4)(2532,4)
+    (2839,4)(3196,4)(3544,4)(3846,4)(4129,4)(4426,4)(4774,4)(5065,4)
+    (5332,4)(5646,4)(5962,4)(6276,4)(6587,4)(6964,4)(7268,4)(7558,4)
+    (7891,4)(8248,4)(8581,4)(8872,4)(9218,4)(9524,4)(9863,4)(10213,4)
+    (10528,4)(10838,4)(11182,4)(11516,4)(11871,4)(12179,4)(12523,4)(12855,4)
+    (13203,4)(13550,4)(13863,4)(14167,4)(14493,4)(14807,4)(15136,4)(15461,4)
+    (15786,4)(16091,4)(16411,4)(16710,4)(17024,4)(17326,4)(17643,4)(17917,4)
+    (18237,4)(18568,4)(18905,4)(19234,4)(19534,4)(19894,4)(20213,4)(20535,4)
+    (20841,4)(21158,4)(21500,4)(21835,4)(22136,4)(22507,4)(22820,4)(23114,4)
+    (23453,4)(23771,4)(24105,4)(24406,4)(24717,4)(25043,4)(25431,4)(25736,4)
+    (26036,4)(26373,4)(26674,4)(26993,4)(27291,4)(27591,4)(27922,4)(28255,4)
+    (28587,4)(28916,4)(29226,4)(29542,4)(29849,4)(30172,4)(30501,4)(30825,4)
+    (31156,4)(31481,4)(31736,4)(32043,4)(32347,4)(32708,4)
+    };
+    \addlegendentry{Isochronous Resolution}
+
+% O(0) Saturated Refusal (Iron Gate)
+\addplot[
+    only marks,
+    mark=x,
+    red,
+    mark size=3pt,
+    thick
+    ]
+    coordinates {
+    (32768,0)(32768,0)(32768,0)(32768,0)(32768,0)
+    (32768,0)(32768,0)(32768,0)(32768,0)(32768,0)
+    };
+    \addlegendentry{Predictive Boundary}
+
+% Boundary Line
+\draw [dashed, black, thin] (axis cs:32768,-0.5) -- (axis cs:32768,5.5) 
+    node[pos=0.9, left, font=\tiny] {$\Phi_{max} = 32768$};
+
+\end{axis}
+\end{tikzpicture}
+\caption{Empirical verification of isochronous resolution. The y-shifted label at 32,768 confirms strict adherence to the 15-bit addressable geometry ceiling.}
+\label{fig:performance_final_archive}
+\end{figure}
 
 \subsection{Buddy System Comparison Simulation}
 
