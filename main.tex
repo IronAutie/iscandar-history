@@ -165,78 +165,39 @@ The \textbf{Iscandar} system \textbf{enforces} a mandatory occupancy boundary, t
 \subsection{Axiom IV: Rotational Steering ($\vec{R}$)}
 A rotational steering vector \textbf{balances} the lattice structure, preventing localized occupancy ``hot spots''. To prevent high-density clusters that necessitate bit-shuffling or metadata updates, the system utilizes $\vec{R}$ to distribute entropy across the manifold [3].
 
-\subsection{Axiom V: The Contiguity Guarantee}
+\subsection{Axiom V: The Contiguity Guarantee and Spatial Entropy}
 
-Any resolved coordinate sequence \textbf{represents} a continuous physical block in the \textbf{Iscandar} lattice. An Oracle in the form of look-up tables \textbf{validates} that the combined leading and trailing fragments across a sector-join \textbf{equal} the requested magnitude $M$ without gaps.
+Any resolved coordinate sequence \textbf{represents} a continuous physical block in the \textbf{Iscandar} lattice. However, functional contiguity does not imply spatial perfection; a perfect Oracle would preclude fragmentation entirely. The \textbf{Iscandar} Oracle prioritizes \textbf{Temporal Invariance} over maximum packing density, explicitly trading spatial capacity for the elimination of search-time jitter. By utilizing the \textbf{Occupancy Limit ($\Phi$)} as a deterministic guardrail, the system \textbf{maintains} the manifold within a manageable entropy domain. This \textbf{prevents} the lattice from reaching a threshold where bit-mask steering degrades into a non-deterministic linear probe.
 
-\section{Inductive Proof of Deterministic Resolution}
+\section{Formal Proof of Deterministic Path Termination}
 
-\noindent \textbf{Theorem:} A fixed-depth $\mathcal{L}$ of Arity $\mathcal{A}=32$ \textbf{establishes} deterministic resolution for operator $\Omega$.
+\noindent \textbf{Theorem:} A fixed-depth $\mathcal{L}$ of Arity $\mathcal{A}=32$ \textbf{establishes} deterministic resolution by mapping every request to a finite execution path.
 
-\subsection{The Complexity Proof}
+\subsection{The Steering-Based Complexity Model}
+The resolution time $T$ in the \textbf{Iscandar} architecture is a discrete function of the sub-lattice depth and the specific heuristic path $\mathcal{P}$ identified by the hierarchical occupancy counters ($\Gamma$). Unlike systems where $T = O(\log N)$ or $O(N)$ based on heap fragmentation, the path selection in Iscandar is an admission-gate function that \textbf{ensures} each operation terminates.
 
-The $\mathcal{L}$ \textbf{maps} its branching factor to the processor word-width to \textbf{optimize} the classical buddy system search [4]. Let $\mathcal{L}_{n}$ \textbf{designate} a sub-lattice of level $n$, where resolution time $T(\mathcal{L}_{n})$ \textbf{represents} the total instruction count ($\iota$) required to \textbf{resolve} a memory coordinate. Resolution time $T(\mathcal{L}_{n})$ \textbf{represents} the instruction count ($\iota$) for \textbf{resolving} a memory coordinate in a level-$n$ sub-lattice [5]. \\
+\begin{equation}
+    T(\mathcal{L}) = f(\Gamma) \in \{ \text{Path}_{\text{Nano}}, \text{Path}_{\text{Tiny}}, \text{Path}_{\text{Small}}, \text{Path}_{\text{Large}}, \text{Path}_{\text{Huge}}, \text{Path}
+    _{\text{Cube}}\}
+\end{equation}
+
+\subsection{Guaranteed Path Termination}
+Every resolution path is constructed from a fixed sequence of \textit{Instruction Groups} that eliminate runtime searching. 
 
 \begin{enumerate}
-    \item \textbf{Base Case ($n = 1$):} At the Row level ($L_1$), a pre-calculated \textbf{Instruction Group mapping} resolves a free sector via a static Look-Up Table. This operation maintains atomicity by collapsing the resolution into a single-cycle, table-driven state transition.
-    
-    \begin{equation}
-    T(\mathcal{L}_{1}) = I_{base}
-    \label{eq:base_case} % Ensure this label exists
-\end{equation}
-\manualeq{eq:base_case}{Base Case: Level 1 Resolution}
-
-    \item \textbf{Inductive Step:} Given the invariant that resolution time for a level-$k$ structure is $T(\mathcal{L}_{k}) = kI_{base}$, resolving a request at level $k+1$ (e.g., the Plane level) \textbf{requires}:
-    \begin{itemize}
-        \item The occupancy sum $\Gamma_{k+1}$ is \textbf{evaluated} via bitmask comparison to \textbf{select} a viable Level-$k$ child. When $\mathcal{A}$ \textbf{aligns} with a power of 2, this lookup and steering operation \textbf{consumes} a single table lookup [6].
-        \item The resolution operation \textbf{descends} to the level-$k$ $\mathcal{L}$ identified by the steering vector from the Oracle.
-        \item The resulting recurrence relation is:
-      \begin{equation}
-    T(\mathcal{L}_{k+1}) = I_{base} + T(\mathcal{L}_k) = I_{base} + kI_{base} = (k+1)I_{base}
-    \label{eq:inductive_step}
-\end{equation}
-\manualeq{eq:inductive_step}{Inductive Resolution of the $(k+1)$-tier Lattice}
-        \item \textbf{Termination Constraint:} The recursion \textbf{terminates} at $\mathcal{L}_{1}$, where the hardware bit-scan \textbf{yields} the final effective address offset.
-    \end{itemize}
+    \item \textbf{Heuristic Selection:} The Global Registrar and intermediate sentinels use bitmask comparison to select the viable path.
+    \item \textbf{Atomic Resolution:} For leaf-level requests, the system executes either a single-pass (Nano) or a bimodal ``Two-Bite'' probe (Tiny or Small).
+    \item \textbf{Path Invariance:} Once a path is engaged, the algorithm terminates when the physical bit-offset is returned.
 \end{enumerate}
 
-
 \subsection{Conclusion of Determinism}
-By induction, the resolution time for any $n$-level $\mathcal{L}$ structure is strictly $nI_{base}$. While standard stochastic allocators exhibit execution times as a function of free-block count ($N$)—typically yielding $O(\log N)$ or worse in fragmented states [7]—the \textbf{Iscandar} architecture \textbf{collapses} this complexity. $n$ as a constant \textbf{enforces} deterministic latency of resolution regardless of heap saturation.\\
-
-In our model, $n$ is an architectural constant (e.g., $n = 3$); so total execution time is:
-\begin{equation}
-    T_{total} = 3I_{base}
-    \label{eq:total_complexity}
-\end{equation}
-\manualeq{eq:total_complexity}{Total Resolution Complexity for 3D Manifolds}
-
-This result confirms that for a Cube of $\mathcal{A}^k$ Sectors, the time required to resolve an address is invariant. This performance is maintained provided the system stays in the operational domain of the Occupancy Limit ($\Phi$). By trading spatial capacity for temporal certainty, the architecture \textbf{eliminates} the ``temporal jitter'' that characterizes non-deterministic real-time systems. [8]
-
-\subsection{Temporal Consistency and Boundary Management}
-To \textbf{preclude} latency variability during boundary-straddling, \textbf{Iscandar} \textbf{utilizes} a computational handshake or ``Oracle,'' a precomputed resolution-path for non-aligned straddle cases, \textbf{ensuring} the instruction count for a $\mathcal{A}$-sector block remains \textbf{isochronous} regardless of its alignment relative to the Tier-1 registers. By \textbf{eliminating} the alignment-check penalty, the architecture \textbf{preserves} a deterministic execution window across the entire addressable space.\\
-
-Here we describe the ``Factory'' math used to pre-calculate the Oracle tables, transforming a search problem into a static retrieval of pre-verified geometric facts.
-
-\subsubsection{Generating the Left and Right Hand Lookup Oracle}
-Part of the Oracle are tables of 1D vectors that map every possible bit-permutation of a Guard Shard to its boundary potential.   These are pre-calculated \textit{Finite State Automata} that eliminate runtime scanning functioning as a direct mapping of the manifold’s geometry onto the Look-Up Tables (LUTs) of the Phase IV hardware.
-\begin{itemize}
-    \item \textbf{Right-Hand Lookahead (RHL):} For any shard state $S$, the table stores the starting index of the longest contiguous zero-run terminating at the right-hand boundary. If the terminal bit is \textbf{1}, the value is \textbf{Null}.
-    \item \textbf{Left-Hand Lookahead (LHL):} Maps the shard state to the final bit position of the zero-run starting from the left-hand boundary. If the initial bit is \textbf{1}, the value is \textbf{Null}.
-    \end{itemize}
-
-\subsubsection{Generating the Center Oracle (2D Matrix)}
-The Core Shard utilizes a 2D matrix ($2^{\mathcal{A}/4} \times \mathcal{A}/4$) to resolve internal gaps.
-\begin{itemize}
-    \item \textbf{Mechanism:} Exhaustive enumeration of all $2^{\mathcal{A}/4}$ bit-patterns against all possible length requests within the core.
-    \item \textbf{Math:} Each cell $(i, j)$ is filled using a windowed zero-run algorithm. This transforms the shard into a precalculated \textit{Finite State Automata}, where the resultant state-space is compressed into the Phase IV hardware’s static lookup tables for single-cycle gap resolution.
-\end{itemize}
+Determinism in Iscandar is defined as the \textbf{guarantee of termination} within a bounded execution window for any given heuristic path, trading away spatial capacity for these predetermined paths.
 
 \section{Deterministic Coalescence and the Occupancy Limit}
 Maintaining temporal determinism in a dynamic environment \textbf{requires} a deallocation process (coalescence) \textbf{mirroring} the efficiency of the allocation logic. Operational stability of the \textbf{Iscandar} lattice uses discrete enforcement of the Occupancy Limit($\Phi$), \textbf{precluding} the high-entropy states typically associated with conventional allocators [9].
 
 \subsection{Symmetric Coalescence Mechanics}
-Here, coalescence is not a variable-time search for adjacent free blocks, but a deterministic state update. Whether the Oracle descends to clear a bit-position or propagates the release upward through the hierarchy, the operation remains isochronous. Because the bit-address of any Sector ($S_0$) is a fixed function of its coordinates, the update to the occupancy counters ($\Gamma$) consumes the same instruction count ($I_{base}$) as the initial resolution. \textbf{The alignment is self-similar across all hierarchical depths, a property derived from the Structural Arity ($\mathcal{A}$) rather than a pre-defined set of size-classes.}
+To maintain determinism our deallocation process mirrors the efficiency of the allocation logic, a state update performed upon the occupancy counters. The bit-address of any Sector ($S_0$) is a fixed function of its coordinates. Updating the occupancy counters ($\Gamma$) thus consumes a predictable instruction count ($\iota_{base}$) identical to the initial resolution.
 
 \begin{enumerate}
     \item The atomic leaf node state $\Gamma_0$ is toggled to 0 (Available).
@@ -244,7 +205,7 @@ Here, coalescence is not a variable-time search for adjacent free blocks, but a 
     \item The Level-2 (Plane) and Level-3 (Cube) counters are updated through integer subtraction.
 \end{enumerate}
 
-Because the lattice depth is fixed at $n = 3$, time complexity for allocation is identical to deallocation ($3I_{base}$). This symmetry ensures that system overhead remains constant regardless of memory ``churn,'' eliminating the temporal spikes typically made by coalescing algorithms. [10]
+Because the lattice depth is fixed at $n = 3$, the time complexity for deallocation is defined by the same path-specific constraints as allocation.
 
 \subsection{Operational Enforcement of $\Omega$}
 The Occupancy Limit ($\Phi$) \textbf{serves} as the authoritative boundary of the system’s operational domain. While traditional allocators attempt to satisfy requests until the address space is 100\% utilized---leading to $O(N)$ search patterns as fragmentation increases [11]---our  lattice uses the $\Gamma_{3}$ counter as a deterministic ``circuit breaker,'' depending on the memory request of the moment.\\
@@ -834,38 +795,53 @@ We map each instruction group to a specific predicate of the \textbf{Iscandar} h
 \setcounter{equation}{17}
 \noindent \textbf{Predicate:} 
 \begin{equation}
-    P_{Tiny} \iff \sum_{i=start}^{end} \neg b_i = L
-    \label{eq:predicate_tiny}
+    P_{leaf} \iff 
+    \begin{cases} 
+    \text{Oracle}_{C}(S_{word}, L) & \text{if } L \le \mathcal{A}/4 \\
+    \text{Oracle}_{L}(S_{word}, L) \lor \text{Oracle}_{R}(S_{word}, L) & \text{if } L > \mathcal{A}/4
+    \end{cases}
+    \label{eq:predicate_leaf}
 \end{equation}
-\manualeq{eq:predicate_tiny}{The Tiny-Tier Bit-Fit Predicate}
+\manualeq{eq:predicate_leaf}{The Leaf-Tier Path Selection Predicate}
 \vspace{12pt}
 
 \begin{enumerate}
     \setcounter{enumi}{10}
-    \item \textbf{Instruction Group 11:} Center LUT Index: Access the bit-occupancy table for the target sector.
-    \item \textbf{Instruction Group 12:} Triangle Projection: Map the LUT result to the physical bit-offset, resolving the Atomic Polytope within the Row manifold.
-    \item \textbf{Instruction Group 13:} Commitment/Return: Write the new occupancy to the 15-bit metadata and return the start address $S$.
+    \item \textbf{Instruction Group 11: Path Selection (Nano vs. Tiny):} The logic evaluates the request magnitude $L$. If $L \le \mathcal{A}/4$, the system engages the Nano path; otherwise, the bimodal Tiny path is engaged.
+    
+    \item \textbf{Instruction Group 12: Bimodal Execution (Tiny Path):} For Tiny requests, the system executes a primary probe via the Left Oracle. Upon a null result, a deterministic secondary probe via the Right Oracle is triggered to capture straddle-runs.
+    
+    \item \textbf{Instruction Group 13: Atomic Resolution (Nano Path):} For Nano requests, the system performs a single-cycle intersection using the Center Oracle to isolate the seed polytope.
+
+    \item \textbf{Instruction Group 14: Triangle Projection:} The successfully resolved bit-run from either path is mapped to the physical offset, finalizing the Atomic Polytope isolation.
 \end{enumerate}
 
-\section{Desk Check Summary: The Tiny Search ($L \le \mathcal{A}$)}}
+\section{Desk Check Summary: Nano and Tiny Resolutions ($L \le \mathcal{A}$)}
 
-Here we posit a hypothetical 32-bit machine providing the data structures needed to demonstrate one example through the Instruction Groups, on possible "Tiny Search" tracing  the sequence needed to resolve an allocation request $L$ of $\mathcal{A}$  sectors or fewer.
+To demonstrate the path-specific determinism of the architecture, we trace two leaf-level resolution requests. These paths navigate the hierarchical gates using fixed-latency Instruction Groups, ensuring termination within a predictable execution window regardless of heap saturation.
 
 \begin{enumerate}
-    \item \textbf{Admissibility Check:} The Global Registrar compares the request size $L$ against the aggregate occupancy ($\Gamma$) and entropy thresholds.
-    \item \textbf{Plane Navigation:} The Rotational Steering Vector ($\vec{R}$) is applied at the Cube level to select a candidate Plane.
-    \item \textbf{Metadata Retrieval:} The 32-bit Row-Summary mask for the selected plane is loaded into the register.
-    \item \textbf{Row Isolation:} A mask check identifies the first available Row index within the plane summary.
-    \item \textbf{Sector Load:} The 32-bit data word representing the candidate Row is fetched.
-    \item \textbf{Hierarchical Bisection:} The 32-bit row is divided into two 16-bit "Half-Words" to initiate the Oracle probe.
-    \item \textbf{Oracle (High):} A LUT probe returns the Right Hand Lookahead for high 16 bits.
-    \item \textbf{Oracle (Low):} A LUT probe returns the Left Hand Lookahead for low 16 bits.
-    \item \textbf{Boundary Intersection:} The system calculates the "Center-Straddle" by summing the RHL of the high half and the LHL of the low half.
-    \item \textbf{Core Shard Interrogation:} If the straddle fails, the 32-bit row is treated as four 8-bit quadrants for unrolled sequential validation.
-    \item \textbf{Geometric Resolution:} The successful bit-run is mapped to a physical offset using the Triangle Projection method.
-    \item \textbf{Lattice Commitment:} The new occupancy state is masked into the row, and local metadata is updated.
-    \item \textbf{Deterministic Exit:} The system returns the resolved pointer.
+    \item \textbf{Admissibility (Gate 3):} For any request $L$, the Global Registrar fetches the 16-bit register at the Apex sector address. It performs a single-cycle comparison against $\Gamma_{Apex}$ to permit or fast-fail the hierarchical descent.
+    
+    \item \textbf{Hierarchical Steering (Gates 2 and 1):} The system applies the Rotational Steering Vector ($\vec{R}$) to select a candidate Plane and Row. This bypasses saturated volumes using metadata sentinels (PMASK and RMASK) without bit-level interrogation.
+
+    \item \textbf{The Nano Path ($L \le \mathcal{A}/4$):}
+    \begin{itemize}
+        \item \textbf{Mechanism:} This path isolates a single byte-aligned segment of the Row to extract a seed polytope.
+        \item \textbf{Atomic Resolution:} The hardware indexes the \textbf{Center Oracle} for a single-pass intersection.
+        \item \textbf{Geometric Event:} An \textit{Atomic Intersection} maps the Row's bit-pattern directly to an exact fit of available sectors.
+    \end{itemize}
+
+    \item \textbf{The Tiny Path ($\mathcal{A}/4 < L \le \mathcal{A}$):}
+    \begin{itemize}
+        \item \textbf{The First Bite:} To mitigate the fragmentation inherent in single-pass lookups, the system first indexes the \textbf{Left Oracle} to identify an eligible contiguous run.
+        \item \textbf{The Second Bite:} If the primary pass returns a null state, the system immediately triggers a deterministic secondary probe via the \textbf{Right Oracle}. This bimodal mechanism ensures straddle-runs across internal alignment boundaries are captured.
+    \end{itemize}
+    
+    \item \textbf{Lattice Commitment:} The resulting run is mapped to a pointer of a given bit offset and length. The new occupancy state is committed to the local metadata registers, and the system returns the resolved wrapped pointer.
 \end{enumerate}
+
+\noindent \textbf{Verification:} Whether the system uses an Oracle to resolve a request through a single-cycle Nano intersection or a dual-pass Tiny probe, the execution path length is fixed. If the Oracle were perfect we would have no fragmentation, but our approach in using it as part of a lattice search gives us a competitive reduction of fragmentation in comparison with a heap.
 
 \section{Volumetric Analysis}
 
@@ -879,70 +855,7 @@ A stress-test audit was performed utilizing a $K=3$ fractal depth configuration.
 \end{itemize}
 
 \subsection{Test Data (generated from Section 10)}
-
-\begin{longtable}{rrr}
-\caption{\textbf{Iscandar} Performance Metrics ($A=32, K=3$)} \\
-\toprule
-\textbf{Occupancy (Sectors)} & \textbf{Memory Request (Sectors)} & \textbf{Memory Touches (Sectors)} \\ \midrule
-\endfirsthead
-
-\multicolumn{3}{c}%
-{{\bfseries \tablename\ \thetable{} -- Continued from previous page}} \\
-\toprule
-\textbf{Occupancy (Sectors)} & \textbf{Memory Request (Sectors)} & \textbf{Memory Touches (Sectors)} \\ \midrule
-\endhead
-
-\bottomrule
-\endfoot
-
-\bottomrule
-\endlastfoot
-
-50 & 4 & 33 \\
-100 & 3 & 36 \\
-150 & 5 & 32 \\
-200 & 6 & 37 \\
-250 & 5 & 13 \\
-300 & 6 & 11 \\
-350 & 4 & 12 \\
-400 & 5 & 37 \\
-450 & 4 & 11 \\
-500 & 4 & 13 \\
-550 & 6 & 32 \\
-600 & 6 & 11 \\
-650 & 4 & 26 \\
-700 & 3 & 31 \\
-750 & 2 & 20 \\
-800 & 6 & 25 \\
-850 & 3 & 41 \\
-900 & 5 & 33 \\
-950 & 2 & 36 \\
-1000 & 6 & 30 \\
-1050 & 6 & 37 \\
-1100 & 6 & 33 \\
-1150 & 6 & 10 \\
-1200 & 4 & 15 \\
-1250 & 5 & 36 \\
-1300 & 2 & 19 \\
-1350 & 2 & 17 \\
-1400 & 2 & 23 \\
-1450 & 6 & 41 \\
-1500 & 5 & 12 \\
-1550 & 5 & 32 \\
-1600 & 5 & 17 \\
-1650 & 5 & 12 \\
-1700 & 6 & 36 \\
-1750 & 2 & 27 \\
-1800 & 2 & 12 \\
-1850 & 2 & 20 \\
-1900 & 4 & 13 \\
-1950 & 3 & 12 \\
-2000 & 5 & 11 \\
-\dots & \dots & \dots \\
-32650 & 5 & 33 \\
-32700 & 3 & 11 \\
-32750 & 4 & 30 \\
-\end{longtable}
+  To generate, follow these instructions.
 
 \subsection{Graphical Verification}
 
@@ -1104,85 +1017,6 @@ To contrast, a theoretical binary buddy system was simulated for a heap size com
 
 For immediate demonstration: this listing can be copied directly from the LaTeX or PDF file into the clipboard, and pasted into a new instance of the "Dyalog APL/W-64 20.0 Unicode" GUI running on Windows 11.  
 
-\pagestyle{empty} % Silences the page numbers starting here
-\begin{HonestLab}
-\addcontentsline{lol}{lstlisting}{Section 11: Iscandar Laboratory Source Code}
-
-⍝ --- ISCANDAR-OZ: MASTER ARCHIVE 16.5.2 ---
-⍝ Finalized for National Drop Archival
-⍝ Logic: Primitive Branching only | Zero-Metabolic Guardrails
-
-∇ INIT_GEOMETRY
-  ⎕IO ← 1 ⋄ A ← 32
-  LATTICE ← 32768⍴0
-  RMASK ← 1024⍴0
-  PMASK ← 32⍴0
-  occ ← 0
-  ⎕ ← 'ISCANDAR-OZ: MANIFOLD INITIALIZED (32768 SECTORS)'
-∇
-
-∇ Z ← ALLOC Size;r_idx;row_start;offset;p;r;eligible_rows;i
-  Z ← 0 ⋄ i ← 1
-  →((occ + Size) > 32768)/REFUSE_HARD
-  eligible_rows ← (⍳1024)/⍨RMASK=0
-  →(0=⍴eligible_rows)/REFUSE_SOFT 
-ROW_LOOP: 
-  r_idx ← eligible_rows[i]
-  row_start ← ((r_idx-1)×32)+1 ⋄ offset ← 0
-OFF_LOOP:
-  →(∨/LATTICE[row_start + offset + ⍳Size-1])/NEXT_OFF
-  LATTICE[row_start + offset + ⍳Size-1] ← 1
-  RMASK[r_idx] ← ∧/LATTICE[row_start + ⍳32-1]
-  p ← ⌈r_idx÷32
-  PMASK[p] ← ∧/RMASK[((p-1)×32) + ⍳32]
-  Z ← (row_start + offset) 4 ⋄ →0
-NEXT_OFF:
-  offset +← 1 ⋄ →(offset ≤ (32-Size))/OFF_LOOP
-NEXT_ROW:
-  i +← 1 ⋄ →(i ≤ ⍴eligible_rows)/ROW_LOOP
-REFUSE_SOFT: Z ← 0 4 ⋄ →0 
-REFUSE_HARD: Z ← 0 0 ⋄ →0 
-∇
-
-∇ FREE(Addr Size);r_idx;p;row_start
-  LATTICE[Addr+⍳Size-1] ← 0
-  r_idx ← ⌈Addr÷32
-  p ← ⌈r_idx÷32
-  row_start ← ((r_idx-1)×32)+1
-  RMASK[r_idx] ← ∧/LATTICE[row_start + ⍳32-1]
-  PMASK[p] ← ∧/RMASK[((p-1)×32) + ⍳32]
-  occ -← Size
-∇
-
-∇ trace ← GEN_GRAPH_DATA;sz;R;addr;cost;stat;cnt;i
-  trace ← 0 4⍴0 ⋄ cnt ← 0
-  ⎕ ← '--- GENERATING HIGH-RES DATA (1:50 SAMPLE) ---'
-LOOP:
-  sz ← ?12 ⋄ R ← ALLOC sz
-  addr ← 1↑R ⋄ cost ← 2⊃R
-  :If addr > 0
-      occ +← sz ⋄ stat ← 1
-  :Else
-      stat ← 0
-  :EndIf
-  cnt +← 1
-  →(0 ≠ 50 | cnt)/SKIP
-  trace ← trace ⍪ occ sz cost stat
-SKIP:
-  →(occ < 32768)/LOOP
-  
-  ⍝ --- SATURATION AUDIT (Branch-Logic Version) ---
-  i ← 1
-AUDIT_LOOP:
-  sz ← ?12 ⋄ R ← ALLOC sz
-  trace ← trace ⍪ occ sz (2⊃R) 0
-  i +← 1 ⋄ →(i ≤ 10)/AUDIT_LOOP
-  ⎕ ← '   OCC      REQ     COST    STAT'
-∇
-INIT_GEOMETRY
-GEN_GRAPH_DATA 32768
-
-\end{HonestLab}
 
 \clearpage % Ensures the last page of the listing also has no number
 
