@@ -10,7 +10,6 @@
 \usepackage{geometry}
 \usepackage{pgfplots} \pgfplotsset{compat=1.18}
 
-\usepackage{qrcode}
 \usepackage[most]{tcolorbox} % Shading helpers for callouts/results
 
 \usepackage{fancyvrb}
@@ -18,12 +17,6 @@
 
 \usepackage{fontspec}
 \setmonofont{FreeMono}
-\usepackage{fancyvrb}
-
-\usepackage[most]{tcolorbox}
-\usepackage{fancyvrb}
-
-\usepackage[most]{tcolorbox}
 \usepackage{fancyvrb}
 
 % Updated environment: removed commandchars to protect braces
@@ -74,6 +67,7 @@
     boxrule=0.5pt
 }
 
+\usepackage[utf8]{inputenc}
 
 \usepackage{marginnote}
 
@@ -120,8 +114,7 @@
 \usepackage{fontspec}
 \usepackage{fancyvrb}
 
-% FreeMono is standard on Overleaf and handles APL glyphs correctly
-\setmonofont{FreeMono}
+\setmonofont{FreeMono} 
 
 % Create a "Protected" environment that ignores the listing margin grid
 \DefineVerbatimEnvironment{HonestLab}{Verbatim}{
@@ -235,11 +228,11 @@ The \textbf{Iscandar} system \textbf{enforces} a mandatory occupancy boundary, t
 
 \subsection{Axiom IV: The Contiguity Guarantee and Spatial Entropy}
 
-Any resolved coordinate sequence \textbf{represents} a continuous physical block in the \textbf{Iscandar} lattice. However, functional contiguity does not imply spatial perfection; a perfect Oracle would preclude fragmentation entirely. The \textbf{Iscandar} Oracle prioritizes \textbf{Temporal Invariance} over maximum packing density, explicitly trading spatial capacity for the elimination of search-time jitter. By utilizing the \textbf{Occupancy Limit ($\Phi$)} as a deterministic guardrail, the system \textbf{maintains} the manifold within a manageable entropy domain. This \textbf{prevents} the lattice from reaching a threshold where bit-mask steering degrades into a non-deterministic linear probe.
+Any resolved coordinate sequence \textbf{represents} a continuous physical block in the \textbf{Iscandar} lattice. However, functional contiguity does not imply spatial perfection; a perfect Oracle would preclude fragmentation entirely. Our Oracles (Center, Left, and Right) prioritize determinism over maximum packing density. 
 
 \subsection{Axiom V: The Coordinate-Address Identity}
 
-The \textit{Iscandar} architecture rejects the traditional separation of logical address space and physical memory geometry. Per Axiom V, we establish a \textbf{Bijective Identity} between a machine-word pointer $P$ (wrapped pointer, see section 5) and its corresponding lattice coordinate $\vec{C}$.\\ 
+The architecture used here rejects the traditional separation of logical address space and physical memory geometry, by establishing a \textbf{Bijective Identity} between a machine-word pointer $P$ (wrapped pointer, see section 5) and its corresponding lattice coordinate $\vec{C}$.\\ 
 
 In a system of depth $k$ and arity $A$, any specific sector is represented by a coordinate vector:
 \begin{equation}
@@ -285,12 +278,51 @@ This listing is the APL implementation of the basic structure of Section 2.
 \noindent \textbf{Theorem:} A fixed-depth $\mathcal{L}$ of Arity $\mathcal{A}=32$ \textbf{establishes} deterministic resolution by mapping every request to a finite execution path.
 
 \subsection{The Steering-Based Complexity Model}
-The resolution time $T$ in the \textbf{Iscandar} architecture is a discrete function of the sub-lattice depth and the specific heuristic path $\mathcal{P}$ identified by the hierarchical occupancy counters ($\Gamma$). Unlike systems where $T = O(\log N)$ or $O(N)$ based on heap fragmentation, the path selection in Iscandar is an admission-gate function that \textbf{ensures} each operation terminates.
+The resolution time $T$ in the \textbf{Iscandar} architecture is a discrete function of the sub-lattice depth and the specific heuristic path $\mathcal{P}$ identified by the memory request size in sectors ($L$). Unlike systems where $T = O(\log N)$ or $O(N)$ based on heap fragmentation, the path selection in Iscandar uses a decision table to ensure each heuristic terminates.
 
 \begin{equation}
     T(\mathcal{L}) = f(\Gamma) \in \{ \text{Path}_{\text{Nano}}, \text{Path}_{\text{Tiny}}, \text{Path}_{\text{Small}}, \text{Path}_{\text{Large}}, \text{Path}_{\text{Huge}}, \text{Path}
     _{\text{Cube}}\}
 \end{equation}
+
+\begin{Iscandar}[Decision.apl]
+:Namespace Decision
+    ⍝ Iscandar Resolution Dispatcher
+    ⍝ Maps request size to Tier FSA
+    
+    (⎕IO ⎕ML) ← 0 1
+    Table ← ⍬ ⍝ Dispatch Lattice
+
+    ∇ Init;C;N;T;S;L;H;B
+      :Access Public Shared
+      ⍝ Localize Constants for Clarity
+      B ← ##.CONSTANTS.BYTE
+      R ← ##.CONSTANTS.ROW
+      P ← ##.CONSTANTS.PLANE
+      C ← ##.CONSTANTS.CUBE
+      
+      ⍝ Shape table to full Cube range
+      Table ← C ⍴ ⊂##.Null
+      
+      ⍝ Tier Mapping via Byte-Arity
+      Table[1+⍳B]     ← ⊂##.Nano
+      Table[B+⍳(R-B)] ← ⊂##.Tiny
+      Table[R+⍳R]     ← ⊂##.Small
+      Table[(2×R)+⍳(P-(2×R))] ← ⊂##.Large
+      Table[P+⍳(C-P)] ← ⊂##.Huge
+      Table[C]        ← ⊂##.Cube
+    ∇
+
+    ∇ res ← Call idx
+      :Access Public Shared
+      ⍝ FSA Pivot: Executes Tier logic
+      res ← (Table[idx]) ⍬
+    ∇
+:EndNamespace
+
+Decision.Init
+Decision ← Decision.Call
+\end{Iscandar}
 
 \subsection{Guaranteed Path Termination}
 Every resolution path is constructed from a fixed sequence of \textit{Instruction Groups} that eliminate runtime searching. 
@@ -318,25 +350,18 @@ To maintain determinism our deallocation process mirrors the efficiency of the a
 
 Because the lattice depth is fixed at $n = 3$, the time complexity for deallocation is defined by the same path-specific constraints as allocation.
 
-\subsection{Operational Enforcement of $\Omega$}
-The Occupancy Limit ($\Phi$) \textbf{serves} as the authoritative boundary of the system’s operational domain. While traditional allocators attempt to satisfy requests until the address space is 100\% utilized---leading to $O(N)$ search patterns as fragmentation increases [11]---our  lattice uses the $\Gamma_{3}$ counter as a deterministic ``circuit breaker,'' depending on the memory request of the moment.\\
+\subsection{Geometric Feasibility and the Resolution Operator ($\Omega$)}
+Unlike traditional allocators that suffer from $O(N)$ search patterns as utilization approaches 100\% \cite{Knuth98}, the Iscandar lattice treats the heap as a deterministic volume. The system does not utilize a static occupancy limit; instead, it enforces a dynamic gate based on the current requested length ($L$) and the total surviving capacity of the cube ($\Gamma_3$).\\
 
-The decision logic for the Resolution Operator ($\Omega$) is:
+The Resolution Operator ($\Omega$) acts as a volumetric circuit breaker. By evaluating a request against remaining free sectors before invoking any Oracle, we ensure resolution only proceeds within the feasible region of the memory manifold \cite{Karmarkar84}. The decision logic is defined as:
+
 \begin{equation}
-\Omega(\text{L}) = 
+\Omega(L) = 
 \begin{cases} 
-\text{Resolve}(p, r, s) & \text{if } \Gamma_{3} < K \\
-\text{Refuse}(\text{Constant Time}) & \text{if } \Gamma_{3} \geq K 
+\text{Resolve}(p, r, s) & \text{if } L \le (\Gamma_3 - \text{Occupancy}) \\
+\text{Refuse} & \text{if } L > (\Gamma_3 - \text{Occupancy}) 
 \end{cases}
-\label{eq:admission_control}
 \end{equation}
-\manualeq{eq:admission_control}{Deterministic Admission Control Function}
-where $K$ is the sector threshold at which the Occupancy Limit is triggered ($K = \mathcal{A}^k \times (1 - \Phi)$)
-
-\subsection{Summary of Empirical Performance}
-
-This enforcement mechanism ensures the system never enters the ``fragmentation trap.'' By refusing to allocate beyond the occupancy limit ($\Phi$), \textbf{Iscandar} guarantees that the internal density of the $\mathcal{A}$-way branching structures never reaches a threshold where bit-mask steering degrades to a linear probe. This confirms a \textbf{flat temporal profile} until the moment of refusal.
-\vspace{10pt}
 
 \subsection{Proof of Coalescence Invariant}
 
@@ -1507,6 +1532,131 @@ for ([double]$d=0; $d -lt 4gb; $d++) {
   }
 }
 $W.Close(); $S_i.Close()
+\end{Iscandar}
+
+\begin{Iscandar}[WrappedPointer.apl]
+:Namespace WrappedPointer
+    (⎕IO ⎕ML) ← 0 1
+
+    ∇ MarkRows(P s);p;r;idx;rem;cur;len
+      :Access Public Shared
+      ⍝ 1. Linearize Coordinates to 1024-Row Vector
+      (p r idx) ← Unwrap P
+      cur ← (p × 32) + r
+      
+      ⍝ 2. Handle Leading Row (Partial)
+      len ← 32 ⌊ (32 - idx) ⌊ s
+      MarkLeadingRow p r idx len
+      
+      rem ← s - len ⋄ cur +← 1
+      
+      ⍝ 3. Driver Loop for Entire Rows
+      :While rem ≥ 32
+          MarkEntireRow (⌊cur÷32) (32|cur)
+          cur +← 1 ⋄ rem -← 32
+      :EndWhile
+      
+      ⍝ 4. Handle Trailing Row (Partial)
+      :If rem > 0
+          MarkTrailingRow (⌊cur÷32) (32|cur) rem
+      :EndIf
+      
+      ⍝ 5. Hierarchical Update
+      ##.Γ2[p] +← s
+    ∇
+
+    ⍝ --- Row Specialists (ArXiv-Safe Literals) ---
+
+    ∇ MarkEntireRow(p r)
+      ⍝ Saturate 32 sectors (0xFFFFFFFF)
+      ##.L[p;r] ← 4294967295
+      ##.Γ1[p;r] ← 32
+    ∇
+
+    ∇ MarkLeadingRow(p r idx s);m
+      m ← ##.BIT.Mask s idx
+      ##.L[p;r] (bitwise_or)← m
+      ##.Γ1[p;r] +← s
+    ∇
+
+    ∇ MarkTrailingRow(p r s);m
+      m ← ##.BIT.Mask s 0
+      ##.L[p;r] (bitwise_or)← m
+      ##.Γ1[p;r] +← s
+    ∇
+
+    ∇ MarkRowCounters(P s);p;r;idx;cur;end;len;rem
+      :Access Public Shared
+      ⍝ 1. Extract Absolute Row Indices
+      (p r idx) ← Unwrap P
+      cur ← (p × 32) + r    ⍝ Starting Row (0-1023)
+      
+      ⍝ 2. Calculate Leading Row Segment
+      len ← 32 ⌊ (32 - idx) ⌊ s
+      ##.Γ1[⌊cur÷32;32|cur] +← len
+      
+      rem ← s - len
+      cur +← 1
+      
+      ⍝ 3. Fast-Forward Full Rows
+      :While rem ≥ 32
+          ##.Γ1[⌊cur÷32;32|cur] ← 32
+          cur +← 1
+          rem -← 32
+      :EndWhile
+      
+      ⍝ 4. Final Trailing Segment
+      :If rem > 0
+          ##.Γ1[⌊cur÷32;32|cur] +← rem
+      :EndIf
+    ∇
+
+    ∇ MarkPlaneCounters(P s);p;r;idx;cur;rem;len
+      :Access Public Shared
+      ⍝ 1. Extract Plane Index
+      (p r idx) ← Unwrap P
+      cur ← p               ⍝ Starting Plane (0-31)
+      
+      ⍝ 2. Calculate Leading Plane Segment
+      ⍝ Plane capacity is 1024 sectors (32*32)
+      len ← 1024 ⌊ (1024 - (r × 32) + idx) ⌊ s
+      ##.Γ2[cur] +← len
+      
+      rem ← s - len
+      cur +← 1
+      
+      ⍝ 3. Fast-Forward Full Planes
+      :While rem ≥ 1024
+          ##.Γ2[cur] ← 1024
+          cur +← 1
+          rem -← 1024
+      :EndWhile
+      
+      ⍝ 4. Final Trailing Plane Segment
+      :If rem > 0
+          ##.Γ2[cur] +← rem
+      :EndIf
+    ∇
+
+    ∇ MarkCubeCounter(P s)
+      :Access Public Shared
+      ⍝ Atomic Update to Cube-Level Occupancy
+      ⍝ P: Pointer (Unused here, but kept for interface symmetry)
+      ⍝ s: Total length of the allocation span
+      
+      ##.count +← s
+    ∇
+
+    ∇ Mark(P s)
+      :Access Public Shared
+      ⍝ Top-Level Orchestration: Geometric Commitment
+      MarkRows P s          ⍝ 1. Flip Physical Bitmasks (L)
+      MarkRowCounters P s    ⍝ 2. Sync Row-Level Counters (Γ1)
+      MarkPlaneCounters P s  ⍝ 3. Sync Plane-Level Counters (Γ2)
+      MarkCubeCounter P s    ⍝ 4. Sync Cube-Level Occupancy
+    ∇
+
+:EndNamespace
 \end{Iscandar}
 
 \clearpage % Ensures the last page of the listing also has no number
