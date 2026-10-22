@@ -62,6 +62,7 @@
 % --- PREAMBLE FRONT-MATTER SETUP ---
 \usepackage{tocloft} % For custom lists
 \usepackage{hyperref} % For PDF bookmarks
+\usepackage{float}
 
 % 1. Set ToC Depth: Section and Subsection only
 \setcounter{tocdepth}{2}
@@ -94,20 +95,22 @@ Traditional heap management architectures, such as the binary buddy system, inhe
 
 % A. Table of Contents
 \cleardoublepage
-\pdfbookmark[0]{Contents}{toc} % Hidden bookmark for PDF sidebar
+\pdfbookmark[0]{Contents}{toc} 
 \tableofcontents
 \newpage
 
 % B. List of Figures
 \cleardoublepage
-\addcontentsline{toc}{section}{\listfigurename}
+\phantomsection % Ensures the TOC link points to the top of the page
+\addcontentsline{toc}{section}{\listfigurename} 
 \listoffigures
 \newpage
 
-% C. List of Equations
+% C. List of Equations (Our 18-strong proof)
 \cleardoublepage
-\addcontentsline{toc}{section}{\listequationname}
-\listofmyequations
+\phantomsection
+\addcontentsline{toc}{section}{List of Equations}
+\listofmyequations % Or whatever command you defined for your LOE
 \newpage
 
 % D. List of APL Listings
@@ -422,64 +425,64 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 
 
 
-% --- COMPLETE DIAGRAM: HUGE ALLOCATOR ---
-\stepcounter{marginfig}
-\begin{tikzpicture}[x=0.42cm, y=0.42cm]
-    % --- THE MARGIN ANCHOR (Matches Equation Numbering Position) ---
-    % Places the figure letter in parentheses at the far right
-    \node[anchor=east, font=\bfseries] at (34, 15) {(\themarginfig)};
+% --- FIGURE: HUGE ALLOCATOR ---
+\begin{figure}[ht!]
+    \centering
+    \stepcounter{marginfig}
+    \begin{tikzpicture}[x=0.42cm, y=0.42cm]
+        % --- THE MARGIN ANCHOR ---
+        % Places the figure letter in parentheses at the far right
+        \node[anchor=east, font=\bfseries] at (34, 15) {(\themarginfig)};
 
-    % --- AXES & DIMENSION LABELS ---
-    \draw[->, thick] (0,0) -- (33,0);
-    
-    % Label: Spelled out, below the line, RHS flush with arrow tip (33,0)
-    \node[anchor=north east, font=\small, text=black!80] at (33,-0.1) {Plane Position ($P_{plane}$)};
-    
-    % Vertical Axis: Plane Magnitude
-    \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Plane Magnitude ($M_{plane}$)};
+        % --- AXES & DIMENSION LABELS ---
+        \draw[->, thick] (0,0) -- (33,0);
+        
+        % Label: Plane Position
+        \node[anchor=north east, font=\small, text=black!80] at (33,-0.1) {Plane Position ($P_{plane}$)};
+        
+        % Vertical Axis: Plane Magnitude
+        \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Plane Magnitude ($M_{plane}$)};
 
-    % --- THE VOLUME LATTICE (S3 TIER) ---
-    % Shifted to y=-3 to -4 to accommodate the Plane Position label
-    \foreach \x in {0,1,...,9} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
-    \foreach \x in {10,11,...,14} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
-    \foreach \x in {15,16,...,19} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
-    \foreach \x in {20,21,...,31} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
-    
-    % Frame and Volume Boundary Weld
-    \draw[thick] (0,-3) rectangle (32,-4);
-    \draw[ultra thick, red, line cap=round] (15,-2.5) -- (15,-4.5);
-    \node[below, font=\tiny, yshift=-2.0cm] at (16,-4) {HUGE ALLOCATOR: VOLUME BOUNDARY PLANE JOIN};
+        % --- THE VOLUME LATTICE (S3 TIER) ---
+        \foreach \x in {0,1,...,9} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
+        \foreach \x in {10,11,...,14} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
+        \foreach \x in {15,16,...,19} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
+        \foreach \x in {20,21,...,31} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
+        
+        % Frame and Volume Boundary Weld
+        \draw[thick] (0,-3) rectangle (32,-4);
+        \draw[ultra thick, red, line cap=round] (15,-2.5) -- (15,-4.5);
+        \node[below, font=\tiny, yshift=-0.5cm] at (16,-4) {HUGE ALLOCATOR: VOLUME BOUNDARY PLANE JOIN};
 
-    % --- THE MANIFOLD GEOMETRY (PLANE-SCALE POLYTOPES) ---
+        % --- THE MANIFOLD GEOMETRY (PLANE-SCALE POLYTOPES) ---
 
-    % LEFT PINK TRIANGLE: Closed Plane Space
-    % Top vertex aligned to 10 on the vertical axis
-    \fill[magenta!15, draw=magenta!50, thick] (0,0) -- (10,0) -- (0,10) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (3.5,3.5) {CLOSED};
+        % LEFT PINK TRIANGLE: Closed Plane Space
+        \fill[magenta!15, draw=magenta!50, thick] (0,0) -- (10,0) -- (0,10) -- cycle;
+        \node[magenta!80, font=\tiny, rotate=-45] at (3.5,3.5) {CLOSED};
 
-    % CENTER GREEN TRIANGLE: The 10-Plane Joined Gap (Crossing Weld)
-    % Top vertex aligned to 10 on the vertical axis
-    \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,0) -- (20,0) -- (10,10) -- cycle;
-    \draw[dashed, red, thick] (15,0) -- (15,5); % Weld projection into plane-space
-    
-    \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,3) {JOINED\\PLANE-SPACE};
-    \node[green!60!black, font=\tiny, rotate=-45] at (16.5,6) {$P_p+M_p=20$};
+        % CENTER GREEN TRIANGLE: The 10-Plane Joined Gap (Crossing Weld)
+        \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,0) -- (20,0) -- (10,10) -- cycle;
+        \draw[dashed, red, thick] (15,0) -- (15,5); % Weld projection
+        
+        \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,3) {JOINED\\PLANE-SPACE};
+        \node[green!60!black, font=\tiny, rotate=-45] at (16.5,6) {$P_p+M_p=20$};
 
-    % RIGHT PINK TRIANGLE: Closed Plane Space
-    % Magnitude at 12 to show variance in volume occupancy
-    \fill[magenta!15, draw=magenta!50, thick] (20,0) -- (32,0) -- (20,12) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (23.5,4.5) {CLOSED};
+        % RIGHT PINK TRIANGLE: Closed Plane Space
+        \fill[magenta!15, draw=magenta!50, thick] (20,0) -- (32,0) -- (20,12) -- cycle;
+        \node[magenta!80, font=\tiny, rotate=-45] at (23.5,4.5) {CLOSED};
 
-    % --- TICKS & NUMERICAL LABELS ---
-    % Numerical indices moved down to clear the axis label text
-    \draw[thick] (10,0.2) -- (10,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {10};
-    \draw[thick] (15,0.2) -- (15,-0.2) node[below=14pt, red, font=\tiny, fill=white, inner sep=1pt] {Weld};
-    \draw[thick] (20,0.2) -- (20,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {20};
-    
-    % Vertical Plane Magnitude Tick at 10
-    \draw[thick] (0.2,10) -- (-0.2,10) node[left=2pt, font=\tiny] {10};
+        % --- TICKS & NUMERICAL LABELS ---
+        \draw[thick] (10,0.2) -- (10,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {10};
+        \draw[thick] (15,0.2) -- (15,-0.2) node[below=14pt, red, font=\tiny, fill=white, inner sep=1pt] {Weld};
+        \draw[thick] (20,0.2) -- (20,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {20};
+        
+        % Vertical Plane Magnitude Tick at 10
+        \draw[thick] (0.2,10) -- (-0.2,10) node[left=2pt, font=\tiny] {10};
 
-\end{tikzpicture}
+    \end{tikzpicture}
+    \caption{Huge Allocator: Phase-Space Manifold and Volume Boundary Weld.}
+    \label{fig:huge_allocator_weld}
+\end{figure}
 
 \subsubsection*{The Large Resolution ( $2\mathcal{A} < L \le \mathcal{A}^2$)}
 
@@ -508,56 +511,57 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \end{description}
 
 
-% --- COMPLETE DIAGRAM ---
-\stepcounter{marginfig}
-\begin{tikzpicture}[x=0.42cm, y=0.42cm]
-    % --- THE MARGIN ANCHOR (Matches Equation Numbering Position) ---
-    \node[anchor=east, font=\bfseries] at (34, 15) {(\themarginfig)};
+% --- FIGURE: LARGE ALLOCATOR (PLANE-LEVEL) ---
+\begin{figure}[ht!]
+    \centering
+    \stepcounter{marginfig}
+    \begin{tikzpicture}[x=0.42cm, y=0.42cm]
+        % --- THE MARGIN ANCHOR ---
+        \node[anchor=east, font=\bfseries] at (34, 15) {(\themarginfig)};
 
-    % --- AXES & DIMENSION LABELS ---
-    \draw[->, thick] (0,0) -- (33,0);
-    
-    % New Label: Spelled out, below the line, RHS flush with arrow tip (33,0)
-    \node[anchor=north east, font=\small, text=black!80] at (33,-0.1) {Row Position ($P$)};
-    
-    \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Row Magnitude ($M$)};
+        % --- AXES & DIMENSION LABELS ---
+        \draw[->, thick] (0,0) -- (33,0);
+        
+        % Label: Row Position
+        \node[anchor=north east, font=\small, text=black!80] at (33,-0.1) {Row Position ($P$)};
+        
+        % Vertical Axis: Row Magnitude
+        \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Row Magnitude ($M$)};
 
-    % --- THE PLANE-LEVEL LATTICE (S2 TIER) ---
-    % Shifted further down to y=-2.5 to accommodate the new "Row Position" label
-    \foreach \x in {0,1,...,9} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
-    \foreach \x in {10,11,...,14} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
-    \foreach \x in {15,16,...,19} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
-    \foreach \x in {20,21,...,31} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
-    
-    % Frame and Plane Boundary Weld
-    \draw[thick] (0,-3) rectangle (32,-4);
-    \draw[ultra thick, red, line cap=round] (15,-2.5) -- (15,-4.5);
-    \node[below, font=\tiny, yshift=-2.0cm] at (16,-4) {LARGE ALLOCATOR: PLANE BOUNDARY ROW JOIN};
+        % --- THE PLANE-LEVEL LATTICE (S2 TIER) ---
+        \foreach \x in {0,1,...,9} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
+        \foreach \x in {10,11,...,14} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
+        \foreach \x in {15,16,...,19} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
+        \foreach \x in {20,21,...,31} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
+        
+        % Frame and Plane Boundary Weld
+        \draw[thick] (0,-3) rectangle (32,-4);
+        \draw[ultra thick, red, line cap=round] (15,-2.5) -- (15,-4.5);
+        \node[below, font=\tiny, yshift=-0.5cm] at (16,-4) {LARGE ALLOCATOR: PLANE BOUNDARY ROW JOIN};
 
-    % --- THE MANIFOLD GEOMETRY (SEARCH POLYTOPES) ---
-    \fill[magenta!15, draw=magenta!50, thick] (0,0) -- (10,0) -- (0,10) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (3.5,3.5) {CLOSED};
+        % --- THE MANIFOLD GEOMETRY (SEARCH POLYTOPES) ---
+        \fill[magenta!15, draw=magenta!50, thick] (0,0) -- (10,0) -- (0,10) -- cycle;
+        \node[magenta!80, font=\tiny, rotate=-45] at (3.5,3.5) {CLOSED};
 
-    \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,0) -- (20,0) -- (10,10) -- cycle;
-    \draw[dashed, red, thick] (15,0) -- (15,5); 
-    
-    \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,3) {JOINED\\ROW-SPACE};
-    \node[green!60!black, font=\tiny, rotate=-45] at (16.5,6) {$P+M=20$};
+        \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,0) -- (20,0) -- (10,10) -- cycle;
+        \draw[dashed, red, thick] (15,0) -- (15,5); 
+        
+        \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,3) {JOINED\\ROW-SPACE};
+        \node[green!60!black, font=\tiny, rotate=-45] at (16.5,6) {$P+M=20$};
 
-    \fill[magenta!15, draw=magenta!50, thick] (20,0) -- (32,0) -- (20,12) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (23.5,4.5) {CLOSED};
+        \fill[magenta!15, draw=magenta!50, thick] (20,0) -- (32,0) -- (20,12) -- cycle;
+        \node[magenta!80, font=\tiny, rotate=-45] at (23.5,4.5) {CLOSED};
 
-    % --- TICKS & NUMERICAL LABELS ---
-    % Shifted labels to accommodate the Row Position text
-    \draw[thick] (10,0.2) -- (10,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {10};
-    \draw[thick] (15,0.2) -- (15,-0.2) node[below=14pt, red, font=\tiny, fill=white, inner sep=1pt] {Weld};
-    \draw[thick] (20,0.2) -- (20,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {20};
-    \draw[thick] (0.2,10) -- (-0.2,10) node[left=2pt, font=\tiny] {10};
+        % --- TICKS & NUMERICAL LABELS ---
+        \draw[thick] (10,0.2) -- (10,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {10};
+        \draw[thick] (15,0.2) -- (15,-0.2) node[below=14pt, red, font=\tiny, fill=white, inner sep=1pt] {Weld};
+        \draw[thick] (20,0.2) -- (20,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {20};
+        \draw[thick] (0.2,10) -- (-0.2,10) node[left=2pt, font=\tiny] {10};
 
-\end{tikzpicture}
-
-
-
+    \end{tikzpicture}
+    \caption{Large Allocator: Search Polytopes and Plane Boundary Row Join.}
+    \label{fig:large_allocator_row_join}
+\end{figure}
 
 \clearpage
 
@@ -589,62 +593,53 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     This tier  functions as the primary submachine for the bottom level of welding, utilizing the Oracle to join partial sector tails and heads into a single contiguous magnitude. By treating the row as a unified geometry,  boundary seams become transparent to the resolution logic.
 \end{description}
 
-% --- COMPLETE DIAGRAM: SMALL ALLOCATOR ---
-\stepcounter{marginfig}
-\begin{tikzpicture}[x=0.42cm, y=0.42cm]
-    % --- THE MARGIN ANCHOR (Matches Figure (A) & (B) Style) ---
-    \node[anchor=east, font=\bfseries] at (34, 15) {(\themarginfig)};
+% --- FIGURE: SMALL ALLOCATOR (PINNED TO TINY TEXT) ---
+\begin{figure}[H] % [H] forces the figure to stay exactly here
+    \centering
+    \stepcounter{marginfig}
+    \begin{tikzpicture}[x=0.42cm, y=0.42cm]
+        % --- THE MARGIN ANCHOR ---
+        \node[anchor=east, font=\bfseries] at (34, 15) {(\themarginfig)};
 
-    % --- AXES & DIMENSION LABELS ---
-    \draw[->, thick] (0,0) -- (33,0);
-    
-    % Label: Spelled out, below the line, RHS flush with arrow tip (33,0)
-    \node[anchor=north east, font=\small, text=black!80] at (33,-0.1) {Joined Position ($P$)};
-    
-    % Vertical Axis: Bit Magnitude
-    \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Magnitude ($M$)};
+        % --- AXES & DIMENSION LABELS ---
+        \draw[->, thick] (0,0) -- (33,0);
+        \node[anchor=north east, font=\small, text=black!80] at (33,-0.1) {Joined Position ($P$)};
+        \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Magnitude ($M$)};
 
-    % --- THE SECTOR LATTICE (S1 TIER) ---
-    % Shifted to y=-3 to accommodate the axis label
-    % Sector N (Bits 0-14) | Sector N+1 (Bits 15-31)
-    \foreach \x in {0,1,...,9} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
-    \foreach \x in {10,11,...,14} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
-    \foreach \x in {15,16,...,19} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
-    \foreach \x in {20,21,...,31} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
-    
-    % Frame and Sector Boundary Weld (The 16-bit Handshake)
-    \draw[thick] (0,-3) rectangle (32,-4);
-    \draw[ultra thick, red, line cap=round] (15,-2.5) -- (15,-4.5);
-    \node[below, font=\tiny, yshift=-2.0cm] at (16,-4) {SMALL ALLOCATOR: SECTOR BOUNDARY BIT JOIN};
+        % --- THE SECTOR LATTICE (S1 TIER) ---
+        \foreach \x in {0,1,...,9} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
+        \foreach \x in {10,11,...,14} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
+        \foreach \x in {15,16,...,19} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
+        \foreach \x in {20,21,...,31} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
+        
+        % Frame and Sector Boundary Weld
+        \draw[thick] (0,-3) rectangle (32,-4);
+        \draw[ultra thick, red, line cap=round] (15,-2.5) -- (15,-4.5);
+        \node[below, font=\tiny, yshift=-0.5cm] at (16,-4) {SMALL ALLOCATOR: SECTOR BOUNDARY BIT JOIN};
 
-    % --- THE HONEST FRACTAL GEOMETRY (Locked to Bit Indices) ---
+        % --- THE HONEST FRACTAL GEOMETRY ---
+        \fill[magenta!15, draw=magenta!50, thick] (0,0) -- (10,0) -- (0,10) -- cycle;
+        \node[magenta!80, font=\tiny, rotate=-45] at (3.5,3.5) {CLOSED};
 
-    % LEFT PINK TRIANGLE: Closed Bit Space (Sector N)
-    \fill[magenta!15, draw=magenta!50, thick] (0,0) -- (10,0) -- (0,10) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (3.5,3.5) {CLOSED};
+        \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,0) -- (20,0) -- (10,10) -- cycle;
+        \draw[dashed, red, thick] (15,0) -- (15,5); 
+        
+        \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,3) {JOINED\\SPACE};
+        \node[green!60!black, font=\tiny, rotate=-45] at (16.5,6) {$P+M=20$};
 
-    % CENTER GREEN TRIANGLE: The 10-Bit Joined Gap (The Weld)
-    \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,0) -- (20,0) -- (10,10) -- cycle;
-    \draw[dashed, red, thick] (15,0) -- (15,5); 
-    
-    \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,3) {JOINED\\SPACE};
-    \node[green!60!black, font=\tiny, rotate=-45] at (16.5,6) {$P+M=20$};
+        \fill[magenta!15, draw=magenta!50, thick] (20,0) -- (32,0) -- (20,12) -- cycle;
+        \node[magenta!80, font=\tiny, rotate=-45] at (23.5,4.5) {CLOSED};
 
-    % RIGHT PINK TRIANGLE: Closed Bit Space (Sector N+1)
-    \fill[magenta!15, draw=magenta!50, thick] (20,0) -- (32,0) -- (20,12) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (23.5,4.5) {CLOSED};
+        % --- TICKS & NUMERICAL LABELS ---
+        \draw[thick] (10,0.2) -- (10,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {10};
+        \draw[thick] (15,0.2) -- (15,-0.2) node[below=14pt, red, font=\tiny, fill=white, inner sep=1pt] {15};
+        \draw[thick] (20,0.2) -- (20,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {20};
+        \draw[thick] (0.2,10) -- (-0.2,10) node[left=2pt, font=\tiny] {10};
 
-    % --- TICKS & NUMERICAL LABELS ---
-    \draw[thick] (10,0.2) -- (10,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {10};
-    \draw[thick] (15,0.2) -- (15,-0.2) node[below=14pt, red, font=\tiny, fill=white, inner sep=1pt] {15};
-    \draw[thick] (20,0.2) -- (20,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {20};
-    
-    % Vertical Magnitude Tick at 10
-    \draw[thick] (0.2,10) -- (-0.2,10) node[left=2pt, font=\tiny] {10};
-
-\end{tikzpicture}
-
-\clearpage
+    \end{tikzpicture}
+    \caption{Small Allocator: Atomic Phase-Space and Sector Boundary Bit Join.}
+    \label{fig:small_allocator_bit_join}
+\end{figure}
 
 \subsection*{Polytope Formation Within Row}
 
@@ -675,53 +670,44 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     This represents the leaf-level execution of the deterministic descent. The \textbf{Oracle Center look-up table} identifies contiguous zero-bit sequences within a sector. This forms the Atomic Polytope of a search, resolving the physical bit-offset in a fixed hardware cycle.
 \end{description}
 
-% --- COMPLETE DIAGRAM: TINY ALLOCATOR ---
-\stepcounter{marginfig}
-\begin{tikzpicture}[x=0.42cm, y=0.42cm]
-    % --- THE MARGIN ANCHOR (Matches Figures A, B, & C) ---
-    \node[anchor=east, font=\bfseries] at (34, 15) {(\themarginfig)};
+% --- FIGURE: TINY ALLOCATOR (FRACTURED WELD) ---
+\begin{figure}[H]
+    \centering
+    \stepcounter{marginfig}
+    \begin{tikzpicture}[x=0.42cm, y=0.42cm]
+        % --- THE MARGIN ANCHOR ---
+        \node[anchor=east, font=\bfseries] at (34, 15) {(\themarginfig)};
 
-    % --- AXES & DIMENSION LABELS ---
-    \draw[->, thick] (0,0) -- (15,0);
-    
-    % Label: Spelled out, below the line, RHS flush with arrow tip (15,0)
-    \node[anchor=north east, font=\small, text=black!80] at (15,-0.1) {Joined Position ($P$)};
-    
-    % Vertical Axis: Bit Magnitude
-    \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Magnitude ($M$)};
+        % --- AXES & DIMENSION LABELS ---
+        \draw[->, thick] (0,0) -- (15,0);
+        \node[anchor=north east, font=\small, text=black!80] at (15,-0.1) {Joined Position ($P$)};
+        \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Magnitude ($M$)};
 
-    % --- THE FRACTURED BIT-LATTICE (S0/S1 INTERFACE) ---
-    % Shifted to y=-3 to accommodate the axis label
-    % Sector N Tail (Left) | Sector N+1 Head (Right)
-    \foreach \x in {0,1,...,4} \fill[green!25, draw=black!40] (\x,-3) rectangle (\x+1,-4);
-    \foreach \x in {5,6,...,9} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
-    
-    % Frame and Weld Point
-    \draw[thick] (0,-3) rectangle (10,-4);
-    \draw[ultra thick, red, line cap=round] (5,-2.5) -- (5,-4.5);
-    \node[below, font=\tiny, yshift=-2.0cm] at (5,-4) {TINY ALLOCATOR: FRACTURED WELD};
+        % --- THE FRACTURED BIT-LATTICE ---
+        \foreach \x in {0,1,...,4} \fill[green!25, draw=black!40] (\x,-3) rectangle (\x+1,-4);
+        \foreach \x in {5,6,...,9} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
+        
+        % Frame and Weld Point
+        \draw[thick] (0,-3) rectangle (10,-4);
+        \draw[ultra thick, red, line cap=round] (5,-2.5) -- (5,-4.5);
+        \node[below, font=\tiny, yshift=-0.5cm] at (5,-4) {TINY ALLOCATOR: FRACTURED WELD};
 
-    % --- THE MANIFOLD GEOMETRY (SUB-SECTOR POLYTOPE) ---
-    % Top vertex aligned to 10 on the vertical axis
-    \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (0,0) -- (10,0) -- (0,10) -- cycle;
-    
-    % Weld projection into bit-space
-    \draw[dashed, red, thick] (5,0) -- (5,5); 
-    
-    \node[green!80!black, font=\bfseries\tiny, align=center] at (3.5,3) {FRACTURED\\WELD\\POLYTOPE};
-    \node[green!60!black, font=\tiny, rotate=-45] at (6.5,5.5) {$P+M=10$};
+        % --- THE MANIFOLD GEOMETRY (SUB-SECTOR POLYTOPE) ---
+        \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (0,0) -- (10,0) -- (0,10) -- cycle;
+        \draw[dashed, red, thick] (5,0) -- (5,5); 
+        
+        \node[green!80!black, font=\bfseries\tiny, align=center] at (3.5,3) {FRACTURED\\WELD\\POLYTOPE};
+        \node[green!60!black, font=\tiny, rotate=-45] at (6.5,5.5) {$P+M=10$};
 
-    % --- TICKS & NUMERICAL LABELS ---
-    % Numerical indices moved down to clear the axis label text
-    \draw[thick] (0,0.2) -- (0,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {0};
-    \draw[thick] (5,0.2) -- (5,-0.2) node[below=14pt, red, font=\tiny, fill=white, inner sep=1pt] {5};
-    \draw[thick] (10,0.2) -- (10,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {10};
-    
-    % Vertical Bit Magnitude Tick at 10
-    \draw[thick] (0.2,10) -- (-0.2,10) node[left=2pt, font=\tiny] {10};
-
-\end{tikzpicture}
-
+        % --- TICKS & NUMERICAL LABELS ---
+        \draw[thick] (0,0.2) -- (0,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {0};
+        \draw[thick] (5,0.2) -- (5,-0.2) node[below=14pt, red, font=\tiny, fill=white, inner sep=1pt] {5};
+        \draw[thick] (10,0.2) -- (10,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {10};
+        \draw[thick] (0.2,10) -- (-0.2,10) node[left=2pt, font=\tiny] {10};
+    \end{tikzpicture}
+    \caption{Tiny Allocator: Fractured Weld Polytope and Bit-Lattice Resolution.}
+    \label{fig:tiny_allocator_fracture}
+\end{figure}
 
 \section{Description of Instruction Groups}
 
@@ -956,13 +942,12 @@ Figure \ref{fig:touches_plot} documents the stability of \textbf{Iscandar} acros
 
 To contrast, a theoretical binary buddy system was simulated for a heap size comparable to ours, a 128\,KB heap utilizing 4-byte sectors. This needs a binary tree depth of $D=15$. Figure \ref{fig:buddy_plot} illustrates the search effort inherent in recursive block splitting and coalescing.
 
-\vspace{1em}
-\noindent
-\begin{minipage}{\linewidth}
+% --- FIGURE: BUDDY SYSTEM CONTRAST (PINNED FOR COMPARISON) ---
+\begin{figure}[H]
     \centering
     \stepcounter{marginfig}
     \begin{tikzpicture}
-        % --- THE MARGIN ANCHOR (Matches Nizhoni Standard) ---
+        % --- THE MARGIN ANCHOR ---
         \node[anchor=east, font=\bfseries] at (16.5, 7) {(\themarginfig)};
 
         \begin{axis}[
@@ -997,10 +982,9 @@ To contrast, a theoretical binary buddy system was simulated for a heap size com
         
         \end{axis}
     \end{tikzpicture}
-    \captionof{}{Simulated binary buddy allocation at 4-bytes per sector in a 32768 sector memory pool.}
+    \caption{Simulated binary buddy allocation at 4-bytes per sector in a 32768 sector memory pool.}
     \label{fig:buddy_plot}
-\end{minipage}
-\vspace{1em}
+\end{figure}
 
 \definecolor{codegray}{rgb}{0.95,0.95,0.96}
 \definecolor{commentgreen}{rgb}{0,0.6,0}
