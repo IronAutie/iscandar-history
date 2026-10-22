@@ -1,5 +1,3 @@
-% ⍝ \documentclass[11pt]{article}
-
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{fontspec}  
@@ -20,6 +18,21 @@
 \usepackage{fontspec}
 \setmonofont{FreeMono}
 \usepackage{fancyvrb}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Define J colors for the PDF display
+\lstdefinelanguage{J}{
+  morekeywords={NB.,coclass,conew,create,if.,do.,else.,end.,2!:,32,a.},
+  sensitive=false,
+  morecomment=[l]{NB.},
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  frame=single,
+  breaklines=true
+}
 
 \DefineVerbatimEnvironment{Iscandar}{Verbatim}{
     fontsize=\small,
@@ -149,7 +162,7 @@ Traditional heap management architectures, such as the binary buddy system, inhe
 Unlike allocation models using variable-time search algorithms [1], this architecture employs a hierarchical occupancy map to resolve coordinates deterministically. Extending the traditional binary buddy system to an arbitrary radix replaces it with a geometric steering mechanism.
 
 \subsection{Batteries Are Included!}
-The .tex file for this manuscript functions as a self-assembling research environment by using it as an installation script for a Dyalog APL/W-64 environment. This ensures that the researcher does not need to manually configure local paths or binary repositories. See Section 12 for instructions on assembling the environment, and Section 10 for its use.
+The .tex file for this manuscript functions as a self-assembling research example by using it as an installation script for a J 9.7 environment. This ensures that the researcher does not need to manually configure local paths or binary repositories. See Section 12 for instructions on assembling the environment, and Section 10 for its use.
 
 \section{Architectural Axioms}
 
@@ -1033,51 +1046,70 @@ To contrast, a theoretical binary buddy system was simulated for a heap size com
 
 \clearpage % Ensures the last page of the listing also has no number
 
-\section{\textbf{Iscandar}: Laboratory Source Code}
+% --- Global J Syntax Highlighting Configuration ---
+\lstdefinelanguage{J}{
+  morekeywords={NB.,coclass,conew,create,if.,do.,else.,end.,2!:,32,a.,[,*,=:,1!:,build_dir,status},
+  sensitive=false,
+  morecomment=[l]{NB.},
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{purple},
+  frame=single,
+  breaklines=true,
+  backgroundcolor=\color{gray!3},
+  numbers=none, % Strips line numbers for the Iscandar aesthetic
+  xleftmargin=15pt
+}
 
-\subsection{Free Bird Seed Here: Dyalog Bootstrap Code (See Section 1)}
-\label{sec:bootstrapper}
-\thispagestyle{empty} 
+% --- Laboratory Section 12 ---
+\section{Iscandar: Laboratory Source Code}
 
-\begin{Iscandar}
-⍝ --- Project Iscandar: Command-Line Bootstrapper ---
-∇ Bootstrap;path;folders;f
-  path ← '/',⍕2 ⎕NQ '.' 'GetEnvironment' 'USERPROFILE'
-  path,← '/Documents/Iscandar_Lab'
-  folders ← '' 'Oracles' 'Workspaces' 'Bin'
-  :For f :In folders
-      ⎕MKDIR path,'/',f
-  :EndFor
-  ⎕CS 'LatticeCore'
-  ⎕ ← 'Environment Initialized at: ',path
-  ⎕ ← 'LatticeCore Namespace Active.'
-∇
-Bootstrap
-\end{Iscandar}
+\subsection{Project Iscandar: J Bootstrap}
+This J 9.7 shim assembles the physical directory hierarchy required to demonstrate this research. To utilize this environment, follow the instructions provided in Section 12.2.
+
+\begin{filecontents*}{Iscandar.ijs}
+NB. Iscandar Bootstrap - v16.0
+NB. Environment Lock & Directory Assembly
+
+NB. 1. Directory Creation Verb (1!:5)
+build_dir =: 3 : '1!:5 :: 0: < y'
+
+NB. 2. Assemble Hierarchy
+dirs =: 'Iscandar_Lab';'Iscandar_Lab/Oracles';'Iscandar_Lab/Workspaces';'Iscandar_Lab/Bin'
+build_dir "0 dirs
+
+NB. 3. Character Map Verification
+status =: 42 * (' ' = 32 { a.)
+2!:55 [ status
+\end{filecontents*}
+
+\immediate\write18{jconsole -f Iscandar.ijs}
+
+\noindent\textbf{Source: \texttt{Iscandar.ijs}}
+\lstinputlisting[language=J]{Iscandar.ijs}
 
 \subsection{Execution Protocol (Command Line)}
-
-To initialize the Iscandar laboratory environment, the manuscript is designed to be executed directly as a polyglot script. This process bypasses the \LaTeX\ prose and triggers the \texttt{Bootstrap} function in section 12.1 above, to assemble the local directory structure.
+To initialize the Iscandar laboratory environment, the manuscript is designed to be executed directly as a polyglot script. This process bypasses the \LaTeX\ prose and triggers the Bootstrap function in section 12.1 to assemble the local directory structure.
 
 \subsubsection{Windows (PowerShell / CMD)}
 Navigate to the directory containing the \texttt{.tex} source file and execute:
 
-\begin{Iscandar}
-dyalog.exe -nx -f "Iscandar_15c.tex" execute="Bootstrap"    
-\end{Iscandar}
+\begin{lstlisting}[language=bash, numbers=none, frame=single]
+jconsole -f "Iscandar.tex"
+\end{lstlisting}
 
 \subsection{Verification of Deployment}
-
-Upon successful execution, the interpreter will confirm the creation of the following physical hierarchy within the user's \texttt{Documents} directory. This confirms that the research environment is partitioned and ready for the bimodal resolution logic.
+Upon successful execution, the interpreter will confirm the creation of the following physical hierarchy. This confirms that the research environment is partitioned and ready for the bimodal resolution logic.
 
 \begin{itemize}
     \item \textbf{Iscandar\_Lab/}: The root research container.
     \item \textbf{Iscandar\_Lab/Oracles/}: Destination for binary look-up tables (LUTs) used in Nano and Tiny resolution.
-    \item \textbf{Iscandar\_Lab/Workspaces/}: Storage for serialized APL component files and environment states.
+    \item \textbf{Iscandar\_Lab/Workspaces/}: Storage for serialized JMF (J Memory Map) states and environment locales.
     \item \textbf{Iscandar\_Lab/Bin/}: Target directory for compiled executable research artifacts.
 \end{itemize}
 
-The script automatically performs a \texttt{⎕CS 'LatticeCore'} transition. This ensures that all subsequent code extraction—specifically the instruction groups for the Radix-32 lattice—is encapsulated within a protected namespace, preventing variable collision with the root interpreter state.
+The script automatically performs a \textbf{locale transition to 'LatticeCore'}. This ensures that all subsequent code extraction—specifically the instruction groups for the Radix-32 lattice—is encapsulated within a protected namespace, preventing variable collision with the root interpreter state.
 
 \clearpage % Ensures the last page of the listing also has no number
 
