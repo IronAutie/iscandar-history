@@ -649,10 +649,10 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 
 \subsection*{Polytope Formation Within Row}
 
-\subsubsection*{The Tiny Resolution ($L \le \mathcal{A}$)}
+\subsubsection*{The Tiny Resolution ($\mathcal{A}/4 < L \le \mathcal{A}$)}
 
 \begin{description}
-    \item[Domain:] The bit-lattice contained within a single Row manifold.
+    \item[Domain:] The bit-lattice spanning multiple sub-word boundaries within a single Row manifold, typically requiring the evaluation of cross-byte contiguity.
     
 \vspace{12pt}
 \setcounter{equation}{13}
@@ -666,15 +666,16 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     
     \item[Discussion:] \hfill \\
 \begin{itemize}
-    \item \textbf{Mechanism:} The request falls entirely within the Core Shard ($S_c$).
+    \item \textbf{Mechanism:} The request targets the Core Shard ($S_c$) for allocations that exceed the single-byte Nano threshold but fit within a Row's width.
     
-    \item \textbf{Geometric Event:} An \textit{Interior Locality} query.
+    \item \textbf{Geometric Event:} A \textit{Bimodal Interior} query.
     
-    \item \textbf{Resolution:} The 2D Oracle Table functions as a point-in-polytope calculator. The system requires only the center lookup to return the $(position, length)$ tuple collapsing the interior search space into a single-cycle coordinate resolution as defined by the Oracle’s static manifold mapping..
+    \item \textbf{Resolution:} To maintain determinism without a stochastic search, the system executes a two-stage probe. The resolution logic first applies the \textbf{Left Oracle} to identify an eligible run. Should that fail, the system takes a ``second bite of the apple'' by immediately applying the \textbf{Right Oracle}. This dual-pass mechanism ensures that runs straddling internal alignment boundaries are captured within a fixed, predictable execution window.
 \end{itemize}
 \end{description}
-    This represents the leaf-level execution of the deterministic descent. The \textbf{Oracle Center look-up table} identifies contiguous zero-bit sequences within a sector. This forms the Atomic Polytope of a search, resolving the physical bit-offset in a fixed hardware cycle.
-\end{description}
+
+This represents the leaf-level execution of the deterministic descent. By utilizing a sequence of \textbf{Left and Right Oracle look-up tables}, the system resolves physical bit-offsets in a bounded number of cycles, effectively collapsing the search space for mid-sized atomic requests.
+
 
 % --- FIGURE: TINY ALLOCATOR (FRACTURED WELD) ---
 \begin{figure}[H]
@@ -714,6 +715,54 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     \caption{Tiny Allocator: Fractured Weld Polytope and Bit-Lattice Resolution.}
     \label{fig:tiny_allocator_fracture}
 \end{figure}
+
+\subsubsection*{The Nano Resolution ($L \le \mathcal{A}/4$)}
+
+\begin{description}
+    \item[Domain:] The bit-lattice contained within a single word or sub-word segment of a Row manifold, specifically targeting requests between 1 and 8 bits ($\mathcal{A}/4$ when $\mathcal{A}=32$).
+    
+    \item[Discussion:] \hfill \\
+\begin{itemize}
+    \item \textbf{Mechanism:} This stage isolates a single byte-aligned segment of the Row to extract a \textit{Seed Polytope}. It ignores higher-level boundary conditions to focus on high-speed intra-byte contiguity.
+    
+    \item \textbf{Geometric Event:} An \textit{Atomic Intersection}.
+    
+    \item \textbf{Resolution:} The \textbf{Center Oracle} intersects between the current Row's bit-pattern and the requested length $L$, mapping the pattern to an exact fit of available sectors, obtaining a seed polytope of 1 to 8 bits (where multiple possibilies are available as shown in Figure E) to be joined with other polytopes later.
+\end{itemize}
+\end{description}
+
+\begin{figure}[ht]
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+            xmin=0, xmax=32,
+            ymin=0, ymax=32,
+            width=10cm,
+            height=10cm,
+            axis lines=box,
+            xtick={0, 8, 16, 24, 32},
+            ytick={0, 8, 16, 24, 32},
+            grid=major,
+            xlabel={Bit Pattern of Index in Center Oracle},
+            ylabel={Magnitudes of Available Polytopes for this Bit Pattern},
+            label style={font=\small}
+        ]
+        % Triangle A (4x4)
+        \addplot[thick, fill=blue!20] coordinates {(0,0) (4,0) (0,4) (0,0)};
+        \node at (axis cs:1.3,1.3) {A};
+        
+        % Triangle B (6x6)
+        \addplot[thick, fill=red!20] coordinates {(8,0) (14,0) (8,6) (8,0)};
+        \node at (axis cs:10,2) {B};
+        
+        % Triangle C (8x8)
+        \addplot[thick, fill=green!20] coordinates {(16,0) (24,0) (16,8) (16,0)};
+        \node at (axis cs:18.5,2.5) {C};
+        \end{axis}
+    \end{tikzpicture}
+    \caption*{Figure E: Nano mode seed polytopes from indexing Center Oracle.}
+\end{figure}
+
 
 \section{Description of Instruction Groups}
 
