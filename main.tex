@@ -430,24 +430,8 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \begin{description}
     \item[Domain:] Total Cube Volume resolution (addressable at $\mathcal{A}^k$).
     
-\setcounter{equation}{9} % This sets the counter so the NEXT equation is 10
-\noindent \textbf{Summation Predicate:} 
-
-\begin{equation}
-    C_{plane} = \sum_{i=0}^{\mathcal{A}-1} (C_{row,i} \cdot [y_{i} = 1])
-    \label{eq:sum_predicate}
-\end{equation}
-
-% Clean, standardized subtitle block replacing the broken macro
-\begin{center}
-    \small\textsc{Hierarchical Occupancy Summation Predicate}
-\end{center}
-\vspace{0.5em}
-    
-    \item[Discussion:] The Cube Scale Allocator computes the unique  \textbf{``Gatekeeper''} sector count of the architecture. It provides the primary fast-fail heuristic for the system; if a request $(S, M)$ is determined to be non-admissible at this tier, the algorithm immediately terminates without initiating a descent. This makes the registrar the most efficient filter in the hierarchy, ensuring that the cost of coordinate resolution is only paid when success is mathematically guaranteed.
+    \item[Discussion:] The Cube Scale Allocator computes the unique  \textbf{``Gatekeeper''} sector count of the architecture. It provides the primary fast-fail heuristic for the system; if a request $(S, M)$ is determined to be non-admissible at this tier, the algorithm immediately terminates without initiating a descent. 
 \end{description}
-
-
 
 \subsection*{Polytope Formation At Row and Plane Levels}
 
