@@ -536,7 +536,7 @@ The Huge allocation exceeds the capacity of the standard Large allocator. By eva
 
 \FloatBarrier 
 
-\subsubsection*{The Large Resolution ( $2\mathcal{A} < L \le \mathcal{A}^2$)}
+\subsubsection*{The Large Resolution ($2\mathcal{A} < L \le \mathcal{A}^2$)}
 
 \begin{description}
     \item[Domain:] Row-join and sequence resolution within an $\mathcal{A}^2$-sector Plane manifold.
@@ -544,82 +544,84 @@ The Huge allocation exceeds the capacity of the standard Large allocator. By eva
 \vspace{12pt}
 \setcounter{equation}{11}
 \noindent \textbf{Summation Predicate:} 
-\textbf{Summation Predicate:} 
 \begin{equation}
-    C_{plane} = \sum_{i=0}^{\mathcal{A}-1} (C_{row,i} \cdot [y_{i} = 1])
+    C_{plane} = \sum_{i=0}^{\mathcal{A}-1} (C_{row,i} \cdot [\text{SectorCount}_i = 0])
     \label{eq:sum_predicate}
 \end{equation}
-
-% Replace the undefined \manualeq with a clean, standardized description line
-\begin{center}
-    \small\textsc{Tier-2 (Plane) Lattice Occupancy Summation}
-\end{center}
-\vspace{0.5em}
     
-\item[Discussion:] 
+\item[Discussion:] \hfill \\
     
 \begin{itemize}
     \item \textbf{Mechanism:} The \textit{Structural Bridge}.
-    \item \textbf{Geometric Event:} \textit{Boundary Handshake} between adjacent vectors.
+    \item \textbf{Geometric Event:} \textit{Coalescence between empty and partial rows.}
     \item \textbf{Resolution:} The system constructs the span via $P + T$. The Right-Hand Lookup (RHL) of Vector A (Preamble) mates with the Left-Hand Lookup (LHL) of Vector B (Tail) to verify connectivity across the boundary, a geometric invariant enforced by these tables.
 \end{itemize}
 
-    This tier represents a fractal expansion of the Level 1 logic. It treats individual rows as the atomic units of resolution, welding row-sequences to satisfy multi-row allocation requests. The Large allocator functions as a resolution engine, calculating a dynamic subset of Rows within the Plane to satisfy continuity requirements.
+    This tier represents a fractal expansion of the Level 1 logic. It treats individual rows as the atomic units of resolution, welding row-sequences to satisfy multi-row allocation requests. The Large allocator functions as a resolution engine, calculating a dynamic subset of Rows within the Plane to satisfy continuity requirements as detailed in Listing 30 (\texttt{HeuristicRowsCoreDriver.apl}) and Listing 32 (\texttt{HeuristicRowsRemainDriver.apl}).
 \end{description}
 
 
-% --- FIGURE: LARGE ALLOCATOR (PLANE-LEVEL) ---
-\begin{figure}[ht!]
+% --- FIGURE: INTERMEDIATE-TIER ROW WELD (LARGE RESOLUTION) ---
+\begin{figure}[htbp]
     \centering
     \stepcounter{marginfig}
-    \begin{tikzpicture}[x=0.42cm, y=0.42cm]
+    \begin{tikzpicture}
+        \begin{axis}[
+            xmin=0, xmax=32,
+            ymin=0, ymax=32,
+            width=11cm,
+            height=7cm,
+            axis lines=box,
+            xtick={0, 8, 16, 24, 32},
+            ytick={0, 8, 16, 24, 32},
+            grid=major,
+            xlabel={Plane Row Position Index},
+            ylabel={Polytope Size in Sectors},
+            label style={font=\small},
+            tick label style={font=\tiny}
+        ]
+        
+        % 1. HEAD REGION: Dashed Triangle (Fractional Leading Edge)
+        % Spans from Row 5 to Row 9, peaking at a magnitude of 16 sectors
+        \draw[thick, dashed, draw=red!80, fill=red!10, fill opacity=0.6] 
+            (axis cs:5,0) -- (axis cs:9,0) -- (axis cs:5,16) -- cycle;
+        \node[font=\tiny\bfseries, text=red!80!black] at (axis cs:6.5,3) {A};
+
+        % 2. FOUR INTERMEDIATE CORE SEQUENCES: Solid Triangles (Fully Saturated Row Voids)
+        % Core Triangle 1 (Rows 9 to 13, height 24 sectors)
+        \draw[thick, draw=green!60!black, fill=green!20] 
+            (axis cs:9,0) -- (axis cs:13,0) -- (axis cs:9,24) -- cycle;
+            
+        % Core Triangle 2 (Rows 13 to 17, height 24 sectors)
+        \draw[thick, draw=green!60!black, fill=green!20] 
+            (axis cs:13,0) -- (axis cs:17,0) -- (axis cs:13,24) -- cycle;
+            
+        % Core Triangle 3 (Rows 17 to 21, height 24 sectors)
+        \draw[thick, draw=green!60!black, fill=green!20] 
+            (axis cs:17,0) -- (axis cs:21,0) -- (axis cs:17,24) -- cycle;
+            
+        % Core Triangle 4 (Rows 21 to 25, height 24 sectors)
+        \draw[thick, draw=green!60!black, fill=green!20] 
+            (axis cs:25,0) -- (axis cs:21,0) -- (axis cs:21,24) -- cycle;
+
+        % 3. TAIL REGION: Dashed Triangle (Fractional Trailing Edge Overspill)
+        % Spans from Row 25 to Row 29, peaking at a magnitude of 12 sectors
+        \draw[thick, dashed, draw=blue!80, fill=blue!10, fill opacity=0.6] 
+            (axis cs:25,0) -- (axis cs:29,0) -- (axis cs:25,12) -- cycle;
+        \node[font=\tiny\bfseries, text=blue!80!black] at (axis cs:26.5,2.5) {B};
+        
+    \end{axis}
+
         % --- THE MARGIN ANCHOR ---
-        \node[anchor=east, font=\bfseries] at (34, 15) {(\themarginfig)};
-
-        % --- AXES & DIMENSION LABELS ---
-        \draw[->, thick] (0,0) -- (33,0);
-        
-        % Label: Row Position
-        \node[anchor=north east, font=\small, text=black!80] at (33,-0.1) {Row Position ($P$)};
-        
-        % Vertical Axis: Row Magnitude
-        \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Row Magnitude ($M$)};
-
-        % --- THE PLANE-LEVEL LATTICE (S2 TIER) ---
-        \foreach \x in {0,1,...,9} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
-        \foreach \x in {10,11,...,14} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
-        \foreach \x in {15,16,...,19} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
-        \foreach \x in {20,21,...,31} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
-        
-        % Frame and Plane Boundary Weld
-        \draw[thick] (0,-3) rectangle (32,-4);
-        \draw[ultra thick, red, line cap=round] (15,-2.5) -- (15,-4.5);
-        \node[below, font=\tiny, yshift=-0.5cm] at (16,-4) {LARGE ALLOCATOR: PLANE BOUNDARY ROW JOIN};
-
-        % --- THE MANIFOLD GEOMETRY (SEARCH POLYTOPES) ---
-        \fill[magenta!15, draw=magenta!50, thick] (0,0) -- (10,0) -- (0,10) -- cycle;
-        \node[magenta!80, font=\tiny, rotate=-45] at (3.5,3.5) {CLOSED};
-
-        \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,0) -- (20,0) -- (10,10) -- cycle;
-        \draw[dashed, red, thick] (15,0) -- (15,5); 
-        
-        \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,3) {JOINED\\ROW-SPACE};
-        \node[green!60!black, font=\tiny, rotate=-45] at (16.5,6) {$P+M=20$};
-
-        \fill[magenta!15, draw=magenta!50, thick] (20,0) -- (32,0) -- (20,12) -- cycle;
-        \node[magenta!80, font=\tiny, rotate=-45] at (23.5,4.5) {CLOSED};
-
-        % --- TICKS & NUMERICAL LABELS ---
-        \draw[thick] (10,0.2) -- (10,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {10};
-        \draw[thick] (15,0.2) -- (15,-0.2) node[below=14pt, red, font=\tiny, fill=white, inner sep=1pt] {Weld};
-        \draw[thick] (20,0.2) -- (20,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {20};
-        \draw[thick] (0.2,10) -- (-0.2,10) node[left=2pt, font=\tiny] {10};
-
+        \node[anchor=north west, font=\bfseries\Large] at (current axis.north east) {\hspace{4.5cm}(\themarginfig)};
     \end{tikzpicture}
-    \caption{Large Allocator: Search Polytopes and Plane Boundary Row Join.}
-    \label{fig:large_allocator_row_join}
+    \caption{Example of Large memory allocation: Series of central row-polytopes revealed by cumulative empty sector counts inside a single Plane, joined by optional head and tail fragments revealed by Left and Right Oracles.}
+    \label{fig:large_sequence_weld_four_cores}
 \end{figure}
 
+\FloatBarrier
+
+\FloatBarrier
 \clearpage
 
 \subsection*{Polytope Formation Between Rows}
