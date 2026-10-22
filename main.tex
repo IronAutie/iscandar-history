@@ -2,6 +2,14 @@
 \documentclass[11pt]{article}
 
 % =========================================================================
+% MASTER TARGET CONTROL SWITCH
+% =========================================================================
+\newif\ifarxivmode
+% -------------------------------------------------------------------------
+\arxivmodefalse  % <--- Set to \arxivmodetrue ONLY when uploading to arXiv
+% -------------------------------------------------------------------------
+
+% =========================================================================
 % 1. Typography and Language Engine (Native for XeLaTeX)
 % =========================================================================
 \usepackage{fontspec}
@@ -26,20 +34,14 @@
 \geometry{letterpaper, margin=1in}
 \usepackage{marginnote}
 
-% Create a new counter for margin figures
 \newcounter{marginfig}
-\renewcommand{\themarginfig}{\Alph{marginfig}} % Set to Alpha (A, B, C...)
+\renewcommand{\themarginfig}{\Alph{marginfig}}
 
-% Define the command to stamp the margin with an optional vertical adjustment parameter
-% Usage: \fignote         (Standard placement)
-%        \fignote[2.5em]  (Pushes Figure down by 2.5 lines)
-%        \fignote[-1cm]   (Pulls Figure up by 1 centimeter)
 \newcommand{\fignote}[1][0pt]{%
-  \bgroup % Open local scope firewall
+  \bgroup 
   \stepcounter{marginfig}%
-  \marginnote{\textbf{Figure \themarginfig}}[#1]% Passes the offset to marginnote
-  \egroup % Close local scope firewall
-}
+  \marginnote{\textbf{Figure \themarginfig}}[#1]%
+  \egroup 
 }
 
 % =========================================================================
@@ -53,17 +55,71 @@
 % --- Custom List of APL Source Listings Setup ---
 \newcommand{\listiscandarname}{List of APL Source Listings}
 \newlistof{iscandar}{lol}{\listiscandarname}
-
-% Set natural indents for the custom List of Listings
 \cftsetindents{iscandar}{1.5em}{3.5em}
 \setcounter{tocdepth}{2}
 \newcounter{iscandarnum}
 
 % =========================================================================
-% 5. Unified Macro Environments (Universal Compatibility Pass)
+% 5. Unified Macro Environments (Dual-Target Deployment Engine)
 % =========================================================================
 
-% A. The PowerShell Extraction Environment Box
+\ifarxivmode
+  % --- TARGET A: ARCHIVE COMPLIANT STATIC CONFIGURATION ---
+  % Standard cross-referencing text for arXiv (No hyperref overhead)
+  \newcommand{\srclink}[2]{See Listing \ref{#2} for \texttt{#1}}
+  
+  \newenvironment{Iscandar}[2][]{%
+    \VerbatimEnvironment
+    \refstepcounter{iscandarnum}%
+    \addcontentsline{lol}{iscandar}{\protect\numberline{\theiscandarnum}#1}%
+    \begin{tcolorbox}[
+      enhanced, sharp corners, boxrule=0.5pt,
+      colback=gray!5!white, colframe=gray!75!black,
+      title={\textbf{Listing \theiscandarnum:} \texttt{#1}},
+      fonttitle=\bfseries\sffamily, coltitle=black, colbacktitle=gray!15!white,
+      attach boxed title to top left={yshift=-2mm, xshift=2mm},
+      top=4mm, breakable,
+      before={\par\vspace{0.5em}\noindent},
+      after={\par\vspace{0.5em}}
+    ]%
+    \label{#2}% Sets the cross-reference anchor securely inside the box
+    \begin{Verbatim}%
+  }{%
+    \end{Verbatim}
+    \end{tcolorbox}
+  }
+\else
+  % --- TARGET B: LOCAL INTERACTIVE CONFIGURATION ---
+  % Hyperlinks the listing number exclusively for interactive distribution
+  \usepackage[hidelinks]{hyperref} 
+  \usepackage{xcolor}
+  
+  \newcommand{\srclink}[2]{See \hyperlink{#2}{\color{blue}Listing \ref*{#2}} for \texttt{#1}}
+
+  \newenvironment{Iscandar}[2][]{%
+    \VerbatimEnvironment
+    \refstepcounter{iscandarnum}%
+    \addcontentsline{lol}{iscandar}{\protect\numberline{\theiscandarnum}#1}%
+    \begin{tcolorbox}[
+      enhanced, sharp corners, boxrule=0.5pt,
+      colback=gray!5!white, colframe=gray!75!black,
+      title={\textbf{Listing \theiscandarnum:} \texttt{#1}},
+      fonttitle=\bfseries\sffamily, coltitle=black, colbacktitle=gray!15!white,
+      attach boxed title to top left={yshift=-2mm, xshift=2mm},
+      top=4mm, breakable,
+      before={\par\vspace{0.5em}\noindent},
+      after={\par\vspace{0.5em}}
+    ]%
+    \hypertarget{#2}{}% Creates a direct target handle for local jumps
+    \label{#2}%
+    \begin{Verbatim}%
+  }{%
+    \end{Verbatim}
+    \end{tcolorbox}
+  }
+\fi
+
+% A. The PowerShell Extraction Environment Box (Permanently Visible)
 \newenvironment{BottleOpener}{%
   \VerbatimEnvironment
   \begin{tcolorbox}[
@@ -75,41 +131,7 @@
     boxed title style={sharp corners, boxrule=0.5pt},
     top=4mm, breakable
   ]%
-  \begin{Verbatim}% % Cleaned: removed keepspaces parameter
-}{%
-  \end{Verbatim}
-  \end{tcolorbox}
-}
-
-% B. The Capitalized Iscandar Source Environment (Isolated to List of Listings Only)
-\newenvironment{Iscandar}[1][]{%
-  \VerbatimEnvironment
-  \refstepcounter{iscandarnum}%
-  
-  % Log explicitly ONLY to your custom LOL list (completely bypassing the main ToC)
-  \addcontentsline{lol}{iscandar}{\protect\numberline{\theiscandarnum}#1}%
-  
-  % Seamlessly suppress headers and footers on the current page
-  \thispagestyle{empty}%
-  
-  \begin{tcolorbox}[
-    enhanced, sharp corners, boxrule=0.5pt,
-    colback=gray!5!white, colframe=gray!75!black,
-    title={\texttt{File: #1}},
-    fonttitle=\bfseries\sffamily, coltitle=white, colbacktitle=gray!60!black,
-    attach boxed title to top left={yshift=-2mm, xshift=2mm},
-    boxed title style={sharp corners, boxrule=0.5pt},
-    top=4mm, 
-    breakable,  % Allows unrolled APL code to split across sheets cleanly
-    before={\par\vspace{0.5em}\noindent}, % Tightly snuggles box beneath prose/headings
-    after={\par\vspace{0.5em}},
-    % --- UNIVERSAL FOOTER STRIPPER ---
-    % Replaced 'every page command' with 'overlay broken' for older package engines
-    overlay broken={%
-      \thispagestyle{empty}%
-    }
-  ]%
-  \begin{Verbatim}% % Cleaned: removed keepspaces parameter
+  \begin{Verbatim}% 
 }{%
   \end{Verbatim}
   \end{tcolorbox}
@@ -133,12 +155,14 @@
 \date{April 2026}
 
 \renewcommand*{\thefootnote}{\fnsymbol{footnote}}
+\usepackage{placeins}
 
 % =========================================================================
 % --- READY FOR DOCUMENT ENVIRONMENT ---
-% =========================================================================}
-\usepackage{placeins}
+% =========================================================================
 \begin{document}
+
+\maketitle
 
 \pagenumbering{roman} % Start Roman sequence here (Title Page = i)
 \maketitle
@@ -172,7 +196,9 @@ The .tex source for this manuscript functions as a self-organizing research exam
 
 \subsubsection{The Welcome Example.}
 
-\begin{Iscandar}[Welcome.apl]
+\srclink{Welcome.apl}{src:welcome}
+
+\begin{Iscandar}[Welcome.apl]{src:welcome}
 :Namespace Welcome
 
     ∇ Run;S;P
