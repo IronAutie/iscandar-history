@@ -12,13 +12,18 @@
 % =========================================================================
 % 0. Document Identity Metadata & Abstract Capsule
 % =========================================================================
-\title{\textbf{Fractal Intelligent Memory (FIM-32): \\ Deterministic Resolution of Stochastic Heaps via Lattice-Bound Search Oracles}}
+\title{\textbf{An Extension of Buddy Systems to Arbitrary Radix
+for Deterministic Memory Allocation}}
 \author{\textbf{Andrew Jonathan Fine}}
 \date{May 31, 2026}
 
 % Automated abstract capsule injection hook
 \gdef\abstractcontent{
-  This paper introduces Fractal Intelligent Memory (FIM-32), a novel computer memory architecture designed to eliminate the latency variance and unpredictability inherent in traditional stochastic heap management. By organizing system memory as a rigid, deterministic multi-tiered lattice structured into geometric Sectors, Rows, and Planes, FIM-32 treats structural allocation as a constant-time coordinate address resolution task. We eliminate search-and-sort execution loops by routing access paths through discrete, boundary-enforced hardware search oracles. Our formal analysis demonstrates that matching allocation state metrics to a strict spatial occupancy limit ($\Gamma$) provides bounded path termination and absolute execution predictability. We validate this approach through concrete Dyalog APL tracking loop implementations, establishing that FIM-32 satisfies the rigorous timing constraints required for predictable, high-performance deterministic computing systems.
+Traditional heap management architectures do not terminate predictably due to dependency upon linked lists for finding and reclaiming storage. This
+paper introduces Iscandar, a deterministic memory management algorithm based on a Radix-32
+Partitioned Allocator. By mapping the memory heap linear number line to a multidimensional
+geometry of arbitrary radix, Iscandar replaces iterative search with a bounded set of unrolled instructions to resolve the geometry for finding available memory. For three-dimensional geometries
+we formalize the fractal lattice resolution across sizes of sector requests using heuristics that scan row and plane occupancy counts (Huge and Large). For heuristics involving obtaining smaller amounts of memory, we use oracles to locate available memory sectors while minimizing fragmentation. Performance is compared against commonly known memory algorithms such as buddy systems.
 }
 
 % =========================================================================
