@@ -413,7 +413,6 @@ The 32-bit machine-side implementation of the \textbf{Bijective Identity} (see s
 15--29      & S (Start)     & 15-bit Coordinate Index (Plane, Row, Sector). \\ \hline
 0--14       & L (Length)    & 15-bit Allocation length/depth. \\ \hline
 \end{tabular}
-\caption{Wrapped Pointer Bit-Field Layout}
 \end{table}
 \end{description}
 
@@ -423,9 +422,9 @@ The 32-bit machine-side implementation of the \textbf{Bijective Identity} (see s
 
 This section describes how \textbf{Iscandar} resolves memory requests by intersecting partitioned sub-spaces. The system utilizes primary ratios relative to the structural Arity ($\mathcal{A}$): the Guard Shards ($0.5\mathcal{A}$) and the Core Shard ($0.25\mathcal{A}$).
 
-\subsection*{Polytope Formation at Cube Level}
+\subsection{Polytope Formation at Cube Level}
 
-\subsubsection*{The Cube Scale Allocator ($L = \mathcal{A}^k$)}
+\subsubsection{The Cube Scale Allocator ($L = \mathcal{A}^k$)}
 
 \begin{description}
     \item[Domain:] Total Cube Volume resolution (addressable at $\mathcal{A}^k$).
@@ -433,9 +432,9 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     \item[Discussion:] The Cube Scale Allocator computes the unique  \textbf{``Gatekeeper''} sector count of the architecture. It provides the primary fast-fail heuristic for the system; if a request $(S, M)$ is determined to be non-admissible at this tier, the algorithm immediately terminates without initiating a descent (as seen in Listing 25 (\texttt{CubeNamespaceSearchHeuristic.apl}).
 \end{description}
 
-\subsection*{Polytope Formation At Row and Plane Levels}
+\subsection{Polytope Formation At Row and Plane Levels}
 
-\subsubsection*{The Huge Resolution ($\mathcal{A}^2 < L < \mathcal{A}^3$)}
+\subsubsection{The Huge Resolution ($\mathcal{A}^2 < L < \mathcal{A}^3$)}
 
 \begin{description}
     \item[Domain:] Multi-planar sequence resolution across the global $\mathcal{A}^k$ Cube row-manifold.
@@ -520,7 +519,7 @@ The Huge allocation exceeds the capacity of the standard Large allocator. By eva
 
 \FloatBarrier 
 
-\subsubsection*{The Large Resolution ($2\mathcal{A} < L \le \mathcal{A}^2$)}
+\subsubsection{The Large Resolution ($2\mathcal{A} < L \le \mathcal{A}^2$)}
 
 \begin{description}
     \item[Domain:] Row-join and sequence resolution within an $\mathcal{A}^2$-sector Plane manifold.
@@ -605,12 +604,11 @@ The Huge allocation exceeds the capacity of the standard Large allocator. By eva
 
 \FloatBarrier
 
-\FloatBarrier
 \clearpage
 
-\subsection*{Polytope Formation Between Rows}
+\subsection{Polytope Formation Between Rows}
 
-\subsubsection*{The Small Resolution ($A < L \le 2\mathcal{A}$)}
+\subsubsection{The Small Resolution ($A < L \le 2\mathcal{A}$)}
 
 \begin{description}
     \item[Domain:] Sector-join and sequence resolution within an $\mathcal{A}$-sector Row manifold.
@@ -622,12 +620,6 @@ The Huge allocation exceeds the capacity of the standard Large allocator. By eva
     C_{row} = \sum_{j=0}^{\mathcal{A}-1} (C_{bits,j} \cdot [x_{j} = 1])
     \label{eq:sum_predicate_row}
 \end{equation}
-
-% Clean, standardized subtitle block replacing the broken macro
-\begin{center}
-    \small\textsc{Tier-1 (Row) Lattice Occupancy Summation}
-\end{center}
-\vspace{12pt}
     
     \item[Discussion:] \hfill \\
 \begin{itemize}
@@ -637,7 +629,7 @@ The Huge allocation exceeds the capacity of the standard Large allocator. By eva
 \end{itemize}
 \end{description}
 
-    This tier  functions as the primary submachine for the bottom level of welding, utilizing the Oracle to join partial sector tails and heads into a single contiguous magnitude. By treating the row as a unified geometry,  boundary seams become transparent to the resolution logic.
+    This tier  functions as the primary submachine for the bottom level of welding, utilizing the Oracle to join partial sector tails and heads into a single contiguous magnitude. By treating the row as a unified geometry,  boundary seams become transparent to the resolution logic  as detailed in Listing 15 (\texttt{HeuristicSectorsDriver.apl}).
 \end{description}
 
 % --- FIGURE: SMALL ALLOCATOR (PINNED TO TINY TEXT) ---
@@ -688,11 +680,9 @@ The Huge allocation exceeds the capacity of the standard Large allocator. By eva
     \label{fig:small_allocator_bit_join}
 \end{figure}
 
+\subsection{Polytope Formation Within Row}
 
-
-\subsection*{Polytope Formation Within Row}
-
-\subsubsection*{The Tiny Resolution ($\mathcal{A}/4 < L \le \mathcal{A}$)}
+\subsubsection{The Tiny Resolution ($\mathcal{A}/4 < L \le \mathcal{A}$)}
 
 \begin{description}
 \item[Discussion:] \hfill \\
@@ -742,7 +732,7 @@ The example below utilizes a sequence of \textbf{Left and Right Oracle look-up t
     \caption*{Tiny mode seed polytopes A and B from indexing Left and Right Oracles.}
 \end{figure}
 
-\subsubsection*{The Nano Resolution ($L \le \mathcal{A}/4$)}
+\subsubsection{The Nano Resolution ($L \le \mathcal{A}/4$)}
 
 \begin{description}
     \item[Domain:] The bit-lattice contained within a single word or sub-word segment of a Row manifold, specifically targeting requests between 1 and 8 bits ($\mathcal{A}/4$ when $\mathcal{A}=32$).
