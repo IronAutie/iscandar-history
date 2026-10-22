@@ -430,7 +430,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \begin{description}
     \item[Domain:] Total Cube Volume resolution (addressable at $\mathcal{A}^k$).
     
-    \item[Discussion:] The Cube Scale Allocator computes the unique  \textbf{``Gatekeeper''} sector count of the architecture. It provides the primary fast-fail heuristic for the system; if a request $(S, M)$ is determined to be non-admissible at this tier, the algorithm immediately terminates without initiating a descent. 
+    \item[Discussion:] The Cube Scale Allocator computes the unique  \textbf{``Gatekeeper''} sector count of the architecture. It provides the primary fast-fail heuristic for the system; if a request $(S, M)$ is determined to be non-admissible at this tier, the algorithm immediately terminates without initiating a descent (as seen in Listing 25 (\texttt{CubeNamespaceSearchHeuristic.apl}).
 \end{description}
 
 \subsection*{Polytope Formation At Row and Plane Levels}
@@ -463,7 +463,7 @@ The Huge allocation exceeds the capacity of the standard Large allocator. By eva
 \nopagebreak
 
 % --- FIGURE: HUGE ALLOCATOR (STET) ---
-\begin{figure}[t!]
+\begin{figure}[H]
     \centering
     \stepcounter{marginfig}
     \begin{tikzpicture}
