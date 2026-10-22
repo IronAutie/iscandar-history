@@ -706,7 +706,6 @@ We map each instruction group to a specific predicate of the \textbf{Iscandar} h
     \item \textbf{Instruction Group 13:} Commitment/Return: Write the new occupancy to the 15-bit metadata and return the start address $S$.
 \end{enumerate}
 
-\end{verbatim}
 \section{Desk Check Summary: The Tiny Search ($L \le 8$)}
 
 Here we posit a hypothetical 32-bit machine providing the data structures needed to demonstrate one example through the Instruction Groups, on possible "Tiny Search" tracing  the sequence needed to resolve an allocation request $L$ of 8 sectors or fewer.
@@ -741,7 +740,7 @@ A stress-test audit was performed utilizing a $K=3$ fractal depth configuration.
 \subsection{Test Data (generated from Section 10)}
 
 \begin{longtable}{rrr}
-\caption{\textbf{Iscandar} Performance Metrics ($A=32, K=3$)} \label{tab:\textbf{Iscandar}_audit} \\
+\caption{\textbf{Iscandar} Performance Metrics ($A=32, K=3$)} \\
 \toprule
 \textbf{Occupancy (Sectors)} & \textbf{Memory Request (Sectors)} & \textbf{Memory Touches (Sectors)} \\ \midrule
 \endfirsthead
