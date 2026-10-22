@@ -1,3 +1,5 @@
+% ⍝ \documentclass[11pt]{article}
+
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{fontspec}  
@@ -14,6 +16,19 @@
 
 \usepackage{fancyvrb}
 \usepackage{alltt}
+
+\usepackage{fontspec}
+\setmonofont{FreeMono}
+\usepackage{fancyvrb}
+
+\DefineVerbatimEnvironment{Iscandar}{Verbatim}{
+    fontsize=\small,
+    fontfamily=tt,
+    keepspaces=true,
+    showspaces=false,
+    xleftmargin=0pt,
+    commandchars=\\\{\}
+}
 
 \geometry{letterpaper, margin=1in}
 
@@ -132,6 +147,9 @@ Traditional heap management architectures, such as the binary buddy system, inhe
 \section{Introduction to \textbf{Iscandar}}
 
 Unlike allocation models using variable-time search algorithms [1], this architecture employs a hierarchical occupancy map to resolve coordinates deterministically. Extending the traditional binary buddy system to an arbitrary radix replaces it with a geometric steering mechanism.
+
+\subsection{Batteries Are Included!}
+The .tex file for this manuscript functions as a self-assembling research environment by using it as an installation script for a Dyalog APL/W-64 environment. This ensures that the researcher does not need to manually configure local paths or binary repositories. See Section 12 for instructions on assembling the environment, and Section 10 for its use.
 
 \section{Architectural Axioms}
 
@@ -1013,10 +1031,53 @@ To contrast, a theoretical binary buddy system was simulated for a heap size com
     language=APL % Note: standard listings APL support varies; ttfamily preserves glyphs
 }
 
+\clearpage % Ensures the last page of the listing also has no number
+
 \section{\textbf{Iscandar}: Laboratory Source Code}
 
-For immediate demonstration: this listing can be copied directly from the LaTeX or PDF file into the clipboard, and pasted into a new instance of the "Dyalog APL/W-64 20.0 Unicode" GUI running on Windows 11.  
+\subsection{Free Bird Seed Here: Dyalog Bootstrap Code (See Section 1)}
+\label{sec:bootstrapper}
+\thispagestyle{empty} 
 
+\begin{Iscandar}
+⍝ --- Project Iscandar: Command-Line Bootstrapper ---
+∇ Bootstrap;path;folders;f
+  path ← '/',⍕2 ⎕NQ '.' 'GetEnvironment' 'USERPROFILE'
+  path,← '/Documents/Iscandar_Lab'
+  folders ← '' 'Oracles' 'Workspaces' 'Bin'
+  :For f :In folders
+      ⎕MKDIR path,'/',f
+  :EndFor
+  ⎕CS 'LatticeCore'
+  ⎕ ← 'Environment Initialized at: ',path
+  ⎕ ← 'LatticeCore Namespace Active.'
+∇
+Bootstrap
+\end{Iscandar}
+
+\subsection{Execution Protocol (Command Line)}
+
+To initialize the Iscandar laboratory environment, the manuscript is designed to be executed directly as a polyglot script. This process bypasses the \LaTeX\ prose and triggers the \texttt{Bootstrap} function in section 12.1 above, to assemble the local directory structure.
+
+\subsubsection{Windows (PowerShell / CMD)}
+Navigate to the directory containing the \texttt{.tex} source file and execute:
+
+\begin{Iscandar}
+dyalog.exe -nx -f "Iscandar_15c.tex" execute="Bootstrap"    
+\end{Iscandar}
+
+\subsection{Verification of Deployment}
+
+Upon successful execution, the interpreter will confirm the creation of the following physical hierarchy within the user's \texttt{Documents} directory. This confirms that the research environment is partitioned and ready for the bimodal resolution logic.
+
+\begin{itemize}
+    \item \textbf{Iscandar\_Lab/}: The root research container.
+    \item \textbf{Iscandar\_Lab/Oracles/}: Destination for binary look-up tables (LUTs) used in Nano and Tiny resolution.
+    \item \textbf{Iscandar\_Lab/Workspaces/}: Storage for serialized APL component files and environment states.
+    \item \textbf{Iscandar\_Lab/Bin/}: Target directory for compiled executable research artifacts.
+\end{itemize}
+
+The script automatically performs a \texttt{⎕CS 'LatticeCore'} transition. This ensures that all subsequent code extraction—specifically the instruction groups for the Radix-32 lattice—is encapsulated within a protected namespace, preventing variable collision with the root interpreter state.
 
 \clearpage % Ensures the last page of the listing also has no number
 
