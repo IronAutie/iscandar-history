@@ -271,38 +271,7 @@ The resolution time $T$ in the \textbf{Iscandar} architecture is a discrete func
     _{\text{Cube}}\}
 \end{equation}
 
-\begin{Iscandar}[DecisionTable.apl]
-:Namespace Decision
-    (⎕IO ⎕ML) ← 0 1
 
-    ⍝ --- Tier Mapping via Byte-Arity ---
-    ⍝ B: 8, R: 32, P: 1024, C: 32768
-    
-    Table ← C ⍴ ⊂##.Heuristic.Null
-    
-    Table[1+⍳B] ← ⊂##.Heuristic.Nano
-    Table[B+⍳(R-B)] ← ⊂##.Heuristic.Tiny
-    Table[R+⍳R] ← ⊂##.Heuristic.Small
-    Table[(2×R)+⍳(P-(2×R))] ← ⊂##.Heuristic.Large
-    Table[P+⍳(C-P)] ← ⊂##.Heuristic.Huge
-    Table[C] ← ⊂##.Heuristic.Cube
-
-    ∇ R ← Resolve s;Tier
-      :Access Public Shared
-      
-      ⍝ 1. Range Guard
-      :If (s < 1) ∨ (s > C)
-          R ← ##.STATUS_FAILURE ⍬ ⋄ :Return
-      :EndIf
-
-      ⍝ 2. Select the Namespace Reference
-      Tier ← ⊃Table[s]
-      
-      ⍝ 3. Invoke standardized Dispatch
-      R ← Tier.Dispatch s
-    ∇
-:EndNamespace
-\end{Iscandar}
 
 \subsection{Guaranteed Path Termination}
 Every resolution path is constructed from a fixed sequence of \textit{Instruction Groups} that eliminate runtime searching. 
@@ -501,24 +470,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     \item[Discussion:] The Cube Scale Allocator computes the unique  \textbf{``Gatekeeper''} sector count of the architecture. It provides the primary fast-fail heuristic for the system; if a request $(S, M)$ is determined to be non-admissible at this tier, the algorithm immediately terminates without initiating a descent. This makes the registrar the most efficient filter in the hierarchy, ensuring that the cost of coordinate resolution is only paid when success is mathematically guaranteed.
 \end{description}
 
-\begin{Iscandar}[HeuristicCube.apl]
-:Namespace Heuristic
-    :Namespace Cube
-        (⎕IO ⎕ML) ← 0 1
 
-        ∇ R ← Dispatch s
-          :Access Public Shared
-          ⍝ Tier-5: Maximum volume (32768 sectors)
-          ⍝ 1. Check if the entire Cube is clear
-          :If 32768 = ##.##.Lattice.TotalCount
-              R ← ##.##.STATUS_SUCCESS ##.##.CubePointer
-          :Else
-              R ← ##.##.STATUS_FAILURE ⍬
-          :EndIf
-        ∇
-    :EndNamespace
-:EndNamespace
-\end{Iscandar}
 
 \subsection*{Polytope Formation At Row and Plane Levels}
 
@@ -618,26 +570,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 
 \FloatBarrier % <--- Forces the figure to settle completely before proceeding
 
-\begin{Iscandar}[HeuristicHuge.apl]
-:Namespace HeuristicHuge
 
-    ∇ (S B) ← Run W_Core W_Rem
-      ⍝ 1. Intent Check: Direct Core or Fragmented Remainder?
-      :If W_Rem = 0
-          ⍝ Invoke the pure monolithic radar
-          (S B) ← ##.HugePlanesCoreDriver.Run W_Core
-      :Else
-          ⍝ Invoke the dual-track overspill radar
-          (S B) ← ##.HugePlanesRemainDriver.Run W_Core W_Rem
-      :EndIf
-
-      ⍝ 2. Status Pass-Through
-      ⍝ Success (S) and Absolute Sector Position (B) 
-      ⍝ are bubbled up to the top-level allocator.
-    ∇
-
-:EndNamespace
-\end{Iscandar}
 
 \subsubsection*{The Large Resolution ( $2\mathcal{A} < L \le \mathcal{A}^2$)}
 
@@ -725,63 +658,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 
 \clearpage
 
-\begin{Iscandar}[HeuristicLarge.apl]
-:Namespace HeuristicLarge
 
-    ARITY ← 32 ⋄ OK ← 1 ⋄ FAIL ← 0
-
-    ∇ Result ← Run L
-      ⍝ Hierarchical Coordinate Dispatch
-      Result ← ##.LargeRowDriver.Run (
-          ##.LargeDriver.Run L SectorScan
-      )
-    ∇
-
-    ∇ Result ← SectorScan (Plane Row L);W_Core;W_Edges;
-                                     L_Edges;Idx;S;
-                                     Sum;Start;Len
-      ⍝ 1. Geometric Decomposition
-      W_Core ← ⌊L ÷ ARITY
-      W_Edges ← 2 × 0 ≠ ARITY | L
-      Idx ← (Plane × 32) + Row
-
-      ⍝ 2. Branch: Join vs. Extrusion
-      :If W_Edges > 0
-          L_Edges ← ARITY | L
-
-          ⍝ Head Resolution
-          S ← (##.Cube.Rows[Idx]).sectors
-          (Len Start) ← ##.Oracle.Left.Resolve S
-          L_Edges -← Len
-
-          ⍝ Tail Resolution (Double-Ended Fast-Fail)
-          :If L_Edges > 0
-              S ← (##.Cube.Rows[Idx + 1 + W_Core]).sectors
-              L_Edges -← ##.Oracle.Right.Resolve S
-          :EndIf
-          →(L_Edges > 0)/FAIL_EXIT
-
-          ⍝ Shard (Core) Validation
-          :If W_Core > 0
-              Sum ← +/ (##.Cube.Rows[Idx + 1 + ⍳W_Core]).count
-              →(Sum ≠ 0)/FAIL_EXIT
-          :EndIf
-          Result ← OK Start
-
-      :Else
-          ⍝ Case II: Row-Aligned Extrusion
-          Sum ← +/ (##.Cube.Rows[Idx + ⍳W_Core]).count
-          →(Sum ≠ 0)/FAIL_EXIT
-          Result ← OK 0
-      :EndIf
-      →END
-
-    FAIL_EXIT: Result ← FAIL 0
-    END:
-    ∇
-
-:EndNamespace
-\end{Iscandar}
 
 \clearpage
 
@@ -865,53 +742,6 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     \label{fig:small_allocator_bit_join}
 \end{figure}
 
-\begin{Iscandar}[HeuristicSmall.apl]
-:Namespace Heuristic
-  :Namespace HeuristicSmall
-    ⍝ --- Constants ---
-    OK ← CONSTANT.STATUS_SUCCESS
-    FAIL ← CONSTANT.STATUS_FAILURE
-    LIMIT ← 1022 ⍝ Pivot limit for pair lookahead
-
-    ⍝ --- Function: SectorChecker ---
-    ⍝ Args: (Row Offset L)
-    ∇ Result ← SectorChecker Args;Row;Offset;L;GR1;GR2;S1;S2;P;Q;M
-      (Row Offset L) ← Args
-      GR1 ← Row + Offset
-      GR2 ← GR1 + 1
-
-      ⍝ Boundary Check: Final pivot is 1022
-      →(GR1 > LIMIT)/FAIL_EXIT
-
-      ⍝ Load Sectors from Cube
-      S1 ← (Cube.Rows[GR1]).sectors
-      S2 ← (Cube.Rows[GR2]).sectors
-      
-      ⍝ --- Scan Phase: S1 Left ---
-      P ← Oracle.Left[S1]
-      →(L > P)/SUPPLEMENT 
-      Result ← OK L ⋄ →END
-
-    SUPPLEMENT:
-      Q ← Oracle.Right[S2]
-      M ← L - P
-      →(M > Q)/FAIL_EXIT
-      Result ← OK L ⋄ →END
-      
-    FAIL_EXIT: 
-        Result ← FAIL 0
-      END:
-    ∇
-
-    ⍝ --- Function: Main ---
-    ∇ Result ← Main L;Offset
-      Offset ← 0
-      Result ← SectorChecker PairsRowsDriver.Run 
-               PlanesDriver.Run (Offset L)
-    ∇
-  :EndNamespace
-:EndNamespace
-\end{Iscandar}
 
 
 \subsection*{Polytope Formation Within Row}
@@ -987,52 +817,6 @@ This represents the leaf-level execution of the deterministic descent. By utiliz
 
 \FloatBarrier %
 
-\begin{Iscandar}[HeuristicTiny.apl]
-:Namespace Heuristic
-  :Namespace HeuristicTiny
-    ⍝ --- Constants ---
-    OK ← CONSTANT.STATUS_SUCCESS
-    FAIL ← CONSTANT.STATUS_FAILURE
-    LIMIT ← 1023
-
-    ⍝ --- Function: SectorChecker ---
-    ⍝ Args: (Row Offset L)
-    ∇ Result ← SectorChecker Args;Row;Offset;L
-      ∇ Result ← SectorChecker Args;GlobalRow;X;S;P
-      (Row Offset L) ← Args
-      GlobalRow ← Row + Offset
-
-      ⍝ Boundary Check
-      →(GlobalRow > LIMIT)/FAIL_EXIT
-
-      X ← Cube.Rows[GlobalRow]
-      S ← X.sectors
-      
-      ⍝ 2D Indexing: Use Oracle as bit scan
-      P ← Oracle.Left[S;L]
-      →(P < 0)/SECOND_CHANCE
-      Result ← OK P ⋄ →END
-
-      SECOND_CHANCE:
-      P ← Oracle.Right[S;L]
-      →(P < 0)/FAIL_EXIT
-      Result ← OK P ⋄ →END
-
-      FAIL_EXIT: 
-        Result ← FAIL 0
-      END:
-    ∇
-
-    ⍝ --- Function: Main ---
-    ∇ Result ← Main L;Offset
-      Offset ← 0
-      Result ← SectorChecker RowsDriver.Run 
-               PlanesDriver.Run (Offset L)
-    ∇
-  :EndNamespace
-:EndNamespace
-\end{Iscandar}
-
 
 \subsubsection*{The Nano Resolution ($L \le \mathcal{A}/4$)}
 
@@ -1084,48 +868,6 @@ This represents the leaf-level execution of the deterministic descent. By utiliz
     \end{tikzpicture}
     \caption*{Nano mode seed polytopes from indexing Center Oracle.}
 \end{figure}
-
-\begin{Iscandar}[HeuristicNano.apl]
-:Namespace Heuristic
-  :Namespace HeuristicNano
-    ⍝ --- Constants ---
-    OK ← CONSTANT.STATUS_SUCCESS
-    FAIL ← CONSTANT.STATUS_FAILURE
-    LIMIT ← 1023
-
-    ⍝ --- Function: SectorChecker ---
-    ⍝ Args: (Row Offset L)
-    ∇ Result ← SectorChecker Args;Row;Offset;L
-      ∇ Result ← SectorChecker Args;GlobalRow;X;S;P
-      (Row Offset L) ← Args
-      GlobalRow ← Row + Offset
-
-      ⍝ Boundary Check
-      →(GlobalRow > LIMIT)/FAIL_EXIT
-
-      X ← Cube.Rows[GlobalRow]
-      S ← X.sectors
-      
-      ⍝ 2D Indexing: Use Oracle as bit scan
-      P ← Oracle.Center[S;L]
-
-      →(P < 0)/FAIL_EXIT
-      Result ← OK P ⋄ →END
-
-      FAIL_EXIT: 
-        Result ← FAIL 0
-      END:
-    ∇
-
-    ⍝ --- Function: Main ---
-    ∇ Result ← Main L;Offset
-      Offset ← 0
-      Result ← SectorChecker RowsDriver.Run 
-               PlanesDriver.Run (Offset L)
-    ∇
-  :EndNamespace
-:EndNamespace
-\end{Iscandar}
 
 
 \section{Description of Instruction Groups}
@@ -1984,6 +1726,276 @@ This listing is the APL implementation of the basic structure of Section 2.
     :Field Public Shared Rows   ← CONSTANTS.PLANE ⍴ ⊂Row
     :Field Public Shared Planes ← CONSTANTS.ARITY ⍴ ⊂Plane
     :Field Public Shared count  ← 0      ⍝ Total Cube Population
+:EndNamespace
+\end{Iscandar}
+
+\begin{Iscandar}[Decision.apl]
+:Namespace Decision
+    (⎕IO ⎕ML) ← 0 1
+
+    ⍝ --- Tier Mapping via Byte-Arity ---
+    ⍝ B: 8, R: 32, P: 1024, C: 32768
+    
+    Table ← C ⍴ ⊂##.Heuristic.Null
+    
+    Table[1+⍳B] ← ⊂##.Heuristic.Nano
+    Table[B+⍳(R-B)] ← ⊂##.Heuristic.Tiny
+    Table[R+⍳R] ← ⊂##.Heuristic.Small
+    Table[(2×R)+⍳(P-(2×R))] ← ⊂##.Heuristic.Large
+    Table[P+⍳(C-P)] ← ⊂##.Heuristic.Huge
+    Table[C] ← ⊂##.Heuristic.Cube
+
+    ∇ R ← Resolve s;Tier
+      :Access Public Shared
+      
+      ⍝ 1. Range Guard
+      :If (s < 1) ∨ (s > C)
+          R ← ##.STATUS_FAILURE ⍬ ⋄ :Return
+      :EndIf
+
+      ⍝ 2. Select the Namespace Reference
+      Tier ← ⊃Table[s]
+      
+      ⍝ 3. Invoke standardized Dispatch
+      R ← Tier.Dispatch s
+    ∇
+:EndNamespace
+\end{Iscandar}
+
+
+\begin{Iscandar}[HeuristicCube.apl]
+:Namespace Heuristic
+    :Namespace Cube
+        (⎕IO ⎕ML) ← 0 1
+
+        ∇ R ← Dispatch s
+          :Access Public Shared
+          ⍝ Tier-5: Maximum volume (32768 sectors)
+          ⍝ 1. Check if the entire Cube is clear
+          :If 32768 = ##.##.Lattice.TotalCount
+              R ← ##.##.STATUS_SUCCESS ##.##.CubePointer
+          :Else
+              R ← ##.##.STATUS_FAILURE ⍬
+          :EndIf
+        ∇
+    :EndNamespace
+:EndNamespace
+\end{Iscandar}
+
+\begin{Iscandar}[HeuristicNano.apl]
+:Namespace Heuristic
+  :Namespace HeuristicNano
+    ⍝ --- Constants ---
+    OK ← CONSTANT.STATUS_SUCCESS
+    FAIL ← CONSTANT.STATUS_FAILURE
+    LIMIT ← 1023
+
+    ⍝ --- Function: SectorChecker ---
+    ⍝ Args: (Row Offset L)
+    ∇ Result ← SectorChecker Args;Row;Offset;L
+      ∇ Result ← SectorChecker Args;GlobalRow;X;S;P
+      (Row Offset L) ← Args
+      GlobalRow ← Row + Offset
+
+      ⍝ Boundary Check
+      →(GlobalRow > LIMIT)/FAIL_EXIT
+
+      X ← Cube.Rows[GlobalRow]
+      S ← X.sectors
+      
+      ⍝ 2D Indexing: Use Oracle as bit scan
+      P ← Oracle.Center[S;L]
+
+      →(P < 0)/FAIL_EXIT
+      Result ← OK P ⋄ →END
+
+      FAIL_EXIT: 
+        Result ← FAIL 0
+      END:
+    ∇
+
+    ⍝ --- Function: Main ---
+    ∇ Result ← Main L;Offset
+      Offset ← 0
+      Result ← SectorChecker RowsDriver.Run 
+               PlanesDriver.Run (Offset L)
+    ∇
+  :EndNamespace
+:EndNamespace
+\end{Iscandar}
+
+\begin{Iscandar}[HeuristicTiny.apl]
+:Namespace Heuristic
+  :Namespace HeuristicTiny
+    ⍝ --- Constants ---
+    OK ← CONSTANT.STATUS_SUCCESS
+    FAIL ← CONSTANT.STATUS_FAILURE
+    LIMIT ← 1023
+
+    ⍝ --- Function: SectorChecker ---
+    ⍝ Args: (Row Offset L)
+    ∇ Result ← SectorChecker Args;Row;Offset;L
+      ∇ Result ← SectorChecker Args;GlobalRow;X;S;P
+      (Row Offset L) ← Args
+      GlobalRow ← Row + Offset
+
+      ⍝ Boundary Check
+      →(GlobalRow > LIMIT)/FAIL_EXIT
+
+      X ← Cube.Rows[GlobalRow]
+      S ← X.sectors
+      
+      ⍝ 2D Indexing: Use Oracle as bit scan
+      P ← Oracle.Left[S;L]
+      →(P < 0)/SECOND_CHANCE
+      Result ← OK P ⋄ →END
+
+      SECOND_CHANCE:
+      P ← Oracle.Right[S;L]
+      →(P < 0)/FAIL_EXIT
+      Result ← OK P ⋄ →END
+
+      FAIL_EXIT: 
+        Result ← FAIL 0
+      END:
+    ∇
+
+    ⍝ --- Function: Main ---
+    ∇ Result ← Main L;Offset
+      Offset ← 0
+      Result ← SectorChecker RowsDriver.Run 
+               PlanesDriver.Run (Offset L)
+    ∇
+  :EndNamespace
+:EndNamespace
+\end{Iscandar}
+
+\begin{Iscandar}[HeuristicSmall.apl]
+:Namespace Heuristic
+  :Namespace HeuristicSmall
+    ⍝ --- Constants ---
+    OK ← CONSTANT.STATUS_SUCCESS
+    FAIL ← CONSTANT.STATUS_FAILURE
+    LIMIT ← 1022 ⍝ Pivot limit for pair lookahead
+
+    ⍝ --- Function: SectorChecker ---
+    ⍝ Args: (Row Offset L)
+    ∇ Result ← SectorChecker Args;Row;Offset;L;GR1;GR2;S1;S2;P;Q;M
+      (Row Offset L) ← Args
+      GR1 ← Row + Offset
+      GR2 ← GR1 + 1
+
+      ⍝ Boundary Check: Final pivot is 1022
+      →(GR1 > LIMIT)/FAIL_EXIT
+
+      ⍝ Load Sectors from Cube
+      S1 ← (Cube.Rows[GR1]).sectors
+      S2 ← (Cube.Rows[GR2]).sectors
+      
+      ⍝ --- Scan Phase: S1 Left ---
+      P ← Oracle.Left[S1]
+      →(L > P)/SUPPLEMENT 
+      Result ← OK L ⋄ →END
+
+    SUPPLEMENT:
+      Q ← Oracle.Right[S2]
+      M ← L - P
+      →(M > Q)/FAIL_EXIT
+      Result ← OK L ⋄ →END
+      
+    FAIL_EXIT: 
+        Result ← FAIL 0
+      END:
+    ∇
+
+    ⍝ --- Function: Main ---
+    ∇ Result ← Main L;Offset
+      Offset ← 0
+      Result ← SectorChecker PairsRowsDriver.Run 
+               PlanesDriver.Run (Offset L)
+    ∇
+  :EndNamespace
+:EndNamespace
+\end{Iscandar}
+
+
+\begin{Iscandar}[HeuristicLarge.apl]
+:Namespace HeuristicLarge
+
+    ARITY ← 32 ⋄ OK ← 1 ⋄ FAIL ← 0
+
+    ∇ Result ← Run L
+      ⍝ Hierarchical Coordinate Dispatch
+      Result ← ##.LargeRowDriver.Run (
+          ##.LargeDriver.Run L SectorScan
+      )
+    ∇
+
+    ∇ Result ← SectorScan (Plane Row L);W_Core;W_Edges;
+                                     L_Edges;Idx;S;
+                                     Sum;Start;Len
+      ⍝ 1. Geometric Decomposition
+      W_Core ← ⌊L ÷ ARITY
+      W_Edges ← 2 × 0 ≠ ARITY | L
+      Idx ← (Plane × 32) + Row
+
+      ⍝ 2. Branch: Join vs. Extrusion
+      :If W_Edges > 0
+          L_Edges ← ARITY | L
+
+          ⍝ Head Resolution
+          S ← (##.Cube.Rows[Idx]).sectors
+          (Len Start) ← ##.Oracle.Left.Resolve S
+          L_Edges -← Len
+
+          ⍝ Tail Resolution (Double-Ended Fast-Fail)
+          :If L_Edges > 0
+              S ← (##.Cube.Rows[Idx + 1 + W_Core]).sectors
+              L_Edges -← ##.Oracle.Right.Resolve S
+          :EndIf
+          →(L_Edges > 0)/FAIL_EXIT
+
+          ⍝ Shard (Core) Validation
+          :If W_Core > 0
+              Sum ← +/ (##.Cube.Rows[Idx + 1 + ⍳W_Core]).count
+              →(Sum ≠ 0)/FAIL_EXIT
+          :EndIf
+          Result ← OK Start
+
+      :Else
+          ⍝ Case II: Row-Aligned Extrusion
+          Sum ← +/ (##.Cube.Rows[Idx + ⍳W_Core]).count
+          →(Sum ≠ 0)/FAIL_EXIT
+          Result ← OK 0
+      :EndIf
+      →END
+
+    FAIL_EXIT: Result ← FAIL 0
+    END:
+    ∇
+
+:EndNamespace
+\end{Iscandar}
+
+
+\begin{Iscandar}[HeuristicHuge.apl]
+:Namespace HeuristicHuge
+
+    ∇ (S B) ← Run W_Core W_Rem
+      ⍝ 1. Intent Check: Direct Core or Fragmented Remainder?
+      :If W_Rem = 0
+          ⍝ Invoke the pure monolithic radar
+          (S B) ← ##.HugePlanesCoreDriver.Run W_Core
+      :Else
+          ⍝ Invoke the dual-track overspill radar
+          (S B) ← ##.HugePlanesRemainDriver.Run W_Core W_Rem
+      :EndIf
+
+      ⍝ 2. Status Pass-Through
+      ⍝ Success (S) and Absolute Sector Position (B) 
+      ⍝ are bubbled up to the top-level allocator.
+    ∇
+
 :EndNamespace
 \end{Iscandar}
 
