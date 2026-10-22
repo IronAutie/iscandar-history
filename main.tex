@@ -443,6 +443,50 @@ We show here how non-deterministic latency inherent in traditional memory manage
     
     \item[Handshake Oracle (LHL/RHL/Center)] "Oracle" for short, a Finite State Automaton, being a precomputed body of solutions used at the Tiny (Level 0) and Small (Level 1) allocator levels to bridge ``fractured'' sequences between sectors. It uses Left-Hand Lookahead (LHL), Right-Hand Lookahead (RHL) and Center Lookahead tables to weld adjacent fragments into a contiguous magnitude. In microcontroller implementations these are laid out as ROM tables. 
 
+    \begin{Iscandar}[OracleCenter.apl]
+:Namespace OracleCenter
+
+    (⎕IO ⎕ML) ← 0 1
+    Data ← ⍬  ⍝ Placeholder for the memory-mapped matrix
+
+    ∇ Init Path;tn;size
+      :Access Public
+      ⍝ Initializes the 'Serial Window' into 
+      ⍝ the string pointing to 'OracleCenter.bin'
+      
+      :If 0=⎕NC 'Data'
+      :OrIf 0=≢Data
+          :Trap 0
+              tn ← Path ⎕NTIE 0
+              size ← ⎕NSIZE tn
+              
+              ⍝ Map as (2^32) rows by 9 columns,
+              ⍝ 8-bit unsigned (Type 80)
+              ⍝ a virtual link without consuming 38GB of RAM.
+              Data ← (4294967296 9) ⎕MAP tn 80
+              
+              ⎕NUNTIE tn
+              ⎕←'Center Oracle Initialized: ',Path
+          :Else
+              ⎕←'Failed to map OracleCenter.bin at ',Path
+          :EndTrap
+      :EndIf
+    ∇
+
+    ∇ Pos ← Resolve(State Length)
+      :Access Public
+      ⍝ Deterministic Motorola Big-Endian First-Fit Resolution.
+      ⍝ Wrapper for the memory-mapped lookup.
+      ⍝ State: 32-bit unsigned integer representing occupancy.
+      ⍝ Length: Requested allocation length k (0-8).
+      
+      ⍝ Return value is the leftmost bit position [0-31] or 255 (Satiated).
+      Pos ← Data[State; Length]
+    ∇
+
+:EndNamespace
+\end{Iscandar}
+
     \item[Polytope Formation] The visual representation of the admissible search space within the lattice. Each hierarchical tier (Cube, Plane, Row) can manifest polytopes that collapse as memory occupancy increases.
     
     \item[Occupancy Limit ($\Phi$)] The mandatory occupancy boundary (Section 4.2) that prevents the system from entering a high-entropy state. Once the floor is reached, the system issues a deterministic refusal rather than engaging in variable-time search.
@@ -1280,11 +1324,11 @@ The following components support the project for this paper:
 # Layout: 2^32 rows x 9 columns (k=0..8)
 # Logic: Motorola Big-Endian (Bit 0 = MSB/Left). First-fit from Left.
 
-$FilePath = "OracleLeft.bin"
+$FilePath = "OracleCenter.bin"
 $Stream = [System.IO.File]::Create($FilePath)
 $Writer = New-Object System.IO.BinaryWriter($Stream)
 
-Write-Host "Manufacturing Left Oracle..."
+Write-Host "Manufacturing Center Oracle..."
 
 # Iterate through all 2^32 possible occupancy states
 for ([double]$S_double = 0; $S_double -lt 4294967296; $S_double++) {
