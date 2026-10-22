@@ -181,7 +181,7 @@ Traditional heap management architectures, such as the binary buddy system, inhe
 Unlike allocation models using variable-time search algorithms [1], this architecture employs a hierarchical occupancy map to resolve coordinates deterministically. Extending the traditional binary buddy system to an arbitrary radix replaces it with a geometric steering mechanism.
 
 \subsection{Batteries Are Included!}
-The .tex source for this manuscript functions as a self-organizing research example. It is designed to be processed by a PowerShell "Scissor" script that extracts Dyalog APL source listings directly from the document to assemble a local research environment. This ensures the researcher does not need to manually configure local paths or binary repositories. See Section 12 for instructions on "clipping" the environment and Section 10 for its use.
+The .tex source for this manuscript functions as a self-organizing research example. It can be processed by a PowerShell script to extracts Dyalog APL source listings directly from surrounding portions of this paper which document them best, to create a local research environment. This ensures the researcher does not need to manually configure local paths or binary repositories. See Section 12 for instructions on putting together the environment and Section 10 for its use.
 
 \section{Architectural Axioms}
 
@@ -441,7 +441,7 @@ We show here how non-deterministic latency inherent in traditional memory manage
     
     \item[Global Registrar] The Level 3 (Cube Scale) apex of the hierarchy. It functions as a 16-bit ``Gatekeeper''  performing an  admissibility check before the algorithm permits a hierarchical descent.
     
-    \item[Handshake Oracle (LHL/RHL/Center)] "Oracle" for short, a Finite State Automaton, being a precomputed body of solutions used at the Tiny (Level 0) and Small (Level 1) allocator levels to bridge ``fractured'' sequences between sectors. It uses Left-Hand Lookahead (LHL), Right-Hand Lookahead (RHL) and Center Lookahead tables to weld adjacent fragments into a contiguous magnitude. In microcontroller implementations these are laid out as ROM tables. 
+    \item[Oracle] A Finite State Automaton, being a precomputed body of polytope seed (Center Oracle) or join (Left or Right Oracle) solutions used by various levels of Iscandar's allocator search heuristics to find available memory in the bitwise geometrical map. 
 
     \begin{Iscandar}[OracleCenter.apl]
 :Namespace OracleCenter
@@ -480,12 +480,71 @@ We show here how non-deterministic latency inherent in traditional memory manage
       ⍝ State: 32-bit unsigned integer representing occupancy.
       ⍝ Length: Requested allocation length k (0-8).
       
-      ⍝ Return value is the leftmost bit position [0-31] or 255 (Satiated).
+      ⍝ Returns leftmost bit position [0-31] or 255 (Fail).
       Pos ← Data[State; Length]
     ∇
 
 :EndNamespace
 \end{Iscandar}
+
+\begin{Iscandar}[OracleLeft.apl]
+:Namespace OracleLeft
+    (⎕IO ⎕ML) ← 0 1
+    Data ← ⍬
+
+    ∇ Init Path;tn
+      :Access Public
+      :If 0=⎕NC 'Data'
+          :Trap 0
+              tn ← Path ⎕NTIE 0
+              ⍝ Map as (2^32) rows by 2 columns (Type 80)
+              Data ← (4294967296 2) ⎕MAP tn 80
+              ⎕NUNTIE tn
+          :Else
+              ⎕←'Failed to map OracleLeft.bin'
+          :EndTrap
+      :EndIf
+    ∇
+
+    ∇ Res ← Resolve State
+      :Access Public
+      ⍝ Returns (Length StartPos)
+      ⍝ Byte A: Length (255 if blocked)
+      ⍝ Byte B: Start Position (32 - Length)
+      Res ← Data[State; 0 1]
+    ∇
+:EndNamespace
+\end{Iscandar}
+
+\begin{Iscandar}[OracleRight.apl]
+:Namespace OracleRight
+    (⎕IO ⎕ML) ← 0 1
+    Data ← ⍬
+
+    ∇ Init Path;tn
+      :Access Public
+      :If 0=⎕NC 'Data'
+          :Trap 0
+              tn ← Path ⎕NTIE 0
+              ⍝ Map as (2^32) rows by 2 columns (Type 80)
+              Data ← (4294967296 2) ⎕MAP tn 80
+              ⎕NUNTIE tn
+          :Else
+              ⎕←'Failed to map OracleRight.bin'
+          :EndTrap
+      :EndIf
+    ∇
+
+    ∇ Res ← Resolve State
+      :Access Public
+      ⍝ Returns (Length StartPos)
+      ⍝ Byte A: Length (255 if blocked)
+      ⍝ Byte B: Start Position (Always 0)
+      Res ← Data[State; 0 1]
+    ∇
+:EndNamespace
+\end{Iscandar}
+
 
     \item[Polytope Formation] The visual representation of the admissible search space within the lattice. Each hierarchical tier (Cube, Plane, Row) can manifest polytopes that collapse as memory occupancy increases.
     
@@ -1317,7 +1376,9 @@ The following components support the project for this paper:
 \end{Iscandar}
 
 
-\subsubsection{Oracle Manufacture}
+\subsection{Oracle Manufacture}
+
+\subsubsection{Center Oracle}
    
 \begin{Iscandar}[OracleCenter.ps1]
 # Manufactures the 38.6GB Center Oracle Blob
@@ -1373,7 +1434,80 @@ $Writer.Close()
 $Stream.Close()
 Write-Host "Iscandar Center Oracle Manufacture: Complete."
 \end{Iscandar}
-    
+
+\subsubsection{Left Oracle}
+\begin{Iscandar}[OracleLeft.ps1]
+# OracleLeft.ps1 (Max 40 Chars)
+# Logic: Trailing Run (Ends at LSB)
+$P = "OracleLeft.bin"
+$S_i = [System.IO.File]::Create($P)
+$W = [System.IO.BinaryWriter]::new($S_i)
+
+for ([double]$d=0; $d -lt 4gb; $d++) {
+  $S = [uint32]$d
+
+  # Check LSB (Motorola Bit 31)
+  if (($S -band 1) -ne 0) {
+    $A = [byte]255 # Blocked Case
+    $B = [byte]0
+  } else {
+    $r = 0 # Length counter
+    for ($i=0; $i -lt 32; $i++) {
+      $m = [uint32]1 -shl $i
+      if (($S -band $m) -eq 0) {
+        $r++
+      } else { break }
+    }
+    $A = [byte]$r # Byte A: Length
+    # B: Start Pos (Relative to MSB)
+    $B = [byte](32 - $r) 
+  }
+  $W.Write($A); $W.Write($B)
+
+  if ($d % 100mb -eq 0) {
+    $p = [math]::Round(($d/4gb)*100,2)
+    Write-Host "Progress: $p %"
+  }
+}
+$W.Close(); $S_i.Close()
+\end{Iscandar}
+
+\subsubsection{Right Oracle}
+
+\begin{Iscandar}[OracleRight.ps1]
+# OracleRight.ps1 (Max 40 Chars)
+# Logic: Leading Run (Starts at MSB)
+$P = "OracleRight.bin"
+$S_i = [System.IO.File]::Create($P)
+$W = [System.IO.BinaryWriter]::new($S_i)
+
+for ([double]$d=0; $d -lt 4gb; $d++) {
+  $S = [uint32]$d
+
+  # Check MSB (Motorola Bit 0)
+  if (($S -band 0x80000000) -ne 0) {
+    $A = [byte]255 # Blocked Case
+    $B = [byte]0
+  } else {
+    $r = 0 # Length counter
+    for ($i=31; $i -ge 0; $i--) {
+      $m = [uint32]1 -shl $i
+      if (($S -band $m) -eq 0) {
+        $r++
+      } else { break }
+    }
+    $A = [byte]$r # Byte A: Length
+    $B = [byte]0  # Byte B: Always 0
+  }
+  $W.Write($A); $W.Write($B)
+
+  if ($d % 100mb -eq 0) {
+    $p = [math]::Round(($d/4gb)*100,2)
+    Write-Host "Progress: $p %"
+  }
+}
+$W.Close(); $S_i.Close()
+\end{Iscandar}
 
 \clearpage % Ensures the last page of the listing also has no number
 
