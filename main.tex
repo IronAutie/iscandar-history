@@ -174,7 +174,47 @@ Traditional heap management architectures, such as the binary buddy system, inhe
 Unlike allocation models using variable-time search algorithms [1], this architecture employs a hierarchical occupancy map to resolve coordinates deterministically. Extending the traditional binary buddy system to an arbitrary radix replaces it with a geometric steering mechanism.
 
 \subsection{Batteries Are Included!}
-The .tex source for this manuscript functions as a self-organizing research example. It can be processed by a PowerShell script to extracts Dyalog APL source listings directly from surrounding portions of this paper which document them best, to create a local research environment. This ensures the researcher does not need to manually configure local paths or binary repositories. See Section 12 for instructions on putting together the environment and Section 10 for its use.
+The .tex source for this manuscript functions as a self-organizing research example. It can be processed by a PowerShell script to extracts Dyalog APL source listings directly from surrounding portions of this paper which document them best, to create a local research environment. This ensures the researcher does not need to manually configure local paths or binary repositories. See Section 12 for instructions on putting together the environment and Section 10 for its use. \textbf {Welcome.apl} below is the basic demonstration. 
+
+\subsubsection{The Welcome Example.}
+
+\thispagestyle{empty}
+\begin{Iscandar}[Welcome.apl]
+:Namespace Welcome
+
+    ∇ Run;S;P
+      ⍝ 1. Lifecycle Start: Bootstrap the Iscandar Engine
+      #.Iscandar.Main
+
+      '--- Welcome to Iscandar ---'
+      'Lattice online. Starting verification...'
+
+      ⍝ 2. Execution Phase: Allocate 2 sectors
+      (S P) ← #.Iscandar.Allocate 2
+
+      ⍝ 3. Guard: Exit early if the lattice is full
+      :If S = 0
+          'ERROR: Verification failed.' ⋄ →EXIT
+      :EndIf
+
+      'SUCCESS: Pointer synthesized at Sector ' (P.base P.len)
+
+      ⍝ 4. Reclamation Phase: Return to the Void
+      S ← #.Iscandar.Free P
+      
+      :If S = #.Iscandar.OK
+          'SUCCESS: Sectors reclaimed.'
+      :EndIf
+
+      EXIT:
+      ⍝ 5. Lifecycle End: Formal Teardown
+      #.Iscandar.Cleanup
+      
+      '--- Welcome Routine Complete ---'
+    ∇
+
+:EndNamespace
+\end{Iscandar}
 
 \section{Architectural Axioms}
 
@@ -273,6 +313,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
+\thispagestyle{empty}
 \begin{Iscandar}[Iscandar.apl]
 :Namespace Iscandar
 
@@ -308,6 +349,22 @@ This listing is the APL implementation of the basic structure of Section 2.
       ⍝ 3. Reset the pointer status to show it is no longer active
       Pointer.status ← 0
       S ← OK
+    ∇
+
+    ∇ Main
+      ⍝ 1. Prepare physical lattice and state maps
+      Initialize_Lattice
+      
+      ⍝ 2. Set environment constants and pathing
+      'Iscandar Engine Online. System initialized.'
+    ∇
+
+    ∇ Cleanup
+      ⍝ 1. Reset all hierarchical occupancy counters
+      { ⍵.sectors ← 0 ⋄ ⍵.count ← 0 }¨ ##.Cube.Rows
+      
+      ⍝ 2. Release oracle handles and clear transient state
+      'Lattice returned to void. Environment clear.'
     ∇
 
 :EndNamespace
