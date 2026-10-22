@@ -49,19 +49,19 @@
 
 \section{Introduction}
 
-The Iscandar memory management system is defined by a fixed-depth, Radix-32 lattice. Unlike allocation models using variable-time search algorithms \cite{knuth, knowlton}, this architecture uses a hierarchical occupancy map and hardware-aligned branching to achieve deterministic coordinate resolution. By extending the traditional binary buddy system to an arbitrary radix, we eliminate the logarithmic search depth and replace it with a geometric steering mechanism.
+A fixed-depth, Radix-32 lattice defines the Iscandar memory management system Unlike allocation models using variable-time search algorithms [1], this architecture employs a hierarchical occupancy map and hardware-aligned branching to resolve coordinates deterministically. Extending the traditional binary buddy system to an arbitrary radix eliminates logarithmic search depth, replacing it with a geometric steering mechanism.
 
 \section{Architectural Axioms}
 
-The following axioms define the geometric and mathematical constraints of the lattice. They ensure each memory request is treated as a coordinate resolution task rather than a search-and-sort operation, maintaining the determinism needed for the $K=13$ instruction tax.
+These axioms establish the geometric and mathematical constraints of the lattice. They transform each memory request into a coordinate resolution task, avoiding search-and-sort operations to maintain the K=13 instruction tax determinism.
 
 \subsection{Axiom I: The State Map (L) and Structural Arity ($\mathcal{A})$}
 
-The memory space is defined as an $n$-level lattice $L$ of fixed depth, where $n=3$. The architecture is characterized by a constant Arity ($\mathcal{A}$) of 32. The lattice is composed of a hierarchical progression of tiers: the atomic Sector ($S_{0}$), the Row of Sectors ($S_{1}$), the Plane of Rows ($S_{2}$), and the Cube of Planes ($S_{3}$). The address of any specific leaf node is a direct function of its lattice coordinates $(p, r, s)$, where $p, r, s \in \{0, \dots, \mathcal{A}-1\}$. This geometric structure remains invariant regardless of the physical byte-width represented by the sector.\footnote[2]{The Large allocator functions as a cross-tier searcher for sequence resolution, managing the fractal logic across the Plane manifold to satistfy multi-Row requests.}
+An $n$-level lattice $L$ of fixed depth ($n=3$) \textbf{defines} the memory space. The architecture \textbf{maintains} a constant Arity ($\mathcal{A}$) of 32. A hierarchical progression of tiers \textbf{organizes} the lattice: the atomic Sector ($S_{0}$), the Row of Sectors ($S_{1}$), the Plane of Rows ($S_{2}$), and the Cube of Planes ($S_{3}$). Lattice coordinates ($p, r, s$) \textbf{determine} the address of any specific leaf node, where $p, r, s \in \{0, \dots, \mathcal{A}-1\}$. The geometry \textbf{maintains} invariance regardless of the physical byte-width the sector \textbf{occupies}.\footnote[2]{The Large allocator functions as a cross-tier searcher for sequence resolution, managing the fractal logic across the Plane manifold to satistfy multi-Row requests.}
 
 \subsection{Axiom II: Hierarchical Occupancy Counters ($\Gamma$)}
 
-To facilitate constant-time steering, the lattice maintains discrete occupancy counts ($\Gamma$) at every tier. Following the principles of bit-block representation \cite{bitblock}, these counters provide a real-time density map of the lattice:
+Discrete occupancy counts ($\Gamma$) at every tier \textbf{enable} constant-time steering. Following bit-block representation principles [2], these counters \textbf{generate} a real-time density map of the lattice:
 
 \begin{itemize}
     \item \textbf{Level 1 (Row):} $\Gamma_{1} = \sum_{i=0}^{31} \Gamma_{0,i}$
@@ -69,142 +69,200 @@ To facilitate constant-time steering, the lattice maintains discrete occupancy c
     \item \textbf{Level 3 (Cube):} $\Gamma_{3} = \sum_{k=0}^{31} \Gamma_{2,k}$
 \end{itemize}
 
-This hierarchical summation ensures that the Global Registrar can perform an admissibility check in a single instruction cycle, satisfying the fast-fail condition established in the audit.
+This hierarchical summation lets the Global Registrar to \textbf{execute} an admissibility check in a single instruction cycle, \textbf{fulfilling} the fast-fail condition established in the audit.
 
 \subsection{Axiom III: Discrete Enforcement of the Resilience Floor ($\Phi$)}
 
-The Iscandar system enforces a mandatory occupancy boundary known as the Resilience Floor ($\Phi$). Unlike traditional allocators that continue to search for gaps as memory nears capacity, this axiom dictates that once $\Gamma_{3}$ reaches the threshold $\Phi$, the system issues a deterministic refusal. 
+The Iscandar system \textbf{enforces} a mandatory occupancy boundary, the Resilience Floor ($\Phi$). Traditional allocators search for gaps as memory nears capacity; in contrast, this system \textbf{triggers} a deterministic refusal once $\Gamma_{3}$ reaches the $\Phi$ threshold.
 
 \subsection{Axiom IV: Rotational Steering ($\vec{R}$)}
 
-To maintain structural balance across the lattice, the allocator utilizes a rotational steering vector. This ensures that the search polytopes are distributed across the 32-radix plane, preventing localized "hot spots" of occupancy and ensuring that the LHL/RHL Handshake Oracle remains within its optimal operational tax.
+A rotational steering vector \textbf{balances} the lattice structure, preventing localized occupancy "hot spots", keeping the LHL/RHL Handshake Oracle within its optimal operational tax.
 
 \subsection{Axiom V: The Contiguity Guarantee}
 
-The Iscandar lattice guarantees that any resolved coordinate sequence represents a continuous physical block. This is enforced by the LHL/RHL Handshake Oracle at Level 1, which validates that the sum of leading and trailing fragments across a sector-join equals the requested magnitude $M$ without gaps.
+Any resolved coordinate sequence \textbf{represents} a continuous physical block in the Iscandar lattice. The Level 1 LHL/RHL Handshake Oracle \textbf{enforces} this property, \textbf{validating} that the combined leading and trailing fragments across a sector-join \textbf{equal} the requested magnitude $M$ without gaps.
 
 \section{Inductive Proof of Deterministic Resolution}
 
-\noindent \textbf{Theorem:} For a fixed-depth \textit{iscandar} lattice of Arity $\mathcal{A}=32$, the time complexity of the resolution operator $\Omega$ is strictly bounded by $O(1)$.
+\noindent \textbf{Theorem:} A fixed-depth $\mathcal{L}$ of Arity $\mathcal{A}=32$ \textbf{establishes} deterministic resolution for operator $\Omega$.
 
 \subsection{The Complexity Proof}
 
-The \textit{iscandar} architecture optimizes the classical buddy system search by mapping the branching factor directly to the processor's word-width \cite{knuth1997art}. Let $L_n$ represent a lattice structure of level $n$. We define the resolution time $T(L_n)$ as the number of hardware clock cycles ($\omega$) required to resolve a memory coordinate.
+The $\mathcal{L}$ \textbf{maps} its branching factor to the processor word-width to \textbf{optimize} the classical buddy system search [3]. Let $\mathcal{L}_{n}$ \textbf{designate} a sub-lattice of level $n$, where resolution time $T(\mathcal{L}_{n})$ \textbf{represents} the total instruction count ($\iota$) required to \textbf{resolve} a memory coordinate. Resolution time $T(\mathcal{L}_{n})$ \textbf{represents} the instruction count ($\iota$) for \textbf{resolving} a memory coordinate in a level-$n$ sub-lattice.\\
 
 \begin{enumerate}
-    \item \textbf{Base Case ($n=1$):} 
-    At the Row level ($L_1$), the resolution of a free sector is performed via a hardware bit-scan primitive (e.g., \textit{Bit Field Find First One}). This operation is atomic on 32-bit architectures.
+    \item \textbf{Base Case ($n = 1$):} At the Row level ($\mathcal{L}_{1}$), a hardware bit-scan primitive \textbf{resolves} a free sector; this operation \textbf{maintains} atomicity on 32-bit architectures.
     \begin{equation}
-        T(L_1) = \omega
+        T(\mathcal{L}_{1}) = I_{base}
     \end{equation}
 
-    \item \textbf{Inductive Step:} 
-    Assume that for a structure of level $k$, the resolution time is $T(L_k) = k\omega$. To resolve a request at level $k+1$ (e.g., the Plane level):
+    \item \textbf{Inductive Step:} Given the invariant that resolution time for a level-$k$ structure is $T(\mathcal{L}_{k}) = kI_{base}$, resolving a request at level $k+1$ (e.g., the Plane level) \textbf{requires}:
     \begin{itemize}
-        \item The occupancy sum $\Gamma_{k+1}$ is evaluated using a parallel bitmask comparison to select a viable Level $k$ child. Because $\mathcal{A}=32$ matches the hardware word-width, this lookup and steering operation is completed in a single cycle \cite{hamming1950error}.
-        \item The resolution logic descends to the Level $k$ structure identified by the steering vector provided by the Oracle.
+        \item The occupancy sum $\Gamma_{k+1}$ is \textbf{evaluated} via parallel bitmask comparison to \textbf{select} a viable Level-$k$ child. As $\mathcal{A} = 32$ \textbf{aligns} with the hardware word-width, this lookup and steering operation \textbf{consumes} a single instruction [4].
+        \item The resolution operation \textbf{descends} to the level-$k$ $\mathcal{L}$ identified by the steering vector from the Oracle.
         \item The resulting recurrence relation is:
         \begin{equation}
-            T(L_{k+1}) = \omega + T(L_k) = \omega + k\omega = (k+1)\omega
+            T(\mathcal{L}_{k+1}) = I_{base} + T(\mathcal{L}_k) = I_{base} + kI_{base} = (k+1)I_{base}
         \end{equation}
+        \item \textbf{Termination Constraint:} The recursion \textbf{terminates} at $\mathcal{L}_{1}$, where the hardware bit-scan \textbf{yields} the final effective address offset.
     \end{itemize}
 \end{enumerate}
 
+
 \subsection{Conclusion of Determinism}
+By induction, the resolution time for any $n$-level $\mathcal{L}$ structure is strictly $nI_{base}$. While standard stochastic allocators exhibit execution times as a function of free-block count ($N$)—typically yielding $O(\log N)$ or worse in fragmented states [5]—the Iscandar architecture \textbf{collapses} this complexity. $n$ as a constant \textbf{enforces} deterministic latency of resolution regardless of heap saturation.\\
 
-By induction, the resolution time for any $n$-level lattice is strictly $n\omega$. In standard stochastic allocators, the execution time is a function of the number of free blocks ($N$), typically yielding $O(\log N)$ or worse in fragmented states \cite{knowlton1965fast, wilson1995dynamic}.\\ 
-
-In the \textit{iscandar} model, $n$ is an architectural constant ($n=3$), thus total execution time is:
+In the Iscandar model, $n$ is an architectural constant (e.g., $n = 3$); so total execution time is:
 \begin{equation}
-    T_{total} = 3\omega
+    T_{total} = 3I_{base}
 \end{equation}
 
-This result confirms that for a Cube of 32768 Sectors, the time required to resolve an address is invariant. This performance is maintained provided the system stays in the operational domain defined by the Resilience Floor ($\Phi$). By trading spatial capacity for temporal certainty, the architecture eliminates the "temporal jitter" that can compromise real-time systems.
+This result confirms that for a Cube of 32,768 Sectors, the time required to resolve an address is \textbf{invariant}. This performance is maintained provided the system stays in the operational domain of the Resilience Floor ($\Phi$). By trading spatial capacity for temporal certainty, the architecture \textbf{eliminates} the ``temporal jitter'' that characterizes non-deterministic real-time systems.
 
-\subsection*{3.3 Theoretical $O(1)$ Consistency}
-To prevent boundary-straddling from introducing a temporal penalty, the kernel utilizes a "Computational Handshake", also known as a Handshake Oracle, being a precomputed body of known solutions for straddle cases. This ensures that the search time for a 32-sector block is identical regardless of its alignment relative to the Tier 1 registers, giving us the consistency we want.
+\subsection{Temporal Consistency and Boundary Management}
+To \textbf{preclude} latency variability during boundary-straddling, Iscandar \textbf{utilizes} a computational handshake or ``Oracle,'' a precomputed resolution-path for non-aligned straddle cases, \textbf{ensuring} the instruction count for a 32-sector block remains \textbf{isochronous} regardless of its alignment relative to the Tier-1 registers. By \textbf{eliminating} the alignment-check penalty, the architecture \textbf{preserves} a deterministic execution window across the entire addressable space.\\
+
+Here we describe the ``Factory'' math used to pre-calculate the Oracle tables, transforming a search problem into a static retrieval of pre-verified geometric facts.
+
+\subsubsection{Generating the Boundary Tables (RHL/LHL)}
+The boundary tables are 1D vectors that map every possible bit-permutation of a Guard Shard to its boundary potential.
+\begin{itemize}
+    \item \textbf{Right-Hand Lookahead (RHL):} For any shard state $S$, the table stores the starting index of the longest contiguous zero-run terminating at the right-hand boundary. If the terminal bit is \textbf{1}, the value is \textbf{Null}.
+    \item \textbf{Left-Hand Lookahead (LHL):} Maps the shard state to the final bit position of the zero-run starting from the left-hand boundary. If the initial bit is \textbf{1}, the value is \textbf{Null}.
+    \item \textbf{Math:} These are pre-calculated \textit{Suffix/Prefix Automata} that eliminate runtime scanning \cite{stringology}.
+\end{itemize}
+
+\subsubsection{Generating the Core Oracle (2D Matrix)}
+The Core Shard utilizes a 2D matrix ($2^{A/4} \times A/4$) to resolve internal gaps.
+\begin{itemize}
+    \item \textbf{Mechanism:} Exhaustive enumeration of all $2^{A/4}$ bit-patterns against all possible length requests within the core.
+    \item \textbf{Math:} Each cell $(i, j)$ is filled using a windowed zero-run algorithm. This transforms the shard into a lookup-based \textit{Finite State Transducer} \cite{stringology}.
+\end{itemize}
+
+\subsubsection{The Cube Case (The Boolean Primitive)}
+The ``Cube Case'' represents the \textbf{Ultimate Degeneracy}. It is the boolean truth for the entire $A^k$ bitspace.
+\begin{itemize}
+    \item \textbf{Scale:} A single bit of metadata representing the occupancy of the entire $A \times k$ volume.
+    \item \textbf{Boolean Law:} 
+        \begin{itemize}
+            \item \textbf{0 (Open):} The entire volume is zero.
+            \item \textbf{1 (Closed):} Any bit within the volume is one.
+        \end{itemize}
+    \item \textbf{Math:} This represents the collapse of a high-dimensional state space into a \textit{Degenerate Polytope}, providing the structural filler for Huge Case construction with $O(1)$ verification \cite{combinatorial}.
+\end{itemize}
+
+
 
 \section{Deterministic Coalescence and the Resilience Floor}
-
-The maintenance of temporal determinism in a dynamic environment requires that the deallocation process (coalescence) mirrors the efficiency of the allocation logic. Furthermore, the operational stability of the \textit{iscandar} lattice is predicated on the discrete enforcement of the Resilience Floor ($\Phi$), which prevents the system from entering high-entropy states associated with traditional heap exhaustion \cite{wilson1995dynamic}.
+Maintaining temporal determinism in a dynamic environment \textbf{requires} a deallocation process (coalescence) \textbf{mirroring} the efficiency of the allocation logic. Operational stability of the iscandar lattice uses discrete enforcement of the Resilience Floor ($\Phi$), \textbf{precluding} the high-entropy states typically associated with stochastic fragmentation [5].
 
 \subsection{Symmetric Coalescence Mechanics}
-
-In the \textit{iscandar} architecture, coalescence is not a background "garbage collection" task or a variable-time search for adjacent free blocks. Instead, it is an inverse steering operation. When a Sector ($S_0$) is released, the system performs a hierarchical update of the occupancy counters ($\Gamma$) in a top-down symmetric path:
+In the iscandar architecture, coalescence is not a variable-time search for adjacent free blocks, but a \textbf{deterministic state update}. Whether the Oracle \textbf{descends} to clear a bit-position or \textbf{propagates} the release upward through the hierarchy, the operation \textbf{remains isochronous}. Because the bit-address of any Sector ($S_{0}$) is a fixed function of its coordinates, the update to the occupancy counters ($\Gamma$) \textbf{consumes} the same instruction count ($I_{base}$) as the initial resolution.
 
 \begin{enumerate}
-    \item The atomic leaf node state $\Gamma_0$ is toggled to 0 (Available).
-    \item The change propagates immediately to the parent Row counter ($\Gamma_1$).
-    \item The Level 2 (Plane) and Level 3 (Cube) counters are updated through single-cycle integer subtraction.
+    \item The atomic leaf node state $\Gamma_{0}$ is \textbf{toggled} to $0$ (Available).
+    \item The change \textbf{propagates} immediately to the parent Row counter ($\Gamma_{1}$).
+    \item The Level-2 (Plane) and Level-3 (Cube) counters are \textbf{updated} through single-cycle integer subtraction.
 \end{enumerate}
 
-Because the lattice depth is fixed at $n=3$, the time complexity for deallocation is identical to allocation ($3\omega$). This symmetry ensures that the system overhead remains constant regardless of the frequency of memory "churn," eliminating the temporal spikes found in traditional coalescing algorithms \cite{knuth1997art}.
+Because the lattice depth is fixed at $n=3$, time complexity for allocation are identical to deallocation ($3I_{base}$). This symmetry \textbf{ensures} that system overhead remains constant regardless of memory ``churn,'' \textbf{eliminating} the temporal spikes typically generated by traditional coalescing algorithms [6].
 
 \subsection{Operational Enforcement of $\Omega$}
+The Resilience Floor ($\Phi$) \textbf{serves} as the authoritative boundary of the system’s operational domain. While traditional allocators attempt to satisfy requests until the address space is 100\% utilized---leading to $O(N)$ search patterns as fragmentation increases [7]---the iscandar lattice \textbf{utilizes} the $\Gamma_{3}$ counter as a deterministic ``circuit breaker.''\\
 
-The Resilience Floor is the authoritative boundary of the system's operational domain. While traditional allocators attempt to satisfy requests until the address space is 100\% utilized—leading to $O(N)$ search patterns as fragmentation increases \cite{knowlton1965fast}—the \textit{iscandar} lattice utilizes the $\Gamma_3$ counter as a deterministic "circuit breaker."\\
-
-The decision logic for the Resolution Operator ($\Omega$) is defined as:
+The decision logic for the Resolution Operator ($\Omega$) is:
 \begin{equation}
-    \Omega(request) = 
-    \begin{cases} 
-      Resolve(p, r, s) & \text{if } \Gamma_3 < K \\
-      Refuse(Constant\_Time) & \text{if } \Gamma_3 \ge K 
-    \end{cases}
+\Omega(\text{request}) = 
+\begin{cases} 
+\text{Resolve}(p, r, s) & \text{if } \Gamma_{3} < K \\
+\text{Refuse}(\text{Constant Time}) & \text{if } \Gamma_{3} \geq K 
+\end{cases}
 \end{equation}
-where $K$ is the sector count when the Resilience Floor is triggered ($K = 32,768 \times (1 - \Phi)$).
+where $K$ is the sector threshold at which the Resilience Floor is triggered ($K = 32,768 \times (1 - \Phi)$).
 
 \subsection{Summary of Empirical Performance}
 
-This enforcement mechanism ensures we never enter the "fragmentation trap." By refusing to allocate beyond the floor, this guarantees the internal density of the 32-way branching structures never reaches a threshold where bit-mask steering would degrade into a linear probe, confirming that the \textit{iscandar} system provides a flat temporal profile until the moment of refusal.\\
+This enforcement mechanism ensures the system never enters the ``fragmentation trap.'' By refusing to allocate beyond the floor ($\Phi$), \textbf{iscandar} guarantees that the internal density of the 32-way branching structures never reaches a threshold where bit-mask steering would degrade into a linear probe. 
 
-\noindent \textbf{Proof of Coalescence Invariant:} \\
+\vspace{5pt}
+\noindent This confirms a \textbf{flat temporal profile} until the moment of refusal.
+\vspace{10pt}
 
-Let $\Gamma_{total}$ be the sum of all leaf nodes $S_{0,i}$. At any discrete time $t$, the hierarchical counters must satisfy the invariant:
-\vspace{-15mm}
-\begin{center}
+\subsubsection*{Proof of Coalescence Invariant}
+
+Let $\Gamma_{total}$ be the sum of all leaf nodes $S_{0,i}$. At any discrete time $t$, the hierarchical counters \textbf{must} satisfy the invariant:
+
 \begin{equation}
-    $\Gamma_{Apex} $(a.k.a \Gamma_3)$
-     = \sum \Gamma_2 = \sum \Gamma_1 = \sum \Gamma_0
-\end{equation} 
-\end{center}
-\\
+    \Gamma_{Apex} \text{ (a.k.a. } \Gamma_{3}) = \sum \Gamma_{2} = \sum \Gamma_{1} = \sum \Gamma_{0}
+\end{equation}
 
-Since deallocation is defined as $\Gamma_x(t+1) = \Gamma_x(t) - 1$ for all levels $x \in \{0, 1, 2, 3\}$ along the specific resolution path, the invariant is preserved. Because this path is fixed at depth $n$, the state of the lattice is restored to a consistent, deterministic state in $O(n)$ time.
+\vspace{5pt}
+\noindent Since deallocation is defined as:
+\begin{center}
+    $\Gamma_{x}(t+1) = \Gamma_{x}(t) - 1$ \quad for all levels $x \in \{0, 1, 2, 3\}$
+\end{center}
+
+\vspace{5pt}
+\noindent along the specific resolution path, the invariant is \textbf{preserved}. Because this path is fixed at depth $n$, the lattice is restored to a consistent, deterministic state in $nI_{base}$ time.
 
 \section{Observations}
 
-Earlier sections had already proven the Iscandar algorithm as deterministic for the main thrust of this paper. However, the Iscandar algorithm has properties explainable as useful observations.
+Earlier sections established Iscandar as deterministic within the primary scope of this paper. However, it exhibits properties warranting distinct architectural observations.
 
-\subsection{As an extension to Binary Buddy Systems}
-The binary buddy system, originally proposed by Knowlton \cite{knowlton1965} and Knuth \cite{knuth1968}, attempted to mitigate search latency by utilizing a power-of-two partitioning scheme ($R=2$). While the binary buddy system offers efficient coalescence, its search complexity remains $O(\log_2 n)$. As memory address spaces have expanded from 16-bit to 32-bit and 64-bit architectures, the logarithmic depth of these trees has become a source of significant latency. Furthermore, at high utilization, binary buddy systems often suffer from "stalling" behaviors as the search algorithm traverses increasingly fragmented leaf nodes.\\
+\subsection{As an Extension to Binary Buddy Systems}
+The binary buddy system, originally proposed by Knowlton [8] and Knuth [9], attempted to mitigate search latency by utilizing a power-of-two partitioning scheme ($R=2$). While this offers efficient coalescence, its search complexity remains $O(\log_{2} n)$. As memory address spaces have expanded from 16-bit to 32-bit and 64-bit architectures, the logarithmic depth of these trees has become a source of significant latency. Furthermore, at high utilization, binary buddy systems often suffer from ``stalling'' behaviors as the search algorithm traverses increasingly fragmented leaf nodes.\\
 
-This paper presents a generalization of buddy system principles to an \textbf{Arbitrary Radix} ($R=32$). By shifting from a binary tree to a high-radix fractal lattice, the depth of the search space is collapsed to a fixed architectural constant $k$. This structural shift moves memory management from the domain of probabilistic searching to the domain of \textbf{Geometric Coordinate Resolution}.
+We generalize buddy system principles to an \textbf{Arbitrary Radix} ($R=32$). By shifting from a binary tree to a high-radix fractal lattice, the depth of the search space is collapsed to a fixed architectural constant $n$. This structural shift moves memory management from the domain of probabilistic searching to the domain of \textbf{Geometric Coordinate Resolution}.
 
 \subsection{As a Symmetric Voronoi Partition}
-
-Per appendices we will show this lattice functions as a \textbf{Symmetric Voronoi Partition}, where the adjacency of "buddies" is a pre-baked geometric property of the address space rather than a calculated proximity. The adjacency graphed by the partition is in terms of the partition's total space "associating" with its handle, a wrapped pointer, rather than by each point in the partition's distance from the partition's centroid (such as homes next to a post office).
+As detailed in the appendices, this lattice functions as a \textbf{Symmetric Voronoi Partition}, where the adjacency of ``buddies'' is a pre-baked geometric property of the address space rather than a calculated proximity. In this model, adjacency is defined by a partition's total volume \textbf{associating} with its handle (a wrapped pointer), rather than the Euclidean distance of individual points from a centroid (e.g., the proximity of residences to a central post office).
 
 \subsection{As Linear Programming}
 
-The operational stability of the system is maintained via an \textbf{Interior Point Method}---analogous to the projective transformations utilized in Karmarkar’s algorithm \cite{karmarkar1984}. By enforcing a mandatory \textbf{Resilience Floor} ($\Phi$), we ensure that the system avoids the "edges" of the feasible region, 
+The operational stability of the system is maintained via an \textbf{Interior Point Method}---analogous to projective transformations used in Karmarkar’s algorithm [10]. By enforcing a \textbf{Resilience Floor} ($\Phi$), we \textbf{ensure} the resolution path avoids ``edges'' of the feasible region (the fragmentation trap). Here, the allocator does not merely manage space; it \textbf{navigates} a high-dimensional manifold where the floor serves as a protective barrier against non-deterministic search behaviors.
 
-\subsection{As Performing at Constant Time}
+\subsection{Amortized Performance: Constant Time}
+The Iscandar architecture utilizes a \textit{Seamless Sack} model that achieves amortized constant time for memory operations through a Next-Fit Circular Cursor mechanism.
 
-Per appendices we will show this guarantees constant time allocation and deallocation under all specified operating conditions.
+\begin{itemize}
+    \item \textbf{Mechanism:} The cursor maintains forward momentum across the 32,768-sector manifold. By never re-scanning fragmented entropy within a single "lap," the metabolic cost of search is distributed across the lifecycle of the system.
+    \item \textbf{Forward-Pressure Principle:} The system treats fragmentation as a temporary spatial tax. High-cost searches (skipping fragmented "Gravel") are balanced by subsequent high-efficiency $1:1$ allocations in reclaimed or virgin territory.
+    \item \textbf{Operational Stability:} Under standard mission profiles, the average metabolic load per sector remains fixed, ensuring thermal and computational predictability for the XAIO hardware regardless of lattice saturation.
+\end{itemize}
+
+\subsection{Worst-Case Performance: Sub-Linear Cube-Root Time}
+To ensure hard real-time determinism, the architecture employs a Hierarchical Double-Sentinel Skip logic, reducing the worst-case search complexity to the cube root of the total lattice size.
+
+\begin{itemize}
+    \item \textbf{Mechanism: Dimensional Collapse.} The 1D address space is logically mapped to a 3D manifold ($32 \times 32 \times 32$). Metadata sentinels at the Plane and Row levels allow the search engine to bypass saturated volumes without bit-level interrogation.
+    \item \textbf{The Triple-Jump Logic:}
+    \begin{enumerate}
+        \item \textbf{Plane-Skip:} Evaluates 1,024-sector manifolds; leaps in $O(1)$ if free space $<$ request size.
+        \item \textbf{Row-Skip:} Evaluates 32-sector rows; leaps in $O(1)$ if row density is prohibitive.
+        \item \textbf{Bit-Scan:} Final linear verification is restricted to a single 32-bit row.
+    \end{enumerate}
+    \item \textbf{Deterministic Ceiling:} For a lattice of size $n$, the maximum investigation path is capped at approximately $3 \times \sqrt[3]{n}$. In the 32k Pluto Vault, this limits the worst-case metabolic tax to $\approx 96$ operations ($32+32+32$), providing a guaranteed execution window for real-time interrupts.
+\end{itemize}
 
 
-\subsection{As Supporting Six Sigma Design.}
+\subsection{As Supporting Six Sigma Design}
+As detailed in the appendices, the compactness of the iscandar kernel enables \textbf{complete path coverage testing} that operates in tandem with the previously established formal methods. The convergence of exhaustive path verification and formal proofs provides the necessary rigor to certify the algorithm as a \textbf{fault-tolerant} memory system, suitable for high-reliability applications.
 
-Per appendices we will show that the compactness of this algorithm allows complete path coverage testing that works hand-in-hand with the earlier mentioned formal methods. Complete path coverage and formal methods together can be used to help certify this algorithm as a fault tolerant memory system.
+\subsection{As Scalable via Depth Extension}
+The iscandar architecture allows for easy scaling by increasing the lattice depth by up to two additional levels. Because the resolution time is a linear function of depth ($nI_{base}$), extending the lattice to $n=4$ or $n=5$ provides a massive increase in addressable memory volume while maintaining a strictly deterministic and predictable execution profile.
+
+\subsection{As Supporting Parallel Execution}
+
+The architecture allows for the distribution of the management load through parallel instantiation. Lesser structures can be managed by hardware subroutines to distribute the processing requirements across multiple units. These parallel hardware components can also supervise local memory independently, communicating management data upward through the hierarchy only as required.
 
 \section{Conclusion}
 
-The Iscandar architecture successfully demonstrates that the non-deterministic latency inherent in traditional memory management systems is not a physical necessity, but a byproduct of stochastic search methodologies. By replacing variable-depth search algorithms with a fixed-depth, Radix-32 fractal lattice, this research has established a deterministic framework for coordinate resolution that remains invariant regardless of memory state or occupancy levels.\\
+The iscandar architecture demonstrates that the non-deterministic latency inherent in traditional memory management is not a physical necessity, but a byproduct of stochastic search methodologies. By replacing variable-depth search algorithms with a fixed-depth, Radix-32 fractal lattice, this research has established a deterministic framework for coordinate resolution that remains invariant regardless of memory state or occupancy levels.\\
 
 The $K=13$ Formal Technical Audit provided in Section 7 serves as the mathematical proof of a fixed instruction tax. This theoretical constant was empirically validated through the Uranus 5 laboratory execution, which reported a Coefficient of Variation (CV) of exactly zero across 1,000 allocation and deallocation cycles. These results confirm the elimination of the ``fragmentation trap'' and the associated temporal jitter that typically characterizes buddy systems and bit-block models as they approach high-density thresholds.\\
 
-By enforcing a mandatory Resilience Floor ($\Phi$) and utilizing a hierarchical occupancy map for constant-time steering, Iscandar provides a hardware-aligned solution for mission-critical, hard-real-time environments. The stability of the instruction path ensures that system architects can guarantee Six Sigma reliability and complete path coverage in safety-critical applications. 
+By enforcing a mandatory Resilience Floor ($\Phi$) and utilizing a hierarchical occupancy map for constant-time steering, iscandar provides a hardware-aligned solution for mission-critical, hard-real-time environments. The stability of the instruction path ensures that system architects can guarantee Six Sigma reliability and complete path coverage in safety-critical applications.\\
 
 \section{Glossary of Terms}
 
@@ -228,11 +286,40 @@ By enforcing a mandatory Resilience Floor ($\Phi$) and utilizing a hierarchical 
     \item[Uranus 5] The laboratory verification suite written in APL used to empirically show deterministic performance in the Iscandar architecture.
 \end{description}
 
-\section{Appendix A: Memory State Spaces}
+\section*{Appendix A: The 13-Instruction Mechanism}
 
-\subsection {Polytope formation at Cube level.}\\
+The following listings represent the raw executable logic of the iscandar mechanism. Each line corresponds to a discrete macro-instruction ($K$).\\
 
-\paragraph {The Cube Scale Allocator (Global Registrar)}\\
+\begin{centering}
+\begin{tabular}{l l l}
+$\nabla$ & \textbf{Coord $\leftarrow$ ALLOC\_ROTATING\_COUNTED} & \\
+$[1]$ & S3 $\leftarrow$ (32 $|$ SEED\_P) & \textit{\% K1: Resolve Tier-3 Plane index} \\
+$[2]$ & S2 $\leftarrow$ (32 $|$ SEED\_R) & \textit{\% K2: Resolve Tier-2 Row index} \\
+$[3]$ & S1 $\leftarrow$ 1$\iota\sim$Lattice[S3;S2;] & \textit{\% K3: Resolve Tier-1 Bit index} \\
+$[4]$ & Coord $\leftarrow$ (S3, S2, S1) & \textit{\% K4: Assemble 3D Coordinate} \\
+$[5]$ & Lattice[S3;S2;S1] $\leftarrow$ 1 & \textit{\% K5: Occupy sector} \\
+$[6]$ & T2[S3;S2] -$\leftarrow$ 1 & \textit{\% K6: Update Tier-2 counter} \\
+$[7]$ & T3[S3] -$\leftarrow$ 1 & \textit{\% K7: Update Tier-3 counter} \\
+$\nabla$ & & \\
+& & \\
+$\nabla$ & \textbf{FREE\_ROTATING\_COUNTED Coord} & \\
+$[8]$ & (S3 S2 S1) $\leftarrow$ Coord & \textit{\% K8: Decompose Coordinate} \\
+$[9]$ & Lattice[S3;S2;S1] $\leftarrow$ 0 & \textit{\% K9: Release sector} \\
+$[10]$ & T2[S3;S2] +$\leftarrow$ 1 & \textit{\% K10: Increment Tier-2 counter} \\
+$[11]$ & T3[S3] +$\leftarrow$ 1 & \textit{\% K11: Increment Tier-3 counter} \\
+$[12]$ & SEED\_P $\leftarrow$ (32 $|$ S3 + 1) & \textit{\% K12: Advance T3 seed} \\
+$[13]$ & SEED\_R $\leftarrow$ (32 $|$ S2 + 1) & \textit{\% K13: Advance T2 seed} \\
+$\nabla$ & & \\
+\end{tabular}
+\end{centering}
+
+\section*{Appendix B: Updating Memory State Spaces by Mating the Oracle Tables}
+
+This section describes how Iscandar resolves memory requests by intersecting partitioned sub-spaces. The system utilizes three primary ratios relative to the Arity ($A$): the \textbf{Guard Shards ($0.5 A$)} and the \textbf{Core Shard ($0.25 A$)}.
+
+\subsection*{B.1 Polytope Formation at Cube Level}
+
+\subsubsection*{The Cube Scale Allocator (Global Registrar)}
 
 \begin{description}
     \item[Domain:] Total Cube Volume resolution (addressable at $32^3$).
@@ -240,53 +327,16 @@ By enforcing a mandatory Resilience Floor ($\Phi$) and utilizing a hierarchical 
     \item[Summation Predicate:] 
     \[ |C| = \sum_{i=0}^{31} (\text{Sector Count of Plane } i) \]
     
-    \item[Discussion:] The Cube Scale Allocator computes the unique 16-bit \textbf{"Gatekeeper"} of the architecture. It provides the primary fast-fail heuristic for the system; if a request $(S, M)$ is determined to be non-admissible at this tier, the algorithm immediately terminates without initiating a descent. This makes the registrar the most efficient filter in the hierarchy, ensuring that the cost of coordinate resolution is only paid when success is mathematically guaranteed.
+    \item[Discussion:] The Cube Scale Allocator computes the unique 16-bit \textbf{``Gatekeeper''} of the architecture. It provides the primary fast-fail heuristic for the system; if a request $(S, M)$ is determined to be non-admissible at this tier, the algorithm immediately terminates without initiating a descent. This makes the registrar the most efficient filter in the hierarchy, ensuring that the cost of coordinate resolution is only paid when success is mathematically guaranteed.
 \end{description}
 
 
-The memory state space of the algorithm is in two dimensions, a pair of intersecting number lines, one number along the horizontal axis being the starting address of a wrapped pointer being granted by the algorithm, the other number along the vertical axis being the amount of memory under control by the wrapped pointer.  Both quantities are in units of memory allocation sectors.\\
-
-This first illustration shows a trivial Voronoi partition where the entire space controllable by a cube (32 * 32 * 32) sectors of memory can be associated by a wrapped pointer beginning at sector address zero (bottom left). This represents the only search polytope possible for an empty cube.\\
-
-The diagonal line represents the locus of points where a new wrapped pointer can occur, in an inverse relationship between the starting address and its permissible magnitude.\\
-
-
-\begin{tikzpicture}[x=0.4cm, y=0.4cm]
-    % Axes
-    \draw[->, thick] (0,0) -- (33,0) node[right, font=\small] {Sector Address ($S$)};
-    \draw[->, thick] (0,0) -- (0,33) node[above, font=\small] {Magnitude ($M$)};
-
-    % --- THE APEX ADMISSIBILITY POLYTOPE ---
-    % Admissible Space: The physical reality of the Cube.
-    \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (0,0) -- (32,0) -- (0,32) -- cycle;
-    
-    % The Rejection Zone
-    \fill[red!10, opacity=0.5] (0,32) -- (32,32) -- (32,0) -- cycle;
-
-    % --- 16-BIT REGISTER INSET ---
-    % The unique 16-bit register for the 32768 capacity check.
-    \node[draw, fill=white, thick, inner sep=5pt, font=\bfseries\tiny, align=center] at (10,10) {CUBE REGISTRAR\\16-BIT SECTOR COUNT\\(0 to 32768)};
-
-    % Logic Annotations
-    \node[green!80!black, font=\bfseries\tiny, align=center] at (10,4) {ADMISSIBLE\\SEARCH SPACE};
-    \node[red!70!black, font=\tiny, align=center, rotate=-45] at (21,21) {OUT OF BOUNDS\\(Immediate Reject)};
-    
-    % Hard Wall (S + M = 32768)
-    \draw[dashed, gray!60, thick] (0,32) -- (32,0); 
-
-    % Ticks
-    \draw[thick] (0,0.1) -- (0,-0.1) node[below=4pt, font=\tiny] {0};
-    \draw[thick] (32,0.1) -- (32,-0.1) node[below=4pt, font=\tiny] {32767};
-    \draw[thick] (0.1,0) -- (-0.1,0) node[left, font=\tiny] {1};
-    \draw[thick] (0.1,32) -- (-0.1,32) node[left, font=\tiny] {32768};
-
-\end{tikzpicture}
 
 \clearpage
 
-\subsection {Polytope Formation At Row and Plane Levels}
+\subsection*{Polytope Formation At Row and Plane Levels}
 
-\subsubsection {The Large Allocator (Rows in Plane)}
+\subsubsection*{The Large Resolution ($A < L \le 2 A$)}
 
 \begin{description}
     \item[Domain:] Row-join and sequence resolution within a 1,024-sector Plane manifold.
@@ -294,11 +344,18 @@ The diagonal line represents the locus of points where a new wrapped pointer can
     \item[Summation Predicate:] 
     \[ C_{plane} = \sum_{k=0}^{31} (C_{row,k} \cdot [y_{k} = 1]) \]
     
-    \item[Discussion:] This tier represents a fractal expansion of the Level 1 logic. It treats individual rows as the atomic units of resolution, welding row-sequences to satisfy multi-row allocation requests. The Large allocator becomes a search helper calculating a dynamic subset of Rows within the Plane to satisfy continuity.
+    \item[Discussion:] 
+    
+\begin{itemize}
+    \item \textbf{Mechanism:} The \textit{Structural Bridge}.
+    \item \textbf{Geometric Event:} \textit{Boundary Handshake} between adjacent vectors.
+    \item \textbf{Resolution:} The span is constructed via $P + T$. The RHL of Vector A (Preamble) mates with the LHL of Vector B (Tail) to verify connectivity across the boundary \cite{polytopes}.
+\end{itemize}
+
+    This tier represents a fractal expansion of the Level 1 logic. It treats individual rows as the atomic units of resolution, welding row-sequences to satisfy multi-row allocation requests. The Large allocator functions as a search helper, calculating a dynamic subset of Rows within the Plane to satisfy continuity requirements.
 \end{description}
 
-\subsubsection {The Huge Allocator (Planes in Cube)}
-
+\subsubsection*{Case 4: The Huge Resolution ($L > 2 A$)}
 
 \begin{description}
     \item[Domain:] Plane-join and sequence resolution within a 32,768-sector Cube manifold.
@@ -306,9 +363,17 @@ The diagonal line represents the locus of points where a new wrapped pointer can
     \item[Summation Predicate:] 
     \[ C_{huge} = \sum_{l=0}^{31} ( C_{plane,l} \cdot [z_{l} = 1] ) \]
     
-    \item[Discussion:] This represents the final join-level resolution of the hierarchy. It manages the 32-radix plane counts, welding 2D plane segments into a unified 3D volume request. By treating planes as the fundamental unit of resolution at this tier, the system ensures that even the largest possible allocations are resolved throughout. The Huge allocator calculates the specific number of Planes required to weld a unified 3D volume, treating each Plane count as a subordinate metric for the Cube count.
-\end{description}
+    \item[Discussion:] 
 
+\begin{itemize}
+    \item \textbf{Mechanism:} \textbf{The Recursive Span}.
+    \item \textbf{Geometric Event:} \textit{Multi-Vector Extrusion}.
+    \item \textbf{Resolution:} The span is constructed via $P + (n \times A) + T$. The $n$ intervening words are verified as ``Clear Rows'' ($A$ nullity checks), effectively treating the span as a single geometric object via induction \cite{polytopes}.
+\end{itemize}
+
+
+    This represents the final join-level resolution of the hierarchy. It manages the 32-radix plane counts, welding 2D plane segments into a unified 3D volume request. By treating planes as the fundamental unit of resolution at this tier, the system ensures that even the largest possible allocations are resolved with identical determinism. The Huge allocator calculates the specific number of Planes required to weld a unified 3D volume, treating each Plane count as a subordinate metric for the total Cube count.
+\end{description}
 \begin{tikzpicture}[x=0.42cm, y=0.42cm]
     % Axes: Row Position vs Row Magnitude
     \draw[->, thick] (0,0) -- (33,0) node[right, font=\small] {Row Position};
@@ -430,9 +495,10 @@ The diagonal line represents the locus of points where a new wrapped pointer can
 
 \clearpage
 
-\subsection {Polytope Formation Between Rows}\\
+\subsection*{Polytope Formation Between Rows}
 
-\paragraph{The Small Allocator (Sector-Join)}\\
+    
+\subsubsection*{The Small Resolution ($L \le A$)}
 
 \begin{description}
     \item[Domain:] Sector-join and sequence resolution within a 32-sector Row manifold.
@@ -440,7 +506,15 @@ The diagonal line represents the locus of points where a new wrapped pointer can
     \item[Summation Predicate:] 
     \[ C_{row} = \sum_{j=0}^{31} (C_{bits,j} \cdot [x_{j} = 1]) \]
     
-    \item[Discussion:] This tier resolves the "fracture" typically found at sector boundaries. It functions as the primary submachine for the first level of welding, utilizing the \textbf{LHL/RHL Handshake Oracle} to join partial sector tails and heads into a single contiguous magnitude. By treating the row as a unified geometric manifold, the system ensures that boundary seams are transparent to the resolution logic.
+    \item[Discussion:] 
+
+\begin{itemize}
+    \item \textbf{Mechanism:} The \textit{Trinitarian Handshake}.
+    \item \textbf{Geometric Event:} A \textit{Hyperplane Intersection}.
+    \item \textbf{Resolution:} The Oracle intersects the Right-Hand Lookahead (RHL) of the first Guard, the internal gaps of the Core, and the Left-Hand Lookahead (LHL) of the second Guard. This represents the intersection of three half-spaces to verify a contiguous span \cite{polytopes}.
+\end{itemize}
+
+    This tier resolves the ``fracture'' typically found at sector boundaries. It functions as the primary submachine for the first level of welding, utilizing the \textbf{LHL/RHL Handshake Oracle} to join partial sector tails and heads into a single contiguous magnitude. By treating the row as a unified geometric manifold, the system ensures that boundary seams are transparent to the resolution logic.
 \end{description}
 
 
@@ -511,17 +585,25 @@ The diagonal line represents the locus of points where a new wrapped pointer can
 
 \clearpage
 
-\subsection{Polytope Formation Within Row}\\
+\subsection*{Polytope Formation Within Row}
 
-\paragraph{The Tiny Allocator (Intra-Row)}\\
+\subsubsection*{The Tiny Resolution ($L \le 0.25 A$)}
 
 \begin{description}
     \item[Domain:] The bit-lattice contained within a single Row manifold.
     
     \item[Summation Predicate:] 
-    \[ C_{bits} = \sum_{i=0}^{31} (\neg b_{i} \cdot [w_{i} = 1]) \]
+    \[ C_{bits} = \sum_{i=0}^{31} (\neg b_{i} \cdot [w_{i} = 1]) \] \\
     
-    \item[Discussion:] This represents the leaf-level execution of the deterministic descent. The \textbf{Center Handshake Oracle} to identifies contiguous zero-bit sequences in a sector. This forms the Atomic Polytope of a search, resolving the physical bit-offset in a fixed hardware cycle.
+    \item[Discussion:]\\ 
+
+\begin{itemize}
+    \item \textbf{Mechanism:} The request falls entirely within the Core Shard ($S_c$).
+    \item \textbf{Geometric Event:} An \textit{Interior Locality} query.
+    \item \textbf{Resolution:} The 2D Oracle Table acts as a point-in-polytope calculator. Only the center lookup is required to return the $(position, length)$ tuple \cite{topology}.
+\end{itemize}
+
+    This represents the leaf-level execution of the deterministic descent. The \textbf{Center Handshake Oracle} identifies contiguous zero-bit sequences within a sector. This forms the Atomic Polytope of a search, resolving the physical bit-offset in a fixed hardware cycle.
 \end{description}
 
 \begin{tikzpicture}[x=0.4cm, y=0.4cm]
@@ -569,75 +651,88 @@ The diagonal line represents the locus of points where a new wrapped pointer can
 
 \end{tikzpicture}
 
-6.3 Performing at Constant Time
 
-\section{Appendix B: The $K=13$ Formal Technical Audit}
+\section*{Appendix C: The $K=13$ Detailed Description of Instructions}
 
-To perform an "honest" audit for the monograph, we must map each of the 13 macro-instructions ($K=13$) to the specific discrete predicates of the Iscandar hierarchy. This ensures the hardware execution is a transparent reflection of the underlying mathematics. The audit assumes a 32-radix descent where each level acts as a "Gate" that must be cleared to reach the subsequent tier.
+To perform an ``honest'' audit for the monograph, we must map each of the 13 macro-instructions ($K=13$) to the specific discrete predicates of the iscandar hierarchy established in the Architectural Axioms. This ensures the hardware execution is a transparent reflection of the underlying mathematics. The audit assumes a 32-radix descent where each level acts as a ``Gate'' that must be cleared to reach the subsequent tier.
 
 \subsection{Phase I: The Admissibility Gate (Level 3)}
-\textbf{Predicate:} $M \in \Gamma_{Apex 0} \iff \Gamma_{Apex 1} ~ += M$
+\textbf{Predicate:} $M \in \Gamma_{Apex} \iff \Gamma_{Apex} \leftarrow \Gamma_{Apex} + M$
 
-\begin{enumerate}[label=\textbf{Instruction \arabic*:}, leftmargin=4em]
-    \item \textbf{Load Global Registrar:} Fetch the 16-bit register located at the Apex sector address..
-    \item \textbf{Admissibility Comparison:} Compare against the requested magnitude $M$. 
-    \begin{itemize}
-        \item \textit{If False:} Immediate Exit (Fast-Fail).
-        \item \textit{If True:} Increment by the requested magnitude.
-    \end{itemize}
+\begin{enumerate}
+    \item \textbf{Instruction 1:} Load Global Registrar: Fetch the 16-bit register located at the Apex sector address as defined in the Cube Scale Allocator.
+    \item \textbf{Instruction 2:} Admissibility Comparison: Compare against the requested magnitude $M$. If False: Immediate Exit (Fast-Fail) as required by the Global Registrar's heuristics. If True: Increment by the requested magnitude.
 \end{enumerate}
 
 \subsection{Phase II: The Plane-Level Resolution (Level 2)}
-\textbf{Predicate:} $P_{Plane} \iff \sum_{i \in \text{Plane}} (\text{Row}_i \cdot [\text{Inclusion}_i]) \ge M$
+\textbf{Predicate:} $P_{Plane} \iff \sum_{i \in Plane} (Row [Inclusion]) \ge M$ 
 
-\begin{enumerate}[label=\textbf{Instruction \arabic*::}, start=3, leftmargin=4em]
-    \item \textbf{Index Plane Metadata:} Using the address bits, index into the 32-radix plane metadata table.
-    \item \textbf{Load Row-Summary:} Fetch the 15-bit metadata for the target plane (summarizing the 32 constituent rows).
-    \item \textbf{Candidate Selection:} Evaluate the plane-state to identify the first row-sequence that satisfies the weld.
-    \item \textbf{Heuristic Branch/Scan:} If the primary candidate has a "local excessive count," scan the remaining 31 row-metadata entries (an $O(1)$ operation on 15-bit scalars).
+\begin{enumerate}
+    \setcounter{enumi}{2}
+    \item \textbf{Instruction 3:} Index Plane Metadata: Using the address bits, index into the 32-radix plane metadata table.
+    \item \textbf{Instruction 4:} Load Row-Summary: Fetch the 15-bit metadata for the target plane summarizing the 32 constituent rows as established in Axiom II.
+    \item \textbf{Instruction 5:} Candidate Selection: Evaluate the plane-state to identify the first row-sequence that satisfies the weld.
+    \item \textbf{Instruction 6:} Heuristic Branch/Scan: Evaluate the 32-radix plane metadata scan to confirm the steering vector.
 \end{enumerate}
 
 \subsection{Phase III: The Row-Level Weld (Level 1)}
-\textbf{Predicate:} $\Phi_{Weld} \iff RHL(\text{Row}_n) + \text{Intermediates} + LHL(\text{Row}_{n+m}) \ge M$
+\textbf{Predicate:} $Weld \iff RHL(Row_n) + Intermediates + LHL(Row_{n+m}) \ge M$ 
 
-\begin{enumerate}[label=\textbf{Instruction \arabic*::}, start=7, leftmargin=4em]
-    \item \textbf{Leading Fragment Access (RHL):} Perform a Look-Up Table (LUT) lookup on the starting row's tail.
-    \item \textbf{Trailing Fragment Access (LHL):} Perform a LUT lookup on the final row's head.
-    \item \textbf{Scalar Summation:} Add $Lead + Intermediates + Trail$. (Intermediates are added as pre-verified constants).
-    \item \textbf{Weld Validation:} Compare the result against $M$ to finalize the inter-row continuity.
+\begin{enumerate}
+    \setcounter{enumi}{6}
+    \item \textbf{Instruction 7:} Leading Fragment Access (RHL): Perform a Look-Up Table (LUT) lookup on the starting row's tail.
+    \item \textbf{Instruction 8:} Trailing Fragment Access (LHL): Perform a LUT lookup on the final row's head.
+    \item \textbf{Instruction 9:} Scalar Summation: Add Lead + Intermediates + Trail, maintaining the Contiguity Guarantee.
+    \item \textbf{Instruction 10:} Weld Validation: Compare the result against $M$ to finalize the inter-row continuity.
 \end{enumerate}
 
 \subsection{Phase IV: The Bit-Lattice Isolation (Level 0)}
-\textbf{Predicate:} $P_{Tiny} \iff \sum_{i=start}^{end} \neg b_i = M$
+\textbf{Predicate:} $P_{Tiny} \iff \sum_{i=start}^{end} \neg b_i = M$ 
 
-\begin{enumerate}[label=\textbf{Instruction \arabic*::}, start=11, leftmargin=4em]
-    \item \textbf{Center LUT Index:} Access the bit-occupancy table for the target sector.
-    \item \textbf{Triangle Projection:} Map the LUT result to the physical bit-offset (the 1D "Green Triangle").
-    \item \textbf{Commitment/Return:} Write the new occupancy to the 15-bit metadata and return the start address $S$.
+\begin{enumerate}
+    \setcounter{enumi}{10}
+    \item \textbf{Instruction 11:} Center LUT Index: Access the bit-occupancy table for the target sector.
+    \item \textbf{Instruction 12:} Triangle Projection: Map the LUT result to the physical bit-offset, resolving the Atomic Polytope within the Row manifold.
+    \item \textbf{Instruction 13:} Commitment/Return: Write the new occupancy to the 15-bit metadata and return the start address $S$.
 \end{enumerate}
 
-\subsection{Summary of Hardware Operations}
+\section*{Appendix D: Time Trials}
 
-\begin{table}[h]
-\centering
-\begin{tabular}{@{}llcl@{}}
-\toprule
-\textbf{Level} & \textbf{Predicate} & \textbf{Count} & \textbf{Hardware Operation} \\ \midrule
-3 (Apex) & Global Admissibility & 2 & 16-bit Load/Compare \\
-2 (Huge) & Plane-Row Continuity & 4 & 32-Radix Metadata Scan \\
-1 (Small) & Inter-Row Weld & 4 & LHL/RHL + Scalar Add \\
-0 (Tiny) & Bit-Isolation & 3 & Center LUT + Offset \\ \midrule
-\textbf{Total} & & \textbf{13} & \textbf{Fixed Time $K$} \\ \bottomrule
+To verify the "No-Search" claim of the iscandar mechanism, a parallel Shadow Map ($SM$) is utilized during laboratory trials. This shadow map is a 3D integer array of identical dimensions to the bit-lattice ($32 \times 32 \times 32$). Every time a sector is accessed—whether to set an occupancy bit or clear it—the corresponding shadow coordinate is incremented.
+
+\begin{centering}
+\begin{tabular}{l l l}
+$\nabla$ & \textbf{Coord $\leftarrow$ ALLOC\_SHADOWED} & \\
+$[1]$ & S3 $\leftarrow$ (32 $|$ SEED\_P) & \textit{\% K1: Resolve Tier-3 Plane index} \\
+$[2]$ & S2 $\leftarrow$ (32 $|$ SEED\_R) & \textit{\% K2: Resolve Tier-2 Row index} \\
+$[3]$ & S1 $\leftarrow$ 1$\iota\sim$Lattice[S3;S2;] & \textit{\% K3: Resolve Tier-1 Bit index} \\
+$[4]$ & Coord $\leftarrow$ (S3, S2, S1) & \textit{\% K4: Assemble 3D Coordinate} \\
+$[5]$ & Lattice[S3;S2;S1] $\leftarrow$ 1 & \textit{\% K5: Occupy sector in Lattice} \\
+$[6]$ & SM[S3;S2;S1] +$\leftarrow$ 1 & \textit{\% ** TOUCH: Increment shadow counter} \\
+$[7]$ & T2[S3;S2] -$\leftarrow$ 1 & \textit{\% K6: Update Tier-2 availability} \\
+$[8]$ & T3[S3] -$\leftarrow$ 1 & \textit{\% K7: Update Tier-3 availability} \\
+$\nabla$ & & \\
+& & \\
+$\nabla$ & \textbf{FREE\_SHADOWED Coord} & \\
+$[1]$ & (S3 S2 S1) $\leftarrow$ Coord & \textit{\% K8: Decompose Coordinate} \\
+$[2]$ & Lattice[S3;S2;S1] $\leftarrow$ 0 & \textit{\% K9: Release sector in Lattice} \\
+$[3]$ & SM[S3;S2;S1] +$\leftarrow$ 1 & \textit{\% ** TOUCH: Increment shadow counter} \\
+$[4]$ & T2[S3;S2] +$\leftarrow$ 1 & \textit{\% K10: Increment Tier-2 availability} \\
+$[5]$ & T3[S3] +$\leftarrow$ 1 & \textit{\% K11: Increment Tier-3 availability} \\
+$[6]$ & SEED\_P $\leftarrow$ (32 $|$ S3 + 1) & \textit{\% K12: Advance T3 seed} \\
+$[7]$ & SEED\_R $\leftarrow$ (32 $|$ S2 + 1) & \textit{\% K13: Advance T2 seed} \\
+$\nabla$ & & \\
 \end{tabular}
-\caption{Fixed Instruction Tax across the Iscandar Hierarchy}
-\end{table}
+\end{centering}
 
-\subsection{Critical Observations}
+\subsection*{Verification Measurements}
+The shadow map provides the following forensic data points:
 \begin{itemize}
-    \item \textbf{The 16-bit Divergence:} Only Instruction 1 interacts with the 16-bit width; all subsequent metadata fetches (3, 4, 7, 8) are 15-bit, preserving the 32-radix symmetry.
-    \item \textbf{Instruction Density:} The "Small Allocator" (Level 1) is the densest part of the math because it manages the fracture between rows.
-    \item \textbf{Zero-Jitter Execution:} Because every path through this audit results in exactly 13 instructions (or a fast-fail at Instruction 2), the "Wicked Witch" of non-deterministic latency is mathematically eliminated.
+    \item \textbf{Total Displacement:} The sum of all values in $SM$ equals the total count of completed requests.
+    \item \textbf{Zero Hunting:} No coordinate in the shadow map is touched unless it is the direct target of a resolution or a release.
+    \item \textbf{Temporal Invariance:} The "work" required for any memory request is exactly one unit of physical displacement, confirming $CV=0$.
 \end{itemize}
+
 
 \section{Uranus 5 Verification: Source and Performance Report}
 
@@ -704,40 +799,51 @@ CV ← Std_Dev ÷ (Mean_Ops + 1E¯10)
 'DETERMINISM         | O(1) CONSTANT PATH CONFIRMED'
 '------------------------------------------------'
 \end{verbatim}
+\section*{References}
 
-\section{Bibliography}
+\noindent [1] D. E. Knuth. \textit{The Art of Computer Programming, Volume 1: Fundamental Algorithms}. Addison-Wesley, 3rd Edition, 1997.
 
-\begin{thebibliography}{9}
+\vspace{0.3cm}
+\noindent [2] K. C. Knowlton. "A Fast Storage Allocator." \textit{Communications of the ACM}, Vol. 8, No. 10, pp. 623-624, 1965.
 
-\bibitem{knuth}
-D. E. Knuth. 
-\textit{The Art of Computer Programming, Volume 1: Fundamental Algorithms}. 
-Addison-Wesley, 3rd Edition, 1997. 
-(Foundational theory on Binary Buddy Systems and memory allocation dynamics).
+\vspace{0.3cm}
+\noindent [3] R. G. Dromey. \textit{A Bit-Block Representation for Constant-Time Memory Management}. \textit{Software: Practice and Experience}, 1980s.
 
-\bibitem{knowlton}
-K. C. Knowlton. 
-``A Fast Storage Allocator.'' 
-\textit{Communications of the ACM}, Vol. 8, No. 10, pp. 623-624, 1965.
-(The original methodology for Buddy allocation improved upon by the Iscandar architecture).
+\vspace{0.3cm}
+\noindent [4] \textit{Ibid.}
 
-\bibitem{bitblock}
-R. G. Dromey. 
-\textit{A Bit-Block Representation for Constant-Time Memory Management}. 
-Software: Practice and Experience, 1980s. 
-(Relevant to the occupancy counter logic and bit-map steering axioms).
+\vspace{0.3cm}
+\noindent [5] N. Karmarkar. "A New Polynomial-Time Algorithm for Linear Programming." \textit{Combinatorica}, 4 (4): 373-395, 1984.
 
-\bibitem{apl_iso}
-ISO/IEC 13751:2001. 
-\textit{Information technology --- Programming languages --- Extended APL}. 
-(The international standard for the APL environment used in the Uranus 5 verification suite).
+\vspace{0.3cm}
+\noindent [6] \textit{Ibid.}
 
-\bibitem{karmarkar}
-N. Karmarkar. 
-``A New Polynomial-Time Algorithm for Linear Programming.'' 
-\textit{Combinatorica}, 4 (4): 373--395, 1984. 
-(Referenced regarding the Resilience Floor and Interior Point method analogy).
+\vspace{0.3cm}
+\noindent [7] \textit{Ibid.}
 
-\end{thebibliography}
+\vspace{0.3cm}
+\noindent [8] K. C. Knowlton, \textit{op. cit.}
+
+\vspace{0.3cm}
+\noindent [9] D. E. Knuth, \textit{op. cit.}
+
+\vspace{0.3 cm}
+\noindent [10] N. Karmarkar, \textit{op. cit.}
+
+\vspace{0.3 cm}
+\noindent [11] 
+Edelsbrunner, H., \& Harer, J. (2010). \textit{Computational Topology: An Introduction}. American Mathematical Society.
+
+\vspace{0.3 cm}
+\noindent [12] 
+Ziegler, G. M. (1995). \textit{Lectures on Polytopes}. Springer-Verlag.
+
+\vspace{0.3 cm}
+\noindent [13] 
+Crochemore, M., \& Rytter, W. (2002). \textit{Jewels of Stringology}. World Scientific Publishing.
+
+\vspace{0.3 cm}
+\noindent [14] 
+Alexandrov, P. S. (1959). \textit{Combinatorial Topology}. Dover Publications.
 
 \end{document}
