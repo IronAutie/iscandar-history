@@ -10,6 +10,18 @@
 % -------------------------------------------------------------------------
 
 % =========================================================================
+% 0. Document Identity Metadata & Abstract Capsule
+% =========================================================================
+\title{\textbf{Fractal Intelligent Memory (FIM-32): \\ Deterministic Resolution of Stochastic Heaps via Lattice-Bound Search Oracles}}
+\author{\textbf{Andrew Jonathan Fine}}
+\date{May 31, 2026}
+
+% Automated abstract capsule injection hook
+\gdef\abstractcontent{
+  This paper introduces Fractal Intelligent Memory (FIM-32), a novel computer memory architecture designed to eliminate the latency variance and unpredictability inherent in traditional stochastic heap management. By organizing system memory as a rigid, deterministic multi-tiered lattice structured into geometric Sectors, Rows, and Planes, FIM-32 treats structural allocation as a constant-time coordinate address resolution task. We eliminate search-and-sort execution loops by routing access paths through discrete, boundary-enforced hardware search oracles. Our formal analysis demonstrates that matching allocation state metrics to a strict spatial occupancy limit ($\Gamma$) provides bounded path termination and absolute execution predictability. We validate this approach through concrete Dyalog APL tracking loop implementations, establishing that FIM-32 satisfies the rigorous timing constraints required for predictable, high-performance deterministic computing systems.
+}
+
+% =========================================================================
 % 1. Typography and Language Engine (Native for XeLaTeX)
 % =========================================================================
 \usepackage{fontspec}
@@ -31,7 +43,6 @@
 % 3. Optimized High-Density Layout and Margin Metrics
 % =========================================================================
 \usepackage{geometry}
-% Expanded printable horizontal layout to half-inch boundaries
 \geometry{letterpaper, margin=0.5in}
 \usepackage{marginnote}
 
@@ -50,10 +61,6 @@
 \usepackage{tcolorbox}
 \tcbuselibrary{enhanced, breakable}
 
-% Load multicol to split the box interior cleanly into two parallel streams
-\usepackage{multicol}
-\setlength{\columnsep}{1.5pc}
-
 % Disable macro syntax processing inside Verbatim blocks to support raw APL tokens
 \fvset{commandchars=none}
 
@@ -63,11 +70,14 @@
 \newcounter{iscandarnum}
 \newcommand{\listiscandarname}{List of APL Source Listings}
 
+% System level wrapper to unlock protection on the '@' character safely
+\makeatletter
 \newcommand{\listofiscandars}{%
   \section*{\listiscandarname}%
   \@starttoc{lol}%
 }
 \newcommand{\l@iscandar}[2]{\noindent\texttt{#1}\dotfill #2\par}
+\makeatother
 
 % =========================================================================
 % 6. Conditional Environment Branching for Multi-Target Output
@@ -85,18 +95,16 @@
       fonttitle=\bfseries\sffamily\small, coltitle=black, colbacktitle=gray!15!white,
       attach boxed title to top left={yshift=-2mm, xshift=2mm},
       breakable,
-      fontupper={\fontsize{6.5pt}{7.5pt}\selectfont},
+      fontupper={\fontsize{7.5pt}{8.5pt}\selectfont},
       boxsep=1pt,
-      top=1.5mm, bottom=1mm, left=1mm, right=1mm,
+      top=2mm, bottom=1mm, left=1mm, right=1mm,
       before={\par\vspace{0.2em}\noindent},
       after={\par\vspace{0.2em}}
     ]%
     \label{#2}% Sets the cross-reference anchor securely inside the box
-    \begin{multicols}{2}% Activates two-column wrapping mode inside the frame
     \begin{Verbatim}%
   }{%
     \end{Verbatim}
-    \end{multicols}
     \end{tcolorbox}%
   }
 \else
@@ -117,24 +125,38 @@
       fonttitle=\bfseries\sffamily\small, coltitle=black, colbacktitle=gray!15!white,
       attach boxed title to top left={yshift=-2mm, xshift=2mm},
       breakable,
-      fontupper={\fontsize{6.5pt}{7.5pt}\selectfont},
+      fontupper={\fontsize{7.5pt}{8.5pt}\selectfont},
       boxsep=1pt,
-      top=1.5mm, bottom=1mm, left=1mm, right=1mm,
+      top=2mm, bottom=1mm, left=1mm, right=1mm,
       before={\par\vspace{0.2em}\noindent},
       after={\par\vspace{0.2em}}
     ]%
     \hypertarget{#2}{}% Creates a direct target handle for local jumps
     \label{#2}%
-    \begin{multicols}{2}% Activates two-column wrapping mode inside the frame
     \begin{Verbatim}%
   }{%
     \end{Verbatim}
-    \end{multicols}
     \end{tcolorbox}%
   }
 \fi
 
 \begin{document}
+
+\maketitle
+
+\begin{abstract}
+\abstractcontent
+\end{abstract}
+
+\clearpage
+
+\maketitle
+
+\begin{abstract}
+\abstractcontent
+\end{abstract}
+
+\clearpage
 
 \maketitle
 
@@ -3609,6 +3631,5 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\clearpage % Ensures the last page of the listing also has no number
-
 \end{document}
+
