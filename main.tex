@@ -326,67 +326,67 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \end{itemize}
 \end{description}
 
-    This represents the final join-level resolution of the hierarchy. It manages the 32-radix plane counts, welding 2D plane segments into a unified 3D volume request. By treating planes as the fundamental unit of resolution at this tier, the system ensures that even the largest possible allocations are resolved with identical determinism. The Huge allocator calculates the specific number of Planes required to weld a unified 3D volume, treating each Plane count as a subordinate metric for the total Cube count.
+    This manages the 32-radix plane counts, welding 2D plane segments into a unified 3D volume request. By treating planes as the fundamental unit of resolution at this tier, the system ensures that even the largest possible allocations are resolved with identical determinism. The Huge allocator calculates the specific number of Planes required to weld a unified 3D volume, treating each Plane count as a subordinate metric for the total Cube count.
 \end{description}
 
 
 
+% --- COMPLETE DIAGRAM: HUGE ALLOCATOR ---
+\stepcounter{marginfig}
 \begin{tikzpicture}[x=0.42cm, y=0.42cm]
-    % Axes: Plane Position vs Plane Magnitude
-    \draw[->, thick] (0,0) -- (33,0) node[right, font=\small] {Plane Position};
-    \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Plane Magnitude};
+    % --- THE MARGIN ANCHOR (Matches Equation Numbering Position) ---
+    % Places the figure letter in parentheses at the far right
+    \node[anchor=east, font=\bfseries] at (34, 15) {(\themarginfig)};
 
-    % --- THE VOLUME LATTICE (Planes as Bits) ---
-    % Fusing two memory segments at the Plane boundary (P=15)
+    % --- AXES & DIMENSION LABELS ---
+    \draw[->, thick] (0,0) -- (33,0);
     
-    % Volume N: Busy Planes (0-9) - PINK
-    \foreach \x in {0,1,...,9} \fill[magenta!20, draw=white] (\x,-1) rectangle (\x+1,-2);
+    % Label: Spelled out, below the line, RHS flush with arrow tip (33,0)
+    \node[anchor=north east, font=\small, text=black!80] at (33,-0.1) {Plane Position ($P_{plane}$)};
     
-    % Volume N: Tail Fracture (Planes 10-14) - GREEN
-    % (Verified as boundary-clear by Large/Small Helpers)
-    \foreach \x in {10,11,...,14} \fill[green!25, draw=white] (\x,-1) rectangle (\x+1,-2);
-    
-    % RED WELD at P=15 (The Segment/Volume Boundary)
-    \draw[ultra thick, red, line cap=round] (15,-0.5) -- (15,-2.5);
-    
-    % Volume N+1: Head Fracture (Planes 15-19) - GREEN
-    % (Verified as boundary-clear by Large/Small Helpers)
-    \foreach \x in {15,16,...,19} \fill[green!25, draw=white] (\x,-1) rectangle (\x+1,-2);
-    
-    % Volume N+1: Busy Planes (20-31) - PINK
-    \foreach \x in {20,21,...,31} \fill[magenta!20, draw=white] (\x,-1) rectangle (\x+1,-2);
-    
-    % Frame
-    \draw[thick] (0,-1) rectangle (32,-2);
-    \node[below, font=\tiny] at (16,-2.2) {HUGE ALLOCATOR: VOLUME BOUNDARY PLANE JOIN};
+    % Vertical Axis: Plane Magnitude
+    \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Plane Magnitude ($M_{plane}$)};
 
-    % --- THE HONEST FRACTAL GEOMETRY (Locked to Plane Indices) ---
-
-    % LEFT PINK TRIANGLE (Busy Plane Space)
-    \fill[magenta!15, draw=magenta!50, thick] (0,1) -- (10,1) -- (0,11) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (3.5,6) {CLOSED};
-
-    % CENTER GREEN TRIANGLE (The 10-Plane Joined Gap)
-    \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,1) -- (20,1) -- (10,11) -- cycle;
-    \draw[dashed, red, thick] (15,1) -- (15,6); % Weld continuation
+    % --- THE VOLUME LATTICE (S3 TIER) ---
+    % Shifted to y=-3 to -4 to accommodate the Plane Position label
+    \foreach \x in {0,1,...,9} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
+    \foreach \x in {10,11,...,14} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
+    \foreach \x in {15,16,...,19} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
+    \foreach \x in {20,21,...,31} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
     
-    \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,4) {JOINED\\PLANE-SPACE};
-    \node[green!60!black, font=\tiny, rotate=-45] at (16.5,7) {$P_{plane}+M_{plane}=20$};
+    % Frame and Volume Boundary Weld
+    \draw[thick] (0,-3) rectangle (32,-4);
+    \draw[ultra thick, red, line cap=round] (15,-2.5) -- (15,-4.5);
+    \node[below, font=\tiny, yshift=-2.0cm] at (16,-4) {HUGE ALLOCATOR: VOLUME BOUNDARY PLANE JOIN};
 
-    % RIGHT PINK TRIANGLE (Busy Plane Space)
-    \fill[magenta!15, draw=magenta!50, thick] (20,1) -- (32,1) -- (20,13) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (23.5,6) {CLOSED};
+    % --- THE MANIFOLD GEOMETRY (PLANE-SCALE POLYTOPES) ---
 
-    % --- VERIFICATION ALIGNMENT ---
-    \draw[dashed, gray!40] (10,0) -- (10,1); 
-    \draw[dashed, gray!40] (20,0) -- (20,1); 
-    \draw[dashed, red!40] (15,0) -- (15,1);  
+    % LEFT PINK TRIANGLE: Closed Plane Space
+    % Top vertex aligned to 10 on the vertical axis
+    \fill[magenta!15, draw=magenta!50, thick] (0,0) -- (10,0) -- (0,10) -- cycle;
+    \node[magenta!80, font=\tiny, rotate=-45] at (3.5,3.5) {CLOSED};
 
-    % Ticks
-    \draw[thick] (10,0.1) -- (10,-0.1) node[below=4pt, font=\tiny] {Plane 10};
-    \draw[thick] (15,0.1) -- (15,-0.1) node[below=4pt, red, font=\tiny] {Weld};
-    \draw[thick] (20,0.1) -- (20,-0.1) node[below=4pt, font=\tiny] {Plane 20};
-    \draw[thick] (0.1,10) -- (-0.1,10) node[left, font=\tiny] {10};
+    % CENTER GREEN TRIANGLE: The 10-Plane Joined Gap (Crossing Weld)
+    % Top vertex aligned to 10 on the vertical axis
+    \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,0) -- (20,0) -- (10,10) -- cycle;
+    \draw[dashed, red, thick] (15,0) -- (15,5); % Weld projection into plane-space
+    
+    \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,3) {JOINED\\PLANE-SPACE};
+    \node[green!60!black, font=\tiny, rotate=-45] at (16.5,6) {$P_p+M_p=20$};
+
+    % RIGHT PINK TRIANGLE: Closed Plane Space
+    % Magnitude at 12 to show variance in volume occupancy
+    \fill[magenta!15, draw=magenta!50, thick] (20,0) -- (32,0) -- (20,12) -- cycle;
+    \node[magenta!80, font=\tiny, rotate=-45] at (23.5,4.5) {CLOSED};
+
+    % --- TICKS & NUMERICAL LABELS ---
+    % Numerical indices moved down to clear the axis label text
+    \draw[thick] (10,0.2) -- (10,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {10};
+    \draw[thick] (15,0.2) -- (15,-0.2) node[below=14pt, red, font=\tiny, fill=white, inner sep=1pt] {Weld};
+    \draw[thick] (20,0.2) -- (20,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {20};
+    
+    % Vertical Plane Magnitude Tick at 10
+    \draw[thick] (0.2,10) -- (-0.2,10) node[left=2pt, font=\tiny] {10};
 
 \end{tikzpicture}
 
@@ -496,69 +496,58 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     This tier  functions as the primary submachine for the bottom level of welding, utilizing the Oracle to join partial sector tails and heads into a single contiguous magnitude. By treating the row as a unified geometry,  boundary seams become transparent to the resolution logic.
 \end{description}
 
-
+% --- COMPLETE DIAGRAM: SMALL ALLOCATOR ---
+\stepcounter{marginfig}
 \begin{tikzpicture}[x=0.42cm, y=0.42cm]
-    % Axes
-    \draw[->, thick] (0,0) -- (33,0) node[right, font=\small] {Joined Position ($P_{total}$)};
+    % --- THE MARGIN ANCHOR (Matches Figure (A) & (B) Style) ---
+    \node[anchor=east, font=\bfseries] at (34, 15) {(\themarginfig)};
+
+    % --- AXES & DIMENSION LABELS ---
+    \draw[->, thick] (0,0) -- (33,0);
+    
+    % Label: Spelled out, below the line, RHS flush with arrow tip (33,0)
+    \node[anchor=north east, font=\small, text=black!80] at (33,-0.1) {Joined Position ($P$)};
+    
+    % Vertical Axis: Bit Magnitude
     \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Magnitude ($M$)};
 
-    % --- LOGICAL BIT-ROW (The Ground Truth) ---
-    % Normalizing the 10-bit joined region to P=10 to P=20
+    % --- THE SECTOR LATTICE (S1 TIER) ---
+    % Shifted to y=-3 to accommodate the axis label
+    % Sector N (Bits 0-14) | Sector N+1 (Bits 15-31)
+    \foreach \x in {0,1,...,9} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
+    \foreach \x in {10,11,...,14} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
+    \foreach \x in {15,16,...,19} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
+    \foreach \x in {20,21,...,31} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
     
-    % Section N: (Bits 0-9) - BUSY/CLOSED (Pink)
-    \foreach \x in {0,1,...,9} \fill[magenta!15, draw=black!40] (\x,-1) rectangle (\x+1,-2);
-    
-    % Section N: Tail Fracture (Bits 10-14) - AVAILABLE (Green)
-    \foreach \x in {10,11,...,14} \fill[green!20, draw=black!40] (\x,-1) rectangle (\x+1,-2);
-    
-    % RED WELD at P=15 (The Sector Boundary)
-    \draw[ultra thick, red, line cap=round] (15,-0.5) -- (15,-2.5);
-    
-    % Section N+1: Head Fracture (Bits 15-19) - AVAILABLE (Green)
-    \foreach \x in {15,16,...,19} \fill[green!20, draw=black!40] (\x,-1) rectangle (\x+1,-2);
-    
-    % Section N+1: (Bits 20-29) - BUSY/CLOSED (Pink)
-    \foreach \x in {20,21,...,29} \fill[magenta!15, draw=black!40] (\x,-1) rectangle (\x+1,-2);
-    
-    % Labels
-    \node[below, font=\tiny, color=magenta!80] at (5,-2) {Sector $N$ (Busy)};
-    \node[below, font=\tiny, color=green!80!black] at (15,-2.5) {Joined Gap (10-bit)};
-    \node[below, font=\tiny, color=magenta!80] at (25,-2) {Sector $N+1$ (Busy)};
+    % Frame and Sector Boundary Weld (The 16-bit Handshake)
+    \draw[thick] (0,-3) rectangle (32,-4);
+    \draw[ultra thick, red, line cap=round] (15,-2.5) -- (15,-4.5);
+    \node[below, font=\tiny, yshift=-2.0cm] at (16,-4) {SMALL ALLOCATOR: SECTOR BOUNDARY BIT JOIN};
 
+    % --- THE HONEST FRACTAL GEOMETRY (Locked to Bit Indices) ---
 
-    % --- THE HONEST GEOMETRY (The Triangles) ---
+    % LEFT PINK TRIANGLE: Closed Bit Space (Sector N)
+    \fill[magenta!15, draw=magenta!50, thick] (0,0) -- (10,0) -- (0,10) -- cycle;
+    \node[magenta!80, font=\tiny, rotate=-45] at (3.5,3.5) {CLOSED};
+
+    % CENTER GREEN TRIANGLE: The 10-Bit Joined Gap (The Weld)
+    \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,0) -- (20,0) -- (10,10) -- cycle;
+    \draw[dashed, red, thick] (15,0) -- (15,5); 
     
-    % FLANKING CLOSED SPACE (Left - Sector N)
-    % Base at 0 (internal), P_base = 0. Apex P=0, M=10.
-    % Boundary ends exactly at P=10.
-    \fill[magenta!15, draw=magenta!50, thick] (0,1) -- (10,1) -- (0,11) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (3.5,6) {CLOSED};
+    \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,3) {JOINED\\SPACE};
+    \node[green!60!black, font=\tiny, rotate=-45] at (16.5,6) {$P+M=20$};
 
-    % THE JOINED UNITES POLYTOPE (The 10-bit target)
-    % Base starts exactly at P=10 and ends at P=20.
-    % Base width=10. Apex P=10, M=10.
-    % Hypotenuse equation: P + M = 20.
-    \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,1) -- (20,1) -- (10,11) -- cycle;
+    % RIGHT PINK TRIANGLE: Closed Bit Space (Sector N+1)
+    \fill[magenta!15, draw=magenta!50, thick] (20,0) -- (32,0) -- (20,12) -- cycle;
+    \node[magenta!80, font=\tiny, rotate=-45] at (23.5,4.5) {CLOSED};
+
+    % --- TICKS & NUMERICAL LABELS ---
+    \draw[thick] (10,0.2) -- (10,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {10};
+    \draw[thick] (15,0.2) -- (15,-0.2) node[below=14pt, red, font=\tiny, fill=white, inner sep=1pt] {15};
+    \draw[thick] (20,0.2) -- (20,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {20};
     
-    % Weld continuing through the Polytope
-    \draw[dashed, red, thick] (15,1) -- (15,6);
-    
-    % Annotations
-    \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,4) {JOINED\\SPACE};
-    \node[green!60!black, font=\tiny, rotate=-45] at (16.5,7) {$P+M=20$};
-
-    % FLANKING CLOSED SPACE (Right - Sector N+1)
-    % Base starts exactly at P=20 and ends at P=32 (max radix).
-    % Boundary starts exactly at P=20.
-    \fill[magenta!15, draw=magenta!50, thick] (20,1) -- (32,1) -- (20,13) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (23.5,6) {CLOSED};
-
-
-    % Ticks for the 10-bit proof
-    \draw[thick] (10,0.1) -- (10,-0.1) node[below=2pt, font=\tiny] {10};
-    \draw[thick] (15,0.1) -- (15,-0.1) node[below=2pt, red, font=\tiny] {15};
-    \draw[thick] (20,0.1) -- (20,-0.1) node[below=2pt, font=\tiny] {20};
-    \draw[thick] (0.1,10) -- (-0.1,10) node[left, font=\tiny] {10};
+    % Vertical Magnitude Tick at 10
+    \draw[thick] (0.2,10) -- (-0.2,10) node[left=2pt, font=\tiny] {10};
 
 \end{tikzpicture}
 
@@ -592,48 +581,50 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     This represents the leaf-level execution of the deterministic descent. The \textbf{Oracle Center look-up table} identifies contiguous zero-bit sequences within a sector. This forms the Atomic Polytope of a search, resolving the physical bit-offset in a fixed hardware cycle.
 \end{description}
 
-\begin{tikzpicture}[x=0.4cm, y=0.4cm]
-    % Axes
-    \draw[->, thick] (0,0) -- (15,0) node[right, font=\small] {Joined Position};
+% --- COMPLETE DIAGRAM: TINY ALLOCATOR ---
+\stepcounter{marginfig}
+\begin{tikzpicture}[x=0.42cm, y=0.42cm]
+    % --- THE MARGIN ANCHOR (Matches Figures A, B, & C) ---
+    \node[anchor=east, font=\bfseries] at (34, 15) {(\themarginfig)};
+
+    % --- AXES & DIMENSION LABELS ---
+    \draw[->, thick] (0,0) -- (15,0);
+    
+    % Label: Spelled out, below the line, RHS flush with arrow tip (15,0)
+    \node[anchor=north east, font=\small, text=black!80] at (15,-0.1) {Joined Position ($P$)};
+    
+    % Vertical Axis: Bit Magnitude
     \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Magnitude ($M$)};
 
-    % REPRESENTATION OF THE "FRACTURE" WELD (The Ground Truth)
-    % We normalize the view to focus only on the 10-bit join (5 Tail + 5 Head)
+    % --- THE FRACTURED BIT-LATTICE (S0/S1 INTERFACE) ---
+    % Shifted to y=-3 to accommodate the axis label
+    % Sector N Tail (Left) | Sector N+1 Head (Right)
+    \foreach \x in {0,1,...,4} \fill[green!25, draw=black!40] (\x,-3) rectangle (\x+1,-4);
+    \foreach \x in {5,6,...,9} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
     
-    % The Left Fracture (Sector N Tail - Bits 27--31)
-    \foreach \x in {0,1,...,4} \fill[green!25, draw=black!50] (\x,-1) rectangle (\x+1,-2);
-    % Broken end on the left
-    \draw[dashed, black!50] (-0.5,-1) -- (0,-1);
-    \draw[dashed, black!50] (-0.5,-2) -- (0,-2);
-    \node[left, font=\tiny, color=blue!80] at (0,-1.5) {Sector $N$ Tail\ \ };
+    % Frame and Weld Point
+    \draw[thick] (0,-3) rectangle (10,-4);
+    \draw[ultra thick, red, line cap=round] (5,-2.5) -- (5,-4.5);
+    \node[below, font=\tiny, yshift=-2.0cm] at (5,-4) {TINY ALLOCATOR: FRACTURED WELD};
 
-    % The Right Fracture (Sector N+1 Head - Bits 0--4)
-    \foreach \x in {5,6,7,8,9} \fill[green!25, draw=black!50] (\x,-1) rectangle (\x+1,-2);
-    % Broken end on the right
-    \draw[dashed, black!50] (9.5,-1) -- (10,-1);
-    \draw[dashed, black!50] (9.5,-2) -- (10,-2);
-    \node[right, font=\tiny, color=blue!80] at (10,-1.5) {\ \ Sector $N+1$ Head};
-
-    % THE ULTRA-THICK WELD POINT (The Proof of Continuity)
-    \draw[ultra thick, red, line cap=round] (5,-0.8) -- (5,-2.2);
-    \node[below, red, font=\bfseries\tiny] at (5,-2.2) {WELD};
-
-    % THE JOINED UNITES POLYTOPE (M=1 to 10)
-    % Normalized: Base 0--10. Apex (0,10).
-    \fill[green!20, draw=green!60, ultra thick] (0,1) -- (10,1) -- (0,11) -- cycle;
-
-    % Logic Annotations
-    \node[green!80!black, font=\bfseries\tiny, align=center] at (3.5,4) {FRACTURED\\WELD\\POLYTOPE};
-    \node[green!60!black, font=\tiny, rotate=-45] at (6.5,7) {$P+M=10$};
+    % --- THE MANIFOLD GEOMETRY (SUB-SECTOR POLYTOPE) ---
+    % Top vertex aligned to 10 on the vertical axis
+    \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (0,0) -- (10,0) -- (0,10) -- cycle;
     
-    % Weld Continuing Through the Polytope
-    \draw[dashed, red, thick] (5,1) -- (5,6);
+    % Weld projection into bit-space
+    \draw[dashed, red, thick] (5,0) -- (5,5); 
+    
+    \node[green!80!black, font=\bfseries\tiny, align=center] at (3.5,3) {FRACTURED\\WELD\\POLYTOPE};
+    \node[green!60!black, font=\tiny, rotate=-45] at (6.5,5.5) {$P+M=10$};
 
-    % Ticks for the 10-unit proof
-    \draw[thick] (0,0.1) -- (0,-0.1) node[below=2pt, font=\tiny] {0};
-    \draw[thick] (5,0.1) -- (5,-0.1) node[below=2pt, red, font=\tiny] {5};
-    \draw[thick] (10,0.1) -- (10,-0.1) node[below=2pt, font=\tiny] {10};
-    \draw[thick] (0.1,10) -- (-0.1,10) node[left, font=\tiny] {10};
+    % --- TICKS & NUMERICAL LABELS ---
+    % Numerical indices moved down to clear the axis label text
+    \draw[thick] (0,0.2) -- (0,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {0};
+    \draw[thick] (5,0.2) -- (5,-0.2) node[below=14pt, red, font=\tiny, fill=white, inner sep=1pt] {5};
+    \draw[thick] (10,0.2) -- (10,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {10};
+    
+    % Vertical Bit Magnitude Tick at 10
+    \draw[thick] (0.2,10) -- (-0.2,10) node[left=2pt, font=\tiny] {10};
 
 \end{tikzpicture}
 
@@ -819,7 +810,12 @@ Figure \ref{fig:touches_plot} documents the stability of \textbf{Iscandar} acros
 \noindent
 \begin{minipage}{\linewidth}
     \centering
+    \stepcounter{marginfig}
     \begin{tikzpicture}
+        % --- THE MARGIN ANCHOR ---
+        % Positioned relative to the tikzpicture origin, outside the axis box
+        \node[anchor=east, font=\bfseries] at (15.5, 7) {(\themarginfig)};
+
         \begin{axis}[
             title={\textbf{Iscandar}: Memory Touches vs. Sector Occupancy},
             xlabel={Occupancy in Sectors},
@@ -852,6 +848,7 @@ Figure \ref{fig:touches_plot} documents the stability of \textbf{Iscandar} acros
         
         \end{axis}
     \end{tikzpicture}
+    
     \captionof{}{Distribution demonstrating bounded search for sectors.}
     \label{fig:touches_plot}
 \end{minipage}
@@ -865,7 +862,11 @@ To contrast, a theoretical binary buddy system was simulated for a heap size com
 \noindent
 \begin{minipage}{\linewidth}
     \centering
+    \stepcounter{marginfig}
     \begin{tikzpicture}
+        % --- THE MARGIN ANCHOR (Matches Nizhoni Standard) ---
+        \node[anchor=east, font=\bfseries] at (16.5, 7) {(\themarginfig)};
+
         \begin{axis}[
             title={Theoretical Buddy System: Touches vs. Sector Occupancy},
             xlabel={Occupancy in Sectors},
