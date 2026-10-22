@@ -727,7 +727,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \end{itemize}
 \end{description}
 
-The example below utilizes a sequence of \textbf{Left and Right Oracle look-up tables}, to reveal polytopes A and B respectively to seek a memory allocation of 11 sectors exactly. Polytope A shows a presence of 10 sectors, polytope B shows 11 sectors, so we use the run from Polytope B.
+The example below utilizes a sequence of \textbf{Left and Right Oracle look-up tables}, to reveal polytopes A and B respectively to seek a memory allocation of 11 sectors exactly. Polytope A shows a presence of 10 sectors, polytope B shows 11 sectors, so we use the run from Polytope B. The complete, unrolled execution path for this bimodal routing mechanism is structurally implemented in Listing 18 (\texttt{HeuristicTiny.apl}).
 
 
 % --- FIGURE: TINY ALLOCATOR (FRACTURED WELD) ---
@@ -775,7 +775,7 @@ The example below utilizes a sequence of \textbf{Left and Right Oracle look-up t
     
     \item \textbf{Geometric Event:} An \textit{Intersection of Atomic (Seed) Polytopes}.
     
-    \item \textbf{Resolution:} The \textbf{Center Oracle} intersects between the current Row's bit-pattern and the requested length $L$, mapping the pattern to an exact fit of available sectors, obtaining a seed polytope of 1 to 8 bits (with multiple possibilities as shown in Figure E) to be joined with other polytopes later.
+    \item  \textbf{Resolution:} The \textbf{Center Oracle} intersects between the current Row's bit-pattern and the requested length L, mapping the pattern to an exact fit of available sectors, obtaining a seed polytope of 1 to 8 bits (with multiple possibilities as shown in Figure E) to be joined with other polytopes later. This deterministic single-cycle intersection is evaluated via the row driver logic detailed in Listing 17 (\texttt{HeuristicNano.apl}).
 \end{itemize}
 \end{description}
 
