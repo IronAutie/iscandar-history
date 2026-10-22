@@ -272,7 +272,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 
 \subsection*{Polytope Formation at Cube Level}
 
-\subsubsection*{The Cube Scale Allocator (Global Registrar)}
+\subsubsection*{The Cube Scale Allocator ($L = \mathcal{A}^k$)}
 
 \begin{description}
     \item[Domain:] Total Cube Volume resolution (addressable at $\mathcal{A}^k$).
@@ -288,38 +288,15 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 
 \subsection*{Polytope Formation At Row and Plane Levels}
 
-\subsubsection*{The Large Resolution ($\mathcal{A} < L \le 2\mathcal{A}$)}
 
-\begin{description}
-    \item[Domain:] Row-join and sequence resolution within an $\mathcal{A}^2$-sector Plane manifold.
-    
-\vspace{12pt}
-\setcounter{equation}{10}
-\noindent \textbf{Summation Predicate:} 
-\begin{equation}
-    C_{plane} = \sum_{i=0}^{\mathcal{A}-1} (C_{row,i} \cdot [y_{i} = 1])
-    \label{eq:sum_predicate}
-\end{equation}
-\vspace{12pt}
-    
-    \item[Discussion:] 
-    
-\begin{itemize}
-    \item \textbf{Mechanism:} The \textit{Structural Bridge}.
-    \item \textbf{Geometric Event:} \textit{Boundary Handshake} between adjacent vectors.
-    \item \textbf{Resolution:} The system constructs the span via $P + T$. The Right-Hand Lookup (RHL) of Vector A (Preamble) mates with the Left-Hand Lookup (LHL) of Vector B (Tail) to verify connectivity across the boundary, a geometric invariant enforced by these tables.
-\end{itemize}
 
-    This tier represents a fractal expansion of the Level 1 logic. It treats individual rows as the atomic units of resolution, welding row-sequences to satisfy multi-row allocation requests. The Large allocator functions as a resolution engine, calculating a dynamic subset of Rows within the Plane to satisfy continuity requirements.
-\end{description}
-
-\subsubsection*{The Huge Resolution ($L > 2 \mathcal{A}$)}
+\subsubsection*{The Huge Resolution ($\mathcal{A}^2 < L < \mathcal{A}^3$) }
 
 \begin{description}
     \item[Domain:] Plane-join and sequence resolution within an $\mathcal{A}^k$ Cube manifold.
     
 \vspace{12pt}
-\setcounter{equation}{11}
+\setcounter{equation}{10}
 \noindent \textbf{Summation Predicate:} 
 \begin{equation}
     C_{huge} = \sum_{i=0}^{\mathcal{A}-1} ( C_{plane,i} \cdot [z_{i} = 1] )
@@ -338,6 +315,31 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \end{description}
 
     This represents the final join-level resolution of the hierarchy. It manages the 32-radix plane counts, welding 2D plane segments into a unified 3D volume request. By treating planes as the fundamental unit of resolution at this tier, the system ensures that even the largest possible allocations are resolved with identical determinism. The Huge allocator calculates the specific number of Planes required to weld a unified 3D volume, treating each Plane count as a subordinate metric for the total Cube count.
+\end{description}
+
+\subsubsection*{The Large Resolution ( $2\mathcal{A} < L \le \mathcal{A}^2$)}
+
+\begin{description}
+    \item[Domain:] Row-join and sequence resolution within an $\mathcal{A}^2$-sector Plane manifold.
+    
+\vspace{12pt}
+\setcounter{equation}{11}
+\noindent \textbf{Summation Predicate:} 
+\begin{equation}
+    C_{plane} = \sum_{i=0}^{\mathcal{A}-1} (C_{row,i} \cdot [y_{i} = 1])
+    \label{eq:sum_predicate}
+\end{equation}
+\vspace{12pt}
+    
+    \item[Discussion:] 
+    
+\begin{itemize}
+    \item \textbf{Mechanism:} The \textit{Structural Bridge}.
+    \item \textbf{Geometric Event:} \textit{Boundary Handshake} between adjacent vectors.
+    \item \textbf{Resolution:} The system constructs the span via $P + T$. The Right-Hand Lookup (RHL) of Vector A (Preamble) mates with the Left-Hand Lookup (LHL) of Vector B (Tail) to verify connectivity across the boundary, a geometric invariant enforced by these tables.
+\end{itemize}
+
+    This tier represents a fractal expansion of the Level 1 logic. It treats individual rows as the atomic units of resolution, welding row-sequences to satisfy multi-row allocation requests. The Large allocator functions as a resolution engine, calculating a dynamic subset of Rows within the Plane to satisfy continuity requirements.
 \end{description}
 
 \begin{tikzpicture}[x=0.42cm, y=0.42cm]
@@ -463,7 +465,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 
 \subsection*{Polytope Formation Between Rows}
 
-\subsubsection*{The Small Resolution ($L \le \mathcal{A}$)}
+\subsubsection*{The Small Resolution ($A < L \le 2\mathcal{A}$)}
 
 \begin{description}
     \item[Domain:] Sector-join and sequence resolution within an $\mathcal{A}$-sector Row manifold.
@@ -558,7 +560,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 
 \subsection*{Polytope Formation Within Row}
 
-\subsubsection*{The Tiny Resolution ($L \le 0.25\mathcal{A}$)}
+\subsubsection*{The Tiny Resolution ($L \le \mathcal{A}$)}
 
 \begin{description}
     \item[Domain:] The bit-lattice contained within a single Row manifold.
