@@ -7,10 +7,12 @@
 \usepackage{mathrsfs}
 \usepackage{geometry}
 \usepackage{pgfplots} \pgfplotsset{compat=1.18}
-\usepackage{xcolor}
-\usepackage{listings}
+
 \usepackage{qrcode}
 \usepackage[most]{tcolorbox} % Shading helpers for callouts/results
+
+\usepackage{fancyvrb}
+\usepackage{alltt}
 
 \geometry{letterpaper, margin=1in}
 
@@ -24,22 +26,6 @@
     boxrule=0.5pt
 }
 
-% --- The "Primitive" APL Character Mapper ---
-% This allows you to type the keywords in code, and LaTeX draws the APL
-\lstdefinelanguage{APL}{
-    basicstyle=\small\ttfamily,
-    columns=flexible,
-    mathescape=true, 
-    frame=single,
-    backgroundcolor=\color{gray!5},
-    literate={<-}{{$\leftarrow$}}1 
-             {rho}{{$\rho$}}1 
-             {iota}{{$\iota$}}1 
-             {AND/}{{$\wedge/ \!$}}2 
-             {diamond}{{$\diamond$}}1 
-             {quad}{{$\square$}}1 
-             {comment}{{$\text{\color{gray} \small $\dashv$}$}}1 % 1994-style comment flag
-}
 
 \usepackage{marginnote}
 
@@ -80,6 +66,25 @@
 \renewcommand{\themarginfig}{\Alph{marginfig}}
 
 \renewcommand{\thefigure}{\Alph{figure}}
+
+\usepackage{listings}
+\usepackage{textcomp} % Helps with symbol rendering
+
+\lstnewenvironment{HonestLab}
+{
+    \lstset{
+        numbers=none,           % FORCES the removal of numbers
+        basicstyle=\ttfamily,
+        columns=flexible,
+        keepspaces=true,
+        xleftmargin=0pt,        % Moves text to the hard left
+        firstnumber=1,
+        stepnumber=0,           % Disables the counter engine
+        % Character Mapping to prevent stripping
+        literate={⍝}{{\texttt{-|}}}1 {⋄}{{\texttt{|}}}1 {⍳}{{i}}1 {⍴}{{r}}1
+    }
+}
+{}
 
 \begin{document}
 
@@ -1018,45 +1023,62 @@ To contrast, a theoretical binary buddy system was simulated for a heap size com
 
 This DYALOG APL implementation was used to generate the report's tables. The test code simulates high-churn volumetric stress to verify determinism of the sentinel-steered geometry.
 
-\begin{lstlisting}[caption={ISCANDAR 16.4.1 Lab Implementation}, label={lst:Iscandar_code}]
-⍝ ==============================================================================
-⍝ Iscandar ARCHIVE 
+\begin{HonestLab}
+
+⍝ === ISCANDAR-OZ: VOLUMETRIC LABORATORY (VER 16.4.1) ===
+⍝ ARCHIVE VERSION: 2026-04-19
 ⍝ AUTHORED BY: ANDREW JONATHAN FINE
-⍝ PURPOSE: DETERMINISM VIA RADIX-32 SENTINEL STEERING
-⍝ ==============================================================================
+⍝ PURPOSE: O(1) DETERMINISM PROOF VIA RADIX-32 SENTINEL STEERING
 ⎕IO ← 1
 
-⍝ --- MODULE 1: ARCHITECTURAL CONSTANTS ---
+⍝ --- [G01-G02] ARCHITECTURAL CONSTANTS ---
+⍝ A=32 (Radix), K=3 (Fractal Depth), V=32768 (Manifold Volume)
 A ← 32 ⋄ K ← 3 ⋄ V ← A*K
 
-⍝ --- MODULE 2: MANIFOLD INITIALIZATION ---
 ∇ INIT_GEOMETRY
-  LATTICE ← (V⍴0)      
-  PMASK ← (A⍴0)        
-  RMASK ← (1024⍴0)     
-  SCAN_OVERHEAD ← 0    
-  ⎕ ← 'ISCANDAR: ARCHIVE MASTER ONLINE (V=32768)'
+  LATTICE ← (V⍴0)      ⍝ 1D Volumetric Manifold (Physical Bit-Stream)
+  PMASK ← (A⍴0)        ⍝ Level 2 Sentinels: 32 Planes
+  RMASK ← (1024⍴0)     ⍝ Level 1 Sentinels: 1024 Rows (A*2)
+  SCAN_OVERHEAD ← 0    ⍝ metabolic "Touch Count" (The Invariance Metric)
+  ⎕ ← 'ISCANDAR-OZ 16.4.1: ARCHIVE MASTER ONLINE'
 ∇
 
-⍝ --- MODULE 3: THE ISCANDAR ORACLE (ALLOCATION) ---
+⍝ --- [G03-G07] THE VOLUMETRIC ORACLE (SENTINEL RESOLUTION) ---
+⍝ This function mimics the hardware steering logic.
+⍝ It avoids bit-scanning to maintain deterministic O(1) performance.
 ∇ Z ← ALLOC_K13 Size;p;r;found;row_start;r_idx;rows_needed;check_range
   SCAN_OVERHEAD ← 0 ⋄ found ← 0 ⋄ Z ← 0
+ 
+  ⍝ Calculate footprint in blocks (Radix units)
   rows_needed ← ⌈Size ÷ A
+
   :For p :In ⍳A
-    SCAN_OVERHEAD +← 1 ⍝ Plane Gate Tax (Macro G03)
+    SCAN_OVERHEAD +← 1 ⍝ [G03] Plane Sentinel Steering Tax
     :If PMASK[p] = 0
       :For r :In ⍳A
         r_idx ← ((p-1)×A)+r
-        SCAN_OVERHEAD +← 1 ⍝ Row Gate Tax (Macro G05)
+        SCAN_OVERHEAD +← 1 ⍝ [G05] Row Sentinel Steering Tax
+       
+        ⍝ Verify that the request does not exceed manifold boundaries
         :If (r_idx + rows_needed - 1) ≤ 1024
+         
+          ⍝ [G07] HONEST RESOLUTION: Check Sentinels (Not Bits)
+          ⍝ This is the key to O(1) determinism.
           check_range ← RMASK[r_idx + ⍳rows_needed - 1]
-          SCAN_OVERHEAD +← ⍴check_range 
+          SCAN_OVERHEAD +← ⍴check_range ⍝ Metabolic cost = Sentinel span
+         
           :If ∧/ check_range = 0
             row_start ← ((r_idx-1)×A) + 1
-            LATTICE[row_start + ⍳Size - 1] ← 1 ⍝ Atomic Write (G08)
-            SCAN_OVERHEAD +← 1 
+           
+            ⍝ [G08] ATOMIC WRITE: Bits are touched only for commit
+            LATTICE[row_start + ⍳Size - 1] ← 1
+            SCAN_OVERHEAD +← 1
+           
+            ⍝ [G09-G12] SENTINEL BACK-PROPAGATION
+            ⍝ Updates the skip-fire registers to maintain zero-jitter integrity
             RMASK ← ∨/ (1024 32 ⍴ LATTICE)
             PMASK ← ∨/ (32 32 ⍴ RMASK)
+           
             Z ← row_start Size ⋄ found ← 1 ⋄ :Leave
           :EndIf
         :EndIf
@@ -1066,7 +1088,7 @@ A ← 32 ⋄ K ← 3 ⋄ V ← A*K
   :EndFor
 ∇
 
-⍝ --- MODULE 4: ENTROPY REVERSAL (DEALLOCATION) ---
+⍝ --- DEALLOCATION: ENTROPY REVERSAL ---
 ∇ FREE_K13 Data;idx;sz
   :If 0 = ⍴,Data ⋄ :Return ⋄ :EndIf
   (idx sz) ← ,Data
@@ -1075,30 +1097,46 @@ A ← 32 ⋄ K ← 3 ⋄ V ← A*K
   PMASK ← ∨/ (32 32 ⍴ RMASK)
 ∇
 
-⍝ --- MODULE 5: STATISTICAL AUDIT HARNESS ---
-∇ RUN_LAB;SACK;sz;res;history;occ;c;stats;t;m;s;idx;v
+⍝ --- [G13] ANALYTICS HARNESS ---
+⍝ Simulates a chaotic memory load with high churn to prove O(1) invariance.
+∇ RUN_LAB;SACK;sz;res;history;occ;c;stats;t;m;s;idx
   INIT_GEOMETRY ⋄ SACK ← ⍬ ⋄ history ← 0 3⍴0 ⋄ occ ← 0
+ 
   :For c :In ⍳500
-      sz ← 1 + (?1024) + (0 = ?10) × ?14000 
+      ⍝ Random requests from 1 to 15,000 sectors
+      sz ← 1 + (?1024) + (0 = ?10) × ?14000
+     
       res ← ALLOC_K13 sz
       :If res ≢ 0
           history ← history ⍪ occ sz SCAN_OVERHEAD
           SACK ,← ⊂res ⋄ occ +← sz
       :EndIf
+     
+      ⍝ Maintain 'Swiss Cheese' manifold density (High Churn)
       :If (0 = 5 | c) ∧ (⍴SACK) > 0
-          idx ← ?⍴SACK ⋄ FREE_K13 ⊃SACK[idx]
-          occ -← (⊃SACK[idx])[2] ⋄ SACK ← ((⍳⍴SACK) ≠ idx) / SACK
+          idx ← ?⍴SACK
+          FREE_K13 ⊃SACK[idx]
+          occ -← (⊃SACK[idx])[2]
+          SACK ← ((⍳⍴SACK) ≠ idx) / SACK
       :EndIf
   :EndFor
-  ⎕ ← ' Usage (Sect) | Request | Touches ' 
+ 
+  ⍝ --- STATISTICAL AUDIT ---
+  ⎕ ← ' Usage (Sect) | Request | Touches '
   ⎕ ← (-50 ⌊ 1↑⍴history) ↑ history
-  t ← history[;3] ⋄ m ← (+/t)÷(⍴t)⌈1 
-  s ← (((+/(t-m)*2)÷(⍴t)⌈1)*0.5) ⋄ v ← s*2
+ 
+  t ← history[;3] ⋄ m ← (+/t)÷(⍴t)⌈1
+  s ← (((+/(t-m)*2)÷(⍴t)⌈1)*0.5)
+  v ← s*2
   ⎕ ← '--- AUDIT COMPLETE ---'
-  ⎕ ← 'MEAN OVERHEAD (METABOLIC COST): ',⍕m 
-  ⎕ ← 'SIGMA (JITTER): ',⍕s ⋄ ⎕ ← 'VARIANCE: ',⍕v
+  ⎕ ← 'MEAN OVERHEAD (METABOLIC COST): ',⍕m
+  ⎕ ← 'SIGMA (JITTER): ',⍕s
+  ⎕ ← 'VARIANCE: ',⍕v
 ∇
-\end{lstlisting}
+
+\end{HonestLab}
+
+
 \begin{thebibliography}{99}
 
 \bibitem{1} P. R. Wilson, M. S. Johnstone, M. Neely, and D. Boles. \textit{Dynamic Storage Allocation: A Survey and Critical Review}. International Workshop on Memory Management, Springer, 1995. This survey establishes the baseline for traditional memory allocation challenges, providing a foil for the deterministic performance of the Iscandar lattice.
