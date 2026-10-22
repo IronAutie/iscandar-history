@@ -17,6 +17,7 @@
 \usepackage{mathrsfs}
 \usepackage{pgfplots} 
 \pgfplotsset{compat=1.18}
+\usepackage{float}
 
 % =========================================================================
 % 3. Layout, Geometry, and Margin Metrics
@@ -29,12 +30,16 @@
 \newcounter{marginfig}
 \renewcommand{\themarginfig}{\Alph{marginfig}} % Set to Alpha (A, B, C...)
 
-% Define the command to stamp the margin with a protective tracking barrier
-\newcommand{\fignote}{%
+% Define the command to stamp the margin with an optional vertical adjustment parameter
+% Usage: \fignote         (Standard placement)
+%        \fignote[2.5em]  (Pushes Figure down by 2.5 lines)
+%        \fignote[-1cm]   (Pulls Figure up by 1 centimeter)
+\newcommand{\fignote}[1][0pt]{%
   \bgroup % Open local scope firewall
   \stepcounter{marginfig}%
-  \marginnote{\textbf{Figure \themarginfig}}%
+  \marginnote{\textbf{Figure \themarginfig}}[#1]% Passes the offset to marginnote
   \egroup % Close local scope firewall
+}
 }
 
 % =========================================================================
@@ -131,7 +136,8 @@
 
 % =========================================================================
 % --- READY FOR DOCUMENT ENVIRONMENT ---
-% =========================================================================
+% =========================================================================}
+\usepackage{placeins}
 \begin{document}
 
 \pagenumbering{roman} % Start Roman sequence here (Title Page = i)
@@ -725,7 +731,12 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     C_{plane} = \sum_{i=0}^{\mathcal{A}-1} (C_{row,i} \cdot [y_{i} = 1])
     \label{eq:sum_predicate}
 \end{equation}
-\manualeq{eq:sum_predicate}{Hierarchical Occupancy Summation Predicate}
+
+% Clean, standardized subtitle block replacing the broken macro
+\begin{center}
+    \small\textsc{Hierarchical Occupancy Summation Predicate}
+\end{center}
+\vspace{0.5em}
     
     \item[Discussion:] The Cube Scale Allocator computes the unique  \textbf{``Gatekeeper''} sector count of the architecture. It provides the primary fast-fail heuristic for the system; if a request $(S, M)$ is determined to be non-admissible at this tier, the algorithm immediately terminates without initiating a descent. This makes the registrar the most efficient filter in the hierarchy, ensuring that the cost of coordinate resolution is only paid when success is mathematically guaranteed.
 \end{description}
@@ -763,8 +774,13 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     C_{huge} = \sum_{i=0}^{\mathcal{A}-1} ( C_{plane,i} \cdot [z_{i} = 1] )
     \label{eq:sum_predicate_huge}
 \end{equation}
-\manualeq{eq:sum_predicate_huge}{Tier-3 (Huge) Lattice Occupancy Summation}
-\vspace{12pt}
+
+% Clean, standardized subtitle block replacing the broken macro
+\begin{center}
+    \small\textsc{Tier-3 (Huge) Lattice Occupancy Summation}
+\end{center}
+\vspace{0.5em}
+
     
     \item[Discussion:] \hfill \\
 \begin{itemize}
@@ -840,6 +856,8 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     \label{fig:huge_allocator_weld}
 \end{figure}
 
+\FloatBarrier % <--- Forces the figure to settle completely before proceeding
+
 \begin{Iscandar}[HeuristicHuge.apl]
 :Namespace HeuristicHuge
 
@@ -869,14 +887,19 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \vspace{12pt}
 \setcounter{equation}{11}
 \noindent \textbf{Summation Predicate:} 
+\textbf{Summation Predicate:} 
 \begin{equation}
     C_{plane} = \sum_{i=0}^{\mathcal{A}-1} (C_{row,i} \cdot [y_{i} = 1])
     \label{eq:sum_predicate}
 \end{equation}
-\manualeq{eq:sum_predicate}{Tier-2 (Plane) Lattice Occupancy Summation}
-\vspace{12pt}
+
+% Replace the undefined \manualeq with a clean, standardized description line
+\begin{center}
+    \small\textsc{Tier-2 (Plane) Lattice Occupancy Summation}
+\end{center}
+\vspace{0.5em}
     
-    \item[Discussion:] 
+\item[Discussion:] 
     
 \begin{itemize}
     \item \textbf{Mechanism:} The \textit{Structural Bridge}.
@@ -1016,7 +1039,11 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     C_{row} = \sum_{j=0}^{\mathcal{A}-1} (C_{bits,j} \cdot [x_{j} = 1])
     \label{eq:sum_predicate_row}
 \end{equation}
-\manualeq{eq:sum_predicate_row}{Tier-1 (Row) Lattice Occupancy Summation}
+
+% Clean, standardized subtitle block replacing the broken macro
+\begin{center}
+    \small\textsc{Tier-1 (Row) Lattice Occupancy Summation}
+\end{center}
 \vspace{12pt}
     
     \item[Discussion:] \hfill \\
@@ -1138,10 +1165,12 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \setcounter{equation}{13}
 \noindent \textbf{Summation Predicate:} 
 \begin{equation}
-    C_{bits} = \sum_{i=0}^{\mathcal{A}-1} (\neg b_{i} \cdot [w_{i} = 1])
+    C_{\text{bits}} = \sum_{i=0}^{\mathcal{A}-1} \left( \neg b_{i} \cdot [w_{i} = 1] \right)
     \label{eq:sum_predicate_bits}
 \end{equation}
-\manualeq{eq:sum_predicate_bits}{Tier-0 (Atomic) Bit-Level Capacity Summation}
+\begin{center}
+    \small\textbf{Tier-0 (Atomic) Bit-Level Capacity Summation}
+\end{center}
 \vspace{12pt}
     
     \item[Discussion:] \hfill \\
@@ -1195,6 +1224,8 @@ This represents the leaf-level execution of the deterministic descent. By utiliz
     \caption{Tiny Allocator: Fractured Weld Polytope and Bit-Lattice Resolution.}
     \label{fig:tiny_allocator_fracture}
 \end{figure}
+
+\FloatBarrier %
 
 \begin{Iscandar}[HeuristicTiny.apl]
 :Namespace Heuristic
@@ -1363,10 +1394,12 @@ We map each instruction group to a specific predicate of the \textbf{Iscandar} h
 \setcounter{equation}{15}
 \noindent \textbf{Predicate:} 
 \begin{equation}
-    P_{Plane} \iff \sum_{i \in Plane} (Row [Inclusion]) \ge L
+    P_{\text{Plane}} \iff \sum_{i \in \text{Plane}} (\text{Row}[\text{Inclusion}]) \ge L
     \label{eq:predicate_plane}
 \end{equation}
-\manualeq{eq:predicate_plane}{The Plane Inclusion Predicate}
+\begin{center}
+    \small\textbf{The Plane Inclusion Predicate}
+\end{center}
 \vspace{12pt}
 
 \begin{enumerate}
@@ -1381,13 +1414,13 @@ We map each instruction group to a specific predicate of the \textbf{Iscandar} h
 
 \vspace{12pt}
 \setcounter{equation}{16}
-\noindent \textbf{Predicate:} 
 \begin{equation}
-    Weld \iff RHL(Row_n) + Intermediates + LHL(Row_{n+m}) \ge L
+    \text{Weld} \iff \text{RHL}(\text{Row}_n) + \text{Intermediates} + \text{LHL}(\text{Row}_{n+m}) \ge L
     \label{eq:predicate_weld}
 \end{equation}
-\manualeq{eq:predicate_weld}{The Weld Predicate for Multi-Block Resolution}
-\manualeq{eq:predicate_weld}{The Weld Predicate for Multi-Block Resolution}
+\begin{center}
+    \small\textbf{The Weld Predicate for Multi-Block Resolution}
+\end{center}
 \vspace{12pt}
 
 \begin{enumerate}
@@ -1404,14 +1437,16 @@ We map each instruction group to a specific predicate of the \textbf{Iscandar} h
 \setcounter{equation}{17}
 \noindent \textbf{Predicate:} 
 \begin{equation}
-    P_{leaf} \iff 
+    P_{\text{leaf}} \iff 
     \begin{cases} 
-    \text{Oracle}_{C}(S_{word}, L) & \text{if } L \le \mathcal{A}/4 \\
-    \text{Oracle}_{L}(S_{word}, L) \lor \text{Oracle}_{R}(S_{word}, L) & \text{if } L > \mathcal{A}/4
+    \text{Oracle}_{C}(S_{\text{word}}, L) & \text{if } L \le \mathcal{A}/4 \\
+    \text{Oracle}_{L}(S_{\text{word}}, L) \lor \text{Oracle}_{R}(S_{\text{word}}, L) & \text{if } L > \mathcal{A}/4
     \end{cases}
     \label{eq:predicate_leaf}
 \end{equation}
-\manualeq{eq:predicate_leaf}{The Leaf-Tier Path Selection Predicate}
+\begin{center}
+    \small\textbf{The Leaf-Tier Path Selection Predicate}
+\end{center}
 \vspace{12pt}
 
 \begin{enumerate}
