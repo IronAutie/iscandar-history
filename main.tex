@@ -1821,31 +1821,341 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[LatticeDriver.apl]
-:Namespace Lattice
-    (⎕IO ⎕ML) ← 0 1
+\pagenumbering{gobble}
+\begin{Iscandar}[file=LatticeDriver.apl]
+:Namespace LatticeDriver
 
-    ∇ R ← SearchAndResolve(s Origin Predicate Transform);idx
-      :Access Public Shared
-      ⍝ s: length
-      ⍝ Origin: Function pointer for start index
-      ⍝ Predicate: Candidacy check
-      ⍝ Transform: Bit-level isolation
+    ⍝ --- Constants ---
+    P ← CONSTANT.PLANE
+    OK ← 1 ⋄ FAIL ← 0
 
-      idx ← ⍎Origin
-      :While idx < 1024
-          :If (⍎Predicate) (##.Rows[idx]) s idx
-              R ← (⍎Transform) (##.Rows[idx]) s idx
-              :If (⊃R) = ##.STATUS_SUCCESS
-                  :Return
-              :EndIf
-          :EndIf
-          idx +← 1
-      :EndWhile
-      R ← ##.STATUS_FAILURE ⍬
+    ⍝ Bit-weights B_0 through B_31
+    B_0←2*0  ⋄ B_1←2*1  ⋄ B_2←2*2  ⋄ B_3←2*3  ⋄ B_4←2*4
+    B_5←2*5  ⋄ B_6←2*6  ⋄ B_7←2*7  ⋄ B_8←2*8  ⋄ B_9←2*9
+    B_10←2*10⋄ B_11←2*11⋄ B_12←2*12⋄ B_13←2*13⋄ B_14←2*14
+    B_15←2*15⋄ B_16←2*16⋄ B_17←2*17⋄ B_18←2*18⋄ B_19←2*19
+    B_20←2*20⋄ B_21←2*21⋄ B_22←2*22⋄ B_23←2*23⋄ B_24←2*24
+    B_25←2*25⋄ B_26←2*26⋄ B_27←2*27⋄ B_28←2*28⋄ B_29←2*29
+    B_30←2*30⋄ B_31←2*31
+
+    ⍝ --- Function: Run ---
+    ∇ Result ← (CR Run) R;V
+      V ← ExecutionVector R
+      → (0 = V) / NULL_SET
+      Result ← (CR V ExecuteVector) R
+      → END
+      NULL_SET: Result ← FAIL 0
+      END:
+    ∇
+
+    ∇ V ← ExecutionVector R
+      V ← 0
+      V +← (R ≤ P - 0 ⊃ Cube.planes) × B_0
+      V +← (R ≤ P - 1 ⊃ Cube.planes) × B_1
+      V +← (R ≤ P - 2 ⊃ Cube.planes) × B_2
+      V +← (R ≤ P - 3 ⊃ Cube.planes) × B_3
+      V +← (R ≤ P - 4 ⊃ Cube.planes) × B_4
+      V +← (R ≤ P - 5 ⊃ Cube.planes) × B_5
+      V +← (R ≤ P - 6 ⊃ Cube.planes) × B_6
+      V +← (R ≤ P - 7 ⊃ Cube.planes) × B_7
+      V +← (R ≤ P - 8 ⊃ Cube.planes) × B_8
+      V +← (R ≤ P - 9 ⊃ Cube.planes) × B_9
+      V +← (R ≤ P - 10 ⊃ Cube.planes) × B_10
+      V +← (R ≤ P - 11 ⊃ Cube.planes) × B_11
+      V +← (R ≤ P - 12 ⊃ Cube.planes) × B_12
+      V +← (R ≤ P - 13 ⊃ Cube.planes) × B_13
+      V +← (R ≤ P - 14 ⊃ Cube.planes) × B_14
+      V +← (R ≤ P - 15 ⊃ Cube.planes) × B_15
+      V +← (R ≤ P - 16 ⊃ Cube.planes) × B_16
+      V +← (R ≤ P - 17 ⊃ Cube.planes) × B_17
+      V +← (R ≤ P - 18 ⊃ Cube.planes) × B_18
+      V +← (R ≤ P - 19 ⊃ Cube.planes) × B_19
+      V +← (R ≤ P - 20 ⊃ Cube.planes) × B_20
+      V +← (R ≤ P - 21 ⊃ Cube.planes) × B_21
+      V +← (R ≤ P - 22 ⊃ Cube.planes) × B_22
+      V +← (R ≤ P - 23 ⊃ Cube.planes) × B_23
+      V +← (R ≤ P - 24 ⊃ Cube.planes) × B_24
+      V +← (R ≤ P - 25 ⊃ Cube.planes) × B_25
+      V +← (R ≤ P - 26 ⊃ Cube.planes) × B_26
+      V +← (R ≤ P - 27 ⊃ Cube.planes) × B_27
+      V +← (R ≤ P - 28 ⊃ Cube.planes) × B_28
+      V +← (R ≤ P - 29 ⊃ Cube.planes) × B_29
+      V +← (R ≤ P - 30 ⊃ Cube.planes) × B_30
+      V +← (R ≤ P - 31 ⊃ Cube.planes) × B_31
+    ∇
+
+    ∇ Result ← (CR V ExecuteVector) R;s;b
+      P_0:  →(0=V∧B_0)/P_1
+            (s b)←CR 0 R ⋄ →(s≠OK)/P_1
+            Result←OK((P×0)+b) ⋄ →END
+      P_1:  →(0=V∧B_1)/P_2
+            (s b)←CR 1 R ⋄ →(s≠OK)/P_2
+            Result←OK((P×1)+b) ⋄ →END
+      P_2:  →(0=V∧B_2)/P_3
+            (s b)←CR 2 R ⋄ →(s≠OK)/P_3
+            Result←OK((P×2)+b) ⋄ →END
+      P_3:  →(0=V∧B_3)/P_4
+            (s b)←CR 3 R ⋄ →(s≠OK)/P_4
+            Result←OK((P×3)+b) ⋄ →END
+      P_4:  →(0=V∧B_4)/P_5
+            (s b)←CR 4 R ⋄ →(s≠OK)/P_5
+            Result←OK((P×4)+b) ⋄ →END
+      P_5:  →(0=V∧B_5)/P_6
+            (s b)←CR 5 R ⋄ →(s≠OK)/P_6
+            Result←OK((P×5)+b) ⋄ →END
+      P_6:  →(0=V∧B_6)/P_7
+            (s b)←CR 6 R ⋄ →(s≠OK)/P_7
+            Result←OK((P×6)+b) ⋄ →END
+      P_7:  →(0=V∧B_7)/P_8
+            (s b)←CR 7 R ⋄ →(s≠OK)/P_8
+            Result←OK((P×7)+b) ⋄ →END
+      P_8:  →(0=V∧B_8)/P_9
+            (s b)←CR 8 R ⋄ →(s≠OK)/P_9
+            Result←OK((P×8)+b) ⋄ →END
+      P_9:  →(0=V∧B_9)/P_10
+            (s b)←CR 9 R ⋄ →(s≠OK)/P_10
+            Result←OK((P×9)+b) ⋄ →END
+      P_10: →(0=V∧B_10)/P_11
+            (s b)←CR 10 R ⋄ →(s≠OK)/P_11
+            Result←OK((P×10)+b) ⋄ →END
+      P_11: →(0=V∧B_11)/P_12
+            (s b)←CR 11 R ⋄ →(s≠OK)/P_12
+            Result←OK((P×11)+b) ⋄ →END
+      P_12: →(0=V∧B_12)/P_13
+            (s b)←CR 12 R ⋄ →(s≠OK)/P_13
+            Result←OK((P×12)+b) ⋄ →END
+      P_13: →(0=V∧B_13)/P_14
+            (s b)←CR 13 R ⋄ →(s≠OK)/P_14
+            Result←OK((P×13)+b) ⋄ →END
+      P_14: →(0=V∧B_14)/P_15
+            (s b)←CR 14 R ⋄ →(s≠OK)/P_15
+            Result←OK((P×14)+b) ⋄ →END
+      P_15: →(0=V∧B_15)/P_16
+            (s b)←CR 15 R ⋄ →(s≠OK)/P_15
+            Result←OK((P×15)+b) ⋄ →END
+      P_16: →(0=V∧B_16)/P_17
+            (s b)←CR 16 R ⋄ →(s≠OK)/P_17
+            Result←OK((P×16)+b) ⋄ →END
+      P_17: →(0=V∧B_17)/P_18
+            (s b)←CR 17 R ⋄ →(s≠OK)/P_18
+            Result←OK((P×17)+b) ⋄ →END
+      P_18: →(0=V∧B_18)/P_19
+            (s b)←CR 18 R ⋄ →(s≠OK)/P_18
+            Result←OK((P×18)+b) ⋄ →END
+      P_19: →(0=V∧B_19)/P_20
+            (s b)←CR 19 R ⋄ →(s≠OK)/P_19
+            Result←OK((P×19)+b) ⋄ →END
+      P_20: →(0=V∧B_20)/P_21
+            (s b)←CR 20 R ⋄ →(s≠OK)/P_20
+            Result←OK((P×20)+b) ⋄ →END
+      P_21: →(0=V∧B_21)/P_22
+            (s b)←CR 21 R ⋄ →(s≠OK)/P_21
+            Result←OK((P×21)+b) ⋄ →END
+      P_22: →(0=V∧B_22)/P_23
+            (s b)←CR 22 R ⋄ →(s≠OK)/P_22
+            Result←OK((P×22)+b) ⋄ →END
+      P_23: →(0=V∧B_23)/P_24
+            (s b)←CR 23 R ⋄ →(s≠OK)/P_23
+            Result←OK((P×23)+b) ⋄ →END
+      P_24: →(0=V∧B_24)/P_25
+            (s b)←CR 24 R ⋄ →(s≠OK)/P_24
+            Result←OK((P×24)+b) ⋄ →END
+      P_25: →(0=V∧B_25)/P_26
+            (s b)←CR 25 R ⋄ →(s≠OK)/P_25
+            Result←OK((P×25)+b) ⋄ →END
+      P_26: →(0=V∧B_26)/P_27
+            (s b)←CR 26 R ⋄ →(s≠OK)/P_26
+            Result←OK((P×26)+b) ⋄ →END
+      P_27: →(0=V∧B_27)/P_28
+            (s b)←CR 27 R ⋄ →(s≠OK)/P_27
+            Result←OK((P×27)+b) ⋄ →END
+      P_28: →(0=V∧B_28)/P_29
+            (s b)←CR 28 R ⋄ →(s≠OK)/P_28
+            Result←OK((P×28)+b) ⋄ →END
+      P_29: →(0=V∧B_29)/P_30
+            (s b)←CR 29 R ⋄ →(s≠OK)/P_29
+            Result←OK((P×29)+b) ⋄ →END
+      P_30: →(0=V∧B_30)/P_31
+            (s b)←CR 30 R ⋄ →(s≠OK)/P_30
+            Result←OK((P×30)+b) ⋄ →END
+      P_31: →(0=V∧B_31)/FAIL_EXIT
+            (s b)←CR 31 R ⋄ →(s≠OK)/FAIL_EXIT
+            Result←OK((P×31)+b) ⋄ →END
+
+      FAIL_EXIT: Result ← FAIL 0
+      END:
     ∇
 :EndNamespace
 \end{Iscandar}
+\thispagestyle{empty}
+
+\pagenumbering{gobble}
+\begin{Iscandar}[file=RowDriver.apl]
+:Namespace RowDriver
+
+    ⍝ --- Constants ---
+    OK ← 1 ⋄ FAIL ← 0
+
+    ⍝ Bit-weights B_0 through B_31
+    B_0←2*0  ⋄ B_1←2*1  ⋄ B_2←2*2  ⋄ B_3←2*3  ⋄ B_4←2*4
+    B_5←2*5  ⋄ B_6←2*6  ⋄ B_7←2*7  ⋄ B_8←2*8  ⋄ B_9←2*9
+    B_10←2*10⋄ B_11←2*11⋄ B_12←2*12⋄ B_13←2*13⋄ B_14←2*14
+    B_15←2*15⋄ B_16←2*16⋄ B_17←2*17⋄ B_18←2*18⋄ B_19←2*19
+    B_20←2*20⋄ B_21←2*21⋄ B_22←2*22⋄ B_23←2*23⋄ B_24←2*24
+    B_25←2*25⋄ B_26←2*26⋄ B_27←2*27⋄ B_28←2*28⋄ B_29←2*29
+    B_30←2*30⋄ B_31←2*31
+
+    ⍝ --- Function: Run ---
+    ∇ Result ← (Off CR Run) R;V;Rows
+      Rows ← GetRows Off
+      V ← Rows ExecutionVector R
+      → (0 = V) / NULL_SET
+      Result ← (CR V ExecuteVector) (Rows R)
+      → END
+      NULL_SET: Result ← FAIL 0
+      END:
+    ∇
+
+    ∇ V ← Rows ExecutionVector R
+      V ← 0
+      V +← (R ≤ (0 ⊃ Rows).count) × B_0
+      V +← (R ≤ (1 ⊃ Rows).count) × B_1
+      V +← (R ≤ (2 ⊃ Rows).count) × B_2
+      V +← (R ≤ (3 ⊃ Rows).count) × B_3
+      V +← (R ≤ (4 ⊃ Rows).count) × B_4
+      V +← (R ≤ (5 ⊃ Rows).count) × B_5
+      V +← (R ≤ (6 ⊃ Rows).count) × B_6
+      V +← (R ≤ (7 ⊃ Rows).count) × B_7
+      V +← (R ≤ (8 ⊃ Rows).count) × B_8
+      V +← (R ≤ (9 ⊃ Rows).count) × B_9
+      V +← (R ≤ (10 ⊃ Rows).count) × B_10
+      V +← (R ≤ (11 ⊃ Rows).count) × B_11
+      V +← (R ≤ (12 ⊃ Rows).count) × B_12
+      V +← (R ≤ (13 ⊃ Rows).count) × B_13
+      V +← (R ≤ (14 ⊃ Rows).count) × B_14
+      V +← (R ≤ (15 ⊃ Rows).count) × B_15
+      V +← (R ≤ (16 ⊃ Rows).count) × B_16
+      V +← (R ≤ (17 ⊃ Rows).count) × B_17
+      V +← (R ≤ (18 ⊃ Rows).count) × B_18
+      V +← (R ≤ (19 ⊃ Rows).count) × B_19
+      V +← (R ≤ (20 ⊃ Rows).count) × B_20
+      V +← (R ≤ (21 ⊃ Rows).count) × B_21
+      V +← (R ≤ (22 ⊃ Rows).count) × B_22
+      V +← (R ≤ (23 ⊃ Rows).count) × B_23
+      V +← (R ≤ (24 ⊃ Rows).count) × B_24
+      V +← (R ≤ (25 ⊃ Rows).count) × B_25
+      V +← (R ≤ (26 ⊃ Rows).count) × B_26
+      V +← (R ≤ (27 ⊃ Rows).count) × B_27
+      V +← (R ≤ (28 ⊃ Rows).count) × B_28
+      V +← (R ≤ (29 ⊃ Rows).count) × B_29
+      V +← (R ≤ (30 ⊃ Rows).count) × B_30
+      V +← (R ≤ (31 ⊃ Rows).count) × B_31
+    ∇
+
+    ∇ Result ← (CR V ExecuteVector) (Rows R);s;b
+      P_0:  →(0=V∧B_0)/P_1
+            (s b)←CR (0 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_1
+            Result←OK b ⋄ →END
+      P_1:  →(0=V∧B_1)/P_2
+            (s b)←CR (1 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_2
+            Result←OK b ⋄ →END
+      P_2:  →(0=V∧B_2)/P_3
+            (s b)←CR (2 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_3
+            Result←OK b ⋄ →END
+      P_3:  →(0=V∧B_3)/P_4
+            (s b)←CR (3 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_4
+            Result←OK b ⋄ →END
+      P_4:  →(0=V∧B_4)/P_5
+            (s b)←CR (4 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_5
+            Result←OK b ⋄ →END
+      P_5:  →(0=V∧B_5)/P_6
+            (s b)←CR (5 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_6
+            Result←OK b ⋄ →END
+      P_6:  →(0=V∧B_6)/P_7
+            (s b)←CR (6 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_7
+            Result←OK b ⋄ →END
+      P_7:  →(0=V∧B_7)/P_8
+            (s b)←CR (7 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_8
+            Result←OK b ⋄ →END
+      P_8:  →(0=V∧B_8)/P_9
+            (s b)←CR (8 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_9
+            Result←OK b ⋄ →END
+      P_9:  →(0=V∧B_9)/P_10
+            (s b)←CR (9 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_10
+            Result←OK b ⋄ →END
+      P_10: →(0=V∧B_10)/P_11
+            (s b)←CR (10 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_11
+            Result←OK b ⋄ →END
+      P_11: →(0=V∧B_11)/P_12
+            (s b)←CR (11 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_12
+            Result←OK b ⋄ →END
+      P_12: →(0=V∧B_12)/P_13
+            (s b)←CR (12 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_13
+            Result←OK b ⋄ →END
+      P_13: →(0=V∧B_13)/P_14
+            (s b)←CR (13 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_14
+            Result←OK b ⋄ →END
+      P_14: →(0=V∧B_14)/P_15
+            (s b)←CR (14 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_15
+            Result←OK b ⋄ →END
+      P_15: →(0=V∧B_15)/P_16
+            (s b)←CR (15 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_15
+            Result←OK b ⋄ →END
+      P_16: →(0=V∧B_16)/P_17
+            (s b)←CR (16 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_17
+            Result←OK b ⋄ →END
+      P_17: →(0=V∧B_17)/P_18
+            (s b)←CR (17 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_18
+            Result←OK b ⋄ →END
+      P_18: →(0=V∧B_18)/P_19
+            (s b)←CR (18 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_19
+            Result←OK b ⋄ →END
+      P_19: →(0=V∧B_19)/P_20
+            (s b)←CR (19 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_20
+            Result←OK b ⋄ →END
+      P_20: →(0=V∧B_20)/P_21
+            (s b)←CR (20 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_21
+            Result←OK b ⋄ →END
+      P_21: →(0=V∧B_21)/P_22
+            (s b)←CR 21 ⊃ Rows.sectors R ⋄ →(s≠OK)/P_22
+            Result←OK b ⋄ →END
+      P_22: →(0=V∧B_22)/P_23
+            (s b)←CR (22 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_23
+            Result←OK b ⋄ →END
+      P_23: →(0=V∧B_23)/P_24
+            (s b)←CR (23 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_24
+            Result←OK b ⋄ →END
+      P_24: →(0=V∧B_24)/P_25
+            (s b)←CR (24 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_25
+            Result←OK b ⋄ →END
+      P_25: →(0=V∧B_25)/P_26
+            (s b)←CR (25 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_26
+            Result←OK b ⋄ →END
+      P_26: →(0=V∧B_26)/P_27
+            (s b)←CR (26 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_27
+            Result←OK b ⋄ →END
+      P_27: →(0=V∧B_27)/P_28
+            (s b)←CR (27 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_28
+            Result←OK b ⋄ →END
+      P_28: →(0=V∧B_28)/P_29
+            (s b)←CR (28 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_29
+            Result←OK b ⋄ →END
+      P_29: →(0=V∧B_29)/P_30
+            (s b)←CR (29 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_30
+            Result←OK b ⋄ →END
+      P_30: →(0=V∧B_30)/P_31
+            (s b)←CR (30 ⊃ Rows).sectors R ⋄ →(s≠OK)/P_31
+            Result←OK b ⋄ →END
+      P_31: →(0=V∧B_31)/FAIL_EXIT
+            (s b)←CR (31 ⊃ Rows).sectors R ⋄ →(s≠OK)/FAIL_EXIT
+            Result←OK b ⋄ →END
+
+      FAIL_EXIT: Result ← FAIL 0
+      END:
+    ∇
+:EndNamespace
+\end{Iscandar}
+\thispagestyle{empty}
 
 \clearpage % Ensures the last page of the listing also has no number
 
