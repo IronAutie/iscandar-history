@@ -57,6 +57,7 @@
 % =========================================================================
 % 4. Automated Code Extraction and Verbatim Engine Configuration
 % =========================================================================
+\usepackage{placeins}
 \usepackage{fancyvrb}
 \usepackage{tcolorbox}
 \tcbuselibrary{enhanced, breakable}
@@ -149,6 +150,8 @@
 \end{abstract}
 
 \clearpage
+
+
 
 \pagenumbering{roman} % Start Roman sequence here (Title Page = i)
 \maketitle
@@ -448,101 +451,90 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 
 \subsection*{Polytope Formation At Row and Plane Levels}
 
-\subsubsection*{The Huge Resolution ($\mathcal{A}^2 < L < \mathcal{A}^3$) }
+\subsubsection*{The Huge Resolution ($\mathcal{A}^2 < L < \mathcal{A}^3$)}
 
 \begin{description}
-    \item[Domain:] Plane-join and sequence resolution within an $\mathcal{A}^k$ Cube manifold.
+    \item[Domain:] Multi-planar sequence resolution across the global $\mathcal{A}^k$ Cube row-manifold.
     
 \vspace{12pt}
 \setcounter{equation}{10}
-\noindent \textbf{Summation Predicate:} 
+\noindent \textbf{Sequence Predicate:} 
 \begin{equation}
-    C_{huge} = \sum_{i=0}^{\mathcal{A}-1} ( C_{plane,i} \cdot [z_{i} = 1] )
-    \label{eq:sum_predicate_huge}
+    P_{\text{huge}} \iff \text{Oracle}_{\text{L}}(\text{Row}_{\text{head}}) \wedge \left( \sum_{i=\text{head}+1}^{\text{tail}-1} \text{RowCount}_i = 0 \right) \wedge \text{Oracle}_{\text{R}}(\text{Row}_{\text{tail}})
+    \label{eq:huge_sequence_predicate}
 \end{equation}
 
-% Clean, standardized subtitle block replacing the broken macro
-\begin{center}
-    \small\textsc{Tier-3 (Huge) Lattice Occupancy Summation}
-\end{center}
-\vspace{0.5em}
-
-    
     \item[Discussion:] \hfill \\
 \begin{itemize}
-    \item \textbf{Mechanism:} \textbf{The Recursive Span}
+    \item \textbf{Mechanism:} Unrolled evaluation of cube's empty rows with Oracle based partial row evaluation.
     
-    \item \textbf{Geometric Event:} \textit{Multi-Vector Extrusion}
+    \item \textbf{Geometric Event:} Allocation from sequence of partial and empty rows.
     
-    \item \textbf{Resolution:} The system constructs the span via $P + (m \times \mathcal{A}) + T$. The Oracle verifies the $m$ intervening words as ``Clear Rows'' ($\mathcal{A}$ nullity checks), treating the span as a single geometric object via induction, preserving isochronous resolution by collapsing the m-length extrusion into a occupancy check.
+    \item \textbf{Resolution:} The request is decomposed across global row indices. The unrolled parallel execution logic verifies a sequence of central, fully vacant monolithic internal rows via cumulative nullity tracking. Simultaneously, the fractional leading boundary vector (\textbf{A}) and trailing overspill vector (\textbf{B}) are instantly validated using single-cycle lookups in the Left and Right Oracles. This eliminates iterative search.
 \end{itemize}
 \end{description}
 
-    This manages the 32-radix plane counts, welding 2D plane segments into a unified 3D volume request. By treating planes as the fundamental unit of resolution at this tier, the system ensures that even the largest possible allocations are resolved with identical determinism. The Huge allocator calculates the specific number of Planes required to weld a unified 3D volume, treating each Plane count as a subordinate metric for the total Cube count.
+The Huge allocation exceeds the capacity of the standard Large allocator. By evaluating the global row coordinate landscape linearly from 0 to 1,024, boundary seams between adjacent 2D planes become completely transparent to the allocation code as detailed in Listing 40 (\texttt{HugePlanesCoreDriver.apl}) and Listing 42 (\texttt{HugePlanesRemainDriver.apl}). 
 
+\nopagebreak
 
-% --- FIGURE: HUGE ALLOCATOR ---
-\begin{figure}[ht!]
+% --- FIGURE: HUGE ALLOCATOR (STET) ---
+\begin{figure}[t!]
     \centering
     \stepcounter{marginfig}
-    \begin{tikzpicture}[x=0.42cm, y=0.42cm]
+    \begin{tikzpicture}
+        \begin{axis}[
+            xmin=0, xmax=1024,
+            ymin=0, ymax=32,
+            width=11cm,
+            height=7cm,
+            axis lines=box,
+            xtick={0, 256, 512, 768, 1024},
+            ytick={0, 8, 16, 24, 32},
+            grid=major,
+            xlabel={Global Row Position Index},
+            ylabel={Contiguous Sequence Length in Rows},
+            label style={font=\small},
+            tick label style={font=\tiny}
+        ]
+        
+        % 1. HEAD REGION: Dashed Triangle (Fractional Leading Edge)
+        \draw[thick, dashed, draw=red!80, fill=red!10, fill opacity=0.6] 
+            (axis cs:160,0) -- (axis cs:224,0) -- (axis cs:160,16) -- cycle;
+        \node[font=\tiny\bfseries, text=red!80!black] at (axis cs:180,3) {A};
+
+        % 2. FOUR INTERMEDIATE CORE SEQUENCES: Solid Triangles (Fully Saturated Voids)
+        % Core Triangle 1
+        \draw[thick, draw=green!60!black, fill=green!20] 
+            (axis cs:224,0) -- (axis cs:352,0) -- (axis cs:224,24) -- cycle;
+            
+        % Core Triangle 2
+        \draw[thick, draw=green!60!black, fill=green!20] 
+            (axis cs:352,0) -- (axis cs:480,0) -- (axis cs:352,24) -- cycle;
+            
+        % Core Triangle 3
+        \draw[thick, draw=green!60!black, fill=green!20] 
+            (axis cs:480,0) -- (axis cs:608,0) -- (axis cs:480,24) -- cycle;
+            
+        % Core Triangle 4
+        \draw[thick, draw=green!60!black, fill=green!20] 
+            (axis cs:736,0) -- (axis cs:608,0) -- (axis cs:608,24) -- cycle;
+
+        % 3. TAIL REGION: Dashed Triangle (Fractional Trailing Edge Overspill)
+        \draw[thick, dashed, draw=blue!80, fill=blue!10, fill opacity=0.6] 
+            (axis cs:736,0) -- (axis cs:800,0) -- (axis cs:736,12) -- cycle;
+        \node[font=\tiny\bfseries, text=blue!80!black] at (axis cs:760,2.5) {B};
+        
+        \end{axis}
+
         % --- THE MARGIN ANCHOR ---
-        % Places the figure letter in parentheses at the far right
-        \node[anchor=east, font=\bfseries] at (34, 15) {(\themarginfig)};
-
-        % --- AXES & DIMENSION LABELS ---
-        \draw[->, thick] (0,0) -- (33,0);
-        
-        % Label: Plane Position
-        \node[anchor=north east, font=\small, text=black!80] at (33,-0.1) {Plane Position ($P_{plane}$)};
-        
-        % Vertical Axis: Plane Magnitude
-        \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Plane Magnitude ($M_{plane}$)};
-
-        % --- THE VOLUME LATTICE (S3 TIER) ---
-        \foreach \x in {0,1,...,9} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
-        \foreach \x in {10,11,...,14} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
-        \foreach \x in {15,16,...,19} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
-        \foreach \x in {20,21,...,31} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
-        
-        % Frame and Volume Boundary Weld
-        \draw[thick] (0,-3) rectangle (32,-4);
-        \draw[ultra thick, red, line cap=round] (15,-2.5) -- (15,-4.5);
-        \node[below, font=\tiny, yshift=-0.5cm] at (16,-4) {HUGE ALLOCATOR: VOLUME BOUNDARY PLANE JOIN};
-
-        % --- THE MANIFOLD GEOMETRY (PLANE-SCALE POLYTOPES) ---
-
-        % LEFT PINK TRIANGLE: Closed Plane Space
-        \fill[magenta!15, draw=magenta!50, thick] (0,0) -- (10,0) -- (0,10) -- cycle;
-        \node[magenta!80, font=\tiny, rotate=-45] at (3.5,3.5) {CLOSED};
-
-        % CENTER GREEN TRIANGLE: The 10-Plane Joined Gap (Crossing Weld)
-        \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,0) -- (20,0) -- (10,10) -- cycle;
-        \draw[dashed, red, thick] (15,0) -- (15,5); % Weld projection
-        
-        \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,3) {JOINED\\PLANE-SPACE};
-        \node[green!60!black, font=\tiny, rotate=-45] at (16.5,6) {$P_p+M_p=20$};
-
-        % RIGHT PINK TRIANGLE: Closed Plane Space
-        \fill[magenta!15, draw=magenta!50, thick] (20,0) -- (32,0) -- (20,12) -- cycle;
-        \node[magenta!80, font=\tiny, rotate=-45] at (23.5,4.5) {CLOSED};
-
-        % --- TICKS & NUMERICAL LABELS ---
-        \draw[thick] (10,0.2) -- (10,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {10};
-        \draw[thick] (15,0.2) -- (15,-0.2) node[below=14pt, red, font=\tiny, fill=white, inner sep=1pt] {Weld};
-        \draw[thick] (20,0.2) -- (20,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {20};
-        
-        % Vertical Plane Magnitude Tick at 10
-        \draw[thick] (0.2,10) -- (-0.2,10) node[left=2pt, font=\tiny] {10};
-
+        \node[anchor=north west, font=\bfseries\Large] at (current axis.north east) {\hspace{4.5cm}(\themarginfig)};
     \end{tikzpicture}
-    \caption{Huge Allocator: Phase-Space Manifold and Volume Boundary Weld.}
-    \label{fig:huge_allocator_weld}
+    \caption{Example of Huge memory allocation: Series of central polytopes revealed by cumulative empty row counts joined by optional head (A) and tail (B) polytopes revealed by Left and Right Oracles.}
+    \label{fig:macro_sequence_weld_four_cores}
 \end{figure}
 
-\FloatBarrier % <--- Forces the figure to settle completely before proceeding
-
-
+\FloatBarrier 
 
 \subsubsection*{The Large Resolution ( $2\mathcal{A} < L \le \mathcal{A}^2$)}
 
