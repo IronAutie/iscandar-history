@@ -273,6 +273,46 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
+\begin{Iscandar}[Iscandar.apl]
+:Namespace Iscandar
+
+    A←32 ⋄ OK←1
+
+    ∇ Pointer ← Allocate Total;S;B
+      ⍝ 1. Search for a starting point that fits the total request
+      (S B) ← ##.Decision.Resolve Total
+
+      ⍝ 2. If the search fails, return a record marked as invalid
+      :If S = 0
+          Pointer ← ⎕NS '' ⋄ Pointer.status ← 0
+          →0
+      :EndIf
+
+      ⍝ 3. Create a record with the location and size
+      Pointer ← ⎕NS ''
+      Pointer.(base len status) ← B Total OK
+
+      ⍝ 4. Mark the selected sectors as occupied in the grid
+      Mark Pointer
+
+      ⍝ 5. Return the record to the caller
+    ∇
+
+    ∇ S ← Free Pointer
+      ⍝ 1. Check if the pointer is valid before proceeding
+      :If 0 = Pointer.status ⋄ S ← 0 ⋄ →0 ⋄ :EndIf
+
+      ⍝ 2. Clear the sectors in the memory grid
+      Unmark Pointer
+
+      ⍝ 3. Reset the pointer status to show it is no longer active
+      Pointer.status ← 0
+      S ← OK
+    ∇
+
+:EndNamespace
+\end{Iscandar}
+
 \section{Formal Proof of Deterministic Path Termination}
 
 \noindent \textbf{Theorem:} A fixed-depth $\mathcal{L}$ of Arity $\mathcal{A}=32$ \textbf{establishes} deterministic resolution by mapping every request to a finite execution path.
@@ -757,6 +797,27 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     \caption{Huge Allocator: Phase-Space Manifold and Volume Boundary Weld.}
     \label{fig:huge_allocator_weld}
 \end{figure}
+
+\begin{Iscandar}[HeuristicHuge.apl]
+:Namespace HeuristicHuge
+
+    ∇ (S B) ← Run W_Core W_Rem
+      ⍝ 1. Intent Check: Direct Core or Fragmented Remainder?
+      :If W_Rem = 0
+          ⍝ Invoke the pure monolithic radar
+          (S B) ← ##.HugePlanesCoreDriver.Run W_Core
+      :Else
+          ⍝ Invoke the dual-track overspill radar
+          (S B) ← ##.HugePlanesRemainDriver.Run W_Core W_Rem
+      :EndIf
+
+      ⍝ 2. Status Pass-Through
+      ⍝ Success (S) and Absolute Sector Position (B) 
+      ⍝ are bubbled up to the top-level allocator.
+    ∇
+
+:EndNamespace
+\end{Iscandar}
 
 \subsubsection*{The Large Resolution ( $2\mathcal{A} < L \le \mathcal{A}^2$)}
 
@@ -2689,6 +2750,334 @@ $W.Close(); $S_i.Close()
 
     ∇ Result ← p Position b
       Result ← (32*2)×p + b
+    ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\begin{Iscandar}[HugePlanesCoreDriver.apl]
+:Namespace HugePlanesCoreDriver
+
+    A←32 ⋄ P_SIZE←1024 ⋄ C_SIZE←32 ⋄ OK←1
+
+    ∇ (S B) ← Run W_Core;I;R;Σ;T;C;L_T
+      ⍝ --- 1. Radar Generation ---
+      
+      ⍝ Create index map with a W_Core lookahead buffer
+      I ← ⍳(P_SIZE + W_Core)
+
+      ⍝ Ingest counts; inject 'A' (32) beyond P_SIZE to form Silicon Wall
+      R ← { (⍵ > P_SIZE): A ⋄ ##.Cube.Rows[⍵].count }¨ I
+
+      ⍝ Windowed sum: Occupancy total for every potential W_Core span
+      Σ ← P_SIZE ↑ (W_Core +/ R)
+
+      ⍝ Global Track: 1,024-bit rail marking valid monolithic voids
+      T ← (Σ = 0)
+
+      ⍝ Capability Vector: 32-bit summary (High if Plane contains a 1)
+      C ← { ∨/ (T[(A × ⍵-1) + ⍳A]) }¨ ⍳C_SIZE
+
+      ⍝ --- 2. Fully Unrolled Execution Manifold ---
+      
+      P_0:  →(0 = 0⊃C)/P_1  ⋄ L_T ← T[⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T 0
+            →(S = OK)/EXIT
+      P_1:  →(0 = 1⊃C)/P_2  ⋄ L_T ← T[A + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T A
+            →(S = OK)/EXIT
+      P_2:  →(0 = 2⊃C)/P_3  ⋄ L_T ← T[(2×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (2×A)
+            →(S = OK)/EXIT
+      P_3:  →(0 = 3⊃C)/P_4  ⋄ L_T ← T[(3×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (3×A)
+            →(S = OK)/EXIT
+      P_4:  →(0 = 4⊃C)/P_5  ⋄ L_T ← T[(4×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (4×A)
+            →(S = OK)/EXIT
+      P_5:  →(0 = 5⊃C)/P_6  ⋄ L_T ← T[(5×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (5×A)
+            →(S = OK)/EXIT
+      P_6:  →(0 = 6⊃C)/P_7  ⋄ L_T ← T[(6×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (6×A)
+            →(S = OK)/EXIT
+      P_7:  →(0 = 7⊃C)/P_8  ⋄ L_T ← T[(7×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (7×A)
+            →(S = OK)/EXIT
+      P_8:  →(0 = 8⊃C)/P_9  ⋄ L_T ← T[(8×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (8×A)
+            →(S = OK)/EXIT
+      P_9:  →(0 = 9⊃C)/P_10 ⋄ L_T ← T[(9×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (9×A)
+            →(S = OK)/EXIT
+      P_10: →(0 = 10⊃C)/P_11 ⋄ L_T ← T[(10×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (10×A)
+            →(S = OK)/EXIT
+      P_11: →(0 = 11⊃C)/P_12 ⋄ L_T ← T[(11×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (11×A)
+            →(S = OK)/EXIT
+      P_12: →(0 = 12⊃C)/P_13 ⋄ L_T ← T[(12×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (12×A)
+            →(S = OK)/EXIT
+      P_13: →(0 = 13⊃C)/P_14 ⋄ L_T ← T[(13×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (13×A)
+            →(S = OK)/EXIT
+      P_14: →(0 = 14⊃C)/P_15 ⋄ L_T ← T[(14×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (14×A)
+            →(S = OK)/EXIT
+      P_15: →(0 = 15⊃C)/P_16 ⋄ L_T ← T[(15×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (15×A)
+            →(S = OK)/EXIT
+      P_16: →(0 = 16⊃C)/P_17 ⋄ L_T ← T[(16×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (16×A)
+            →(S = OK)/EXIT
+      P_17: →(0 = 17⊃C)/P_18 ⋄ L_T ← T[(17×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (17×A)
+            →(S = OK)/EXIT
+      P_18: →(0 = 18⊃C)/P_19 ⋄ L_T ← T[(18×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (18×A)
+            →(S = OK)/EXIT
+      P_19: →(0 = 19⊃C)/P_20 ⋄ L_T ← T[(19×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (19×A)
+            →(S = OK)/EXIT
+      P_20: →(0 = 20⊃C)/P_21 ⋄ L_T ← T[(20×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (20×A)
+            →(S = OK)/EXIT
+      P_21: →(0 = 21⊃C)/P_22 ⋄ L_T ← T[(21×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (21×A)
+            →(S = OK)/EXIT
+      P_22: →(0 = 22⊃C)/P_23 ⋄ L_T ← T[(22×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (22×A)
+            →(S = OK)/EXIT
+      P_23: →(0 = 23⊃C)/P_24 ⋄ L_T ← T[(23×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (23×A)
+            →(S = OK)/EXIT
+      P_24: →(0 = 24⊃C)/P_25 ⋄ L_T ← T[(24×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (24×A)
+            →(S = OK)/EXIT
+      P_25: →(0 = 25⊃C)/P_26 ⋄ L_T ← T[(25×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (25×A)
+            →(S = OK)/EXIT
+      P_26: →(0 = 26⊃C)/P_27 ⋄ L_T ← T[(26×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (26×A)
+            →(S = OK)/EXIT
+      P_27: →(0 = 27⊃C)/P_28 ⋄ L_T ← T[(27×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (27×A)
+            →(S = OK)/EXIT
+      P_28: →(0 = 28⊃C)/P_29 ⋄ L_T ← T[(28×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (28×A)
+            →(S = OK)/EXIT
+      P_29: →(0 = 29⊃C)/P_30 ⋄ L_T ← T[(29×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (29×A)
+            →(S = OK)/EXIT
+      P_30: →(0 = 30⊃C)/P_31 ⋄ L_T ← T[(30×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (30×A)
+            →(S = OK)/EXIT
+      P_31: →(0 = 31⊃C)/FAIL ⋄ L_T ← T[(31×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core L_T (31×A)
+            →(S = OK)/EXIT
+
+      FAIL: S ← 0 ⋄ B ← 0 ⋄ →0
+      EXIT: 
+    ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\begin{Iscandar}[HugeRowsCoreDriver.apl]
+:Namespace HugeRowsCoreDriver
+
+    A←32 ⋄ OK←1
+
+    ∇ (S B) ← Run W_Core L_T Base;R_Idx
+      ⍝ 1. Fast-Fail: Bulk Zero-Check (OR-reduction)
+      ⍝ If the rail is dark, exit immediately with Fail
+      :If 0 = ∨/L_T ⋄ S←0 ⋄ B←0 ⋄ →0 ⋄ :EndIf
+
+      ⍝ 2. Hardware Decode: Resolve leading edge offset
+      R_Idx ← L_T ⍳ 1
+
+      ⍝ 3. Synthesis: Calculate absolute bit offset
+      S ← OK
+      B ← (Base + R_Idx) × A
+    ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\begin{Iscandar}[HugePlanesRemainDriver.apl]
+:Namespace HugePlanesRemainDriver
+
+    A←32 ⋄ P_SIZE←1024 ⋄ C_SIZE←32 ⋄ OK←1
+
+    ∇ (S B) ← Run W_Core W_Rem;I;R;S_T;E_T;Track;C;L_T
+      ⍝ --- 1. Dual-Track Radar Generation ---
+      
+      ⍝ Lookahead indices for Head, Shard, and Tail rows
+      I ← ⍳(P_SIZE + W_Core + 1)
+      R ← { (⍵ ≥ P_SIZE): A ⋄ ##.Cube.Rows[⍵].count }¨ I
+
+      ⍝ Track 1: Shard Rail (Monolithic Void)
+      ⍝ Must be zero between the Head and the Tail
+      S_T ← P_SIZE ↑ ((W_Core +/ 1 ↓ R) = 0)
+
+      ⍝ Track 2: Edges Rail (Combined Capacity)
+      ⍝ Checks if Space[Head] + Space[Tail] ≥ W_Rem
+      E_T ← P_SIZE ↑ ((A - R) + (A - (W_Core + 1) ↓ R) ≥ W_Rem)
+
+      ⍝ Global Track: Intersection of Void and Edge Space
+      Track ← S_T ∧ E_T
+
+      ⍝ Capability Vector: 32-bit Planar Filter
+      C ← { ∨/ (Track[(A × ⍵) + ⍳A]) }¨ ⍳C_SIZE
+
+      ⍝ --- 2. Fully Unrolled Execution Manifold ---
+      P_0:  →(0 = 0⊃C)/P_1  ⋄ L_T ← Track[⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T 0
+            →(S = OK)/EXIT
+      P_1:  →(0 = 1⊃C)/P_2  ⋄ L_T ← Track[A + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T A
+            →(S = OK)/EXIT
+      P_2:  →(0 = 2⊃C)/P_3  ⋄ L_T ← Track[(2×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (2×A)
+            →(S = OK)/EXIT
+      P_3:  →(0 = 3⊃C)/P_4  ⋄ L_T ← Track[(3×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (3×A)
+            →(S = OK)/EXIT
+      P_4:  →(0 = 4⊃C)/P_5  ⋄ L_T ← Track[(4×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (4×A)
+            →(S = OK)/EXIT
+      P_5:  →(0 = 5⊃C)/P_6  ⋄ L_T ← Track[(5×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (5×A)
+            →(S = OK)/EXIT
+      P_6:  →(0 = 6⊃C)/P_7  ⋄ L_T ← Track[(6×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (6×A)
+            →(S = OK)/EXIT
+      P_7:  →(0 = 7⊃C)/P_8  ⋄ L_T ← Track[(7×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (7×A)
+            →(S = OK)/EXIT
+      P_8:  →(0 = 8⊃C)/P_9  ⋄ L_T ← Track[(8×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (8×A)
+            →(S = OK)/EXIT
+      P_9:  →(0 = 9⊃C)/P_10 ⋄ L_T ← Track[(9×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (9×A)
+            →(S = OK)/EXIT
+      P_10: →(0 = 10⊃C)/P_11 ⋄ L_T ← Track[(10×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (10×A)
+            →(S = OK)/EXIT
+      P_11: →(0 = 11⊃C)/P_12 ⋄ L_T ← Track[(11×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (11×A)
+            →(S = OK)/EXIT
+      P_12: →(0 = 12⊃C)/P_13 ⋄ L_T ← Track[(12×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (12×A)
+            →(S = OK)/EXIT
+      P_13: →(0 = 13⊃C)/P_14 ⋄ L_T ← Track[(13×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (13×A)
+            →(S = OK)/EXIT
+      P_14: →(0 = 14⊃C)/P_15 ⋄ L_T ← Track[(14×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (14×A)
+            →(S = OK)/EXIT
+      P_15: →(0 = 15⊃C)/P_16 ⋄ L_T ← Track[(15×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (15×A)
+            →(S = OK)/EXIT
+      P_16: →(0 = 16⊃C)/P_17 ⋄ L_T ← Track[(16×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (16×A)
+            →(S = OK)/EXIT
+      P_17: →(0 = 17⊃C)/P_18 ⋄ L_T ← Track[(17×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (17×A)
+            →(S = OK)/EXIT
+      P_18: →(0 = 18⊃C)/P_19 ⋄ L_T ← Track[(18×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (18×A)
+            →(S = OK)/EXIT
+      P_19: →(0 = 19⊃C)/P_20 ⋄ L_T ← Track[(19×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (19×A)
+            →(S = OK)/EXIT
+      P_20: →(0 = 20⊃C)/P_21 ⋄ L_T ← Track[(20×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (20×A)
+            →(S = OK)/EXIT
+      P_21: →(0 = 21⊃C)/P_22 ⋄ L_T ← Track[(21×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (21×A)
+            →(S = OK)/EXIT
+      P_22: →(0 = 22⊃C)/P_23 ⋄ L_T ← Track[(22×A) + ⍳A]
+            (S B) ← ##.HugeRowsCoreDriver.Run W_Core W_Rem L_T (22×A)
+            →(S = OK)/EXIT
+      P_23: →(0 = 23⊃C)/P_24 ⋄ L_T ← Track[(23×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (23×A)
+            →(S = OK)/EXIT
+      P_24: →(0 = 24⊃C)/P_25 ⋄ L_T ← Track[(24×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (24×A)
+            →(S = OK)/EXIT
+      P_25: →(0 = 25⊃C)/P_26 ⋄ L_T ← Track[(25×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (25×A)
+            →(S = OK)/EXIT
+      P_26: →(0 = 26⊃C)/P_27 ⋄ L_T ← Track[(26×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (26×A)
+            →(S = OK)/EXIT
+      P_27: →(0 = 27⊃C)/P_28 ⋄ L_T ← Track[(27×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (27×A)
+            →(S = OK)/EXIT
+      P_28: →(0 = 28⊃C)/P_29 ⋄ L_T ← Track[(28×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (28×A)
+            →(S = OK)/EXIT
+      P_29: →(0 = 29⊃C)/P_30 ⋄ L_T ← Track[(29×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (29×A)
+            →(S = OK)/EXIT
+      P_30: →(0 = 30⊃C)/P_31 ⋄ L_T ← Track[(30×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (30×A)
+            →(S = OK)/EXIT
+      P_31: →(0 = 31⊃C)/FAIL ⋄ L_T ← Track[(31×A) + ⍳A]
+            (S B) ← ##.HugeRowsRemainDriver.Run W_Core W_Rem L_T (31×A)
+            →(S = OK)/EXIT
+
+      FAIL: S ← 0 ⋄ B ← 0 ⋄ →0
+      EXIT: 
+    ∇
+
+:EndNamespace
+\end{Iscandar}
+
+\begin{Iscandar}[HugeRowsRemainDriver.apl]
+:Namespace HugeRowsRemainDriver
+
+    A←32 ⋄ OK←1
+
+    ∇ (S B) ← Run W_Core W_Rem L_T Base;R_Idx;H_Idx;H_Row;P_H;T_Rem;T_Idx;T_Row
+      ⍝ 1. Rail Gate: Fast-fail if the track is dark
+      :If 0 = ∨/L_T ⋄ →FAIL ⋄ :EndIf
+
+      ⍝ 2. Hardware Decode: Resolve leading edge row offset
+      R_Idx ← L_T ⍳ 1
+
+      ⍝ 3. Oracle Extraction: Fetch sector-position from Head
+      H_Idx ← Base + R_Idx
+      H_Row ← ##.Cube.Rows[H_Idx].sectors
+      P_H ← ##.Oracles.Left[H_Row]
+
+      ⍝ 4. Oracle Validity Gate: Catch negative or OOB sentinels
+      :If (P_H < 0) ∨ (P_H ≥ A) ⋄ →FAIL ⋄ :EndIf
+
+      ⍝ 5. Debt Calculation: Determine if overspill is required
+      T_Rem ← W_Rem - (A - P_H)
+
+      ⍝ 6. Early Success Shunt: If Head absorbed W_Rem, exit now
+      :If T_Rem ≤ 0 ⋄ →DONE ⋄ :EndIf
+
+      ⍝ 7. Tail Gate: Verify Tail row can host the spillover
+      ⍝ Stride: Head [1] + Shard [W_Core] = Tail at +1
+      T_Idx ← H_Idx + W_Core + 1
+      T_Row ← ##.Cube.Rows[T_Idx].sectors
+      
+      ⍝ Tail check: Row must have enough leading-edge space
+      :If T_Rem > (A - T_Row) ⋄ →FAIL ⋄ :EndIf
+
+      DONE: 
+      ⍝ 8. Success Synthesis
+      S ← OK
+      B ← (H_Idx × A) + P_H
+      →EXIT
+
+      FAIL: S ← 0 ⋄ B ← 0
+      EXIT: 
     ∇
 
 :EndNamespace
