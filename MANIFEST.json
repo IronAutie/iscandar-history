@@ -1,0 +1,1415 @@
+{
+ "paper": "An Extension of Buddy Systems to Arbitrary Radix for Deterministic Memory Allocation",
+ "built": "2026-10-22",
+ "sources": {
+  "overleaf_zips": "workspace/browser_downloads/sess-2505447410 (88 zips; filename seq = inventory position + 14)",
+  "escrow_pdfs": "workspace/iscandar/escrow (43 PDFs, see its MANIFEST.md)",
+  "inventory": "workspace/iscandar/overleaf-inventory.md"
+ },
+ "insertion_rules": [
+  "Build order is the reverse of the Overleaf project-list order (inventory positions 88 down to 1); position 88, 'Iscandar', is the oldest version and position 1, 'Iscandar 24c', the newest.",
+  "Each Overleaf version commit replaces the whole tree with that version's unzipped source; README.md at the root is repo furniture and is preserved across version commits.",
+  "A version commit's pdf/ folder holds exactly that version's matched escrow PDF(s). Email-only commits carry the current tree forward unchanged and add their PDF(s) under pdf/.",
+  "Email-only commits are dated with the email's date (12:00 UTC) as author and committer date, and inserted at the points recorded per entry ('inserted' field).",
+  "A version whose source tree is byte-identical to the previous version's source gets no commit; it is recorded here as checkpoint-identical, and any tag or insertion keyed to it lands on the commit it collapsed into.",
+  "Tags are lightweight, named 'v' + the author's version token. Every Overleaf commit that received a matched escrow PDF is tagged, and every email-only commit is tagged except the 2026-04-20 unversioned state and the 2026-05-08 no-subject state, which are identified by their commit messages and this manifest."
+ ],
+ "commits": [
+  {
+   "kind": "readme",
+   "subject": "Add README",
+   "commit": "122621ca6513422561e7208bddcdeabb3cb14d00"
+  },
+  {
+   "kind": "email",
+   "subject": "Paper4",
+   "email_date": "2026-04-07",
+   "attachments": [
+    "Iscandar.pdf"
+   ],
+   "pdfs": [
+    "iscandar-paper4.pdf"
+   ],
+   "inserted": "first version commit, before Overleaf 'Iscandar' (earliest dated state, 2026-04-07)",
+   "tags": [
+    "vpaper4"
+   ],
+   "commit": "4a612e159900d54789c9d2683a641a46910a0d1c"
+  },
+  {
+   "kind": "overleaf",
+   "position": 88,
+   "title": "Iscandar",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T123641.166796064Z-102-Iscandar.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "31afc1125170bf6b2f2f3c1e39e3ea3ac076ba13"
+  },
+  {
+   "kind": "overleaf",
+   "position": 87,
+   "title": "Iscandar 2",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T123612.152471596Z-101-Iscandar_2.zip",
+   "pdfs": [
+    "iscandar-2.pdf"
+   ],
+   "tags": [
+    "v2"
+   ],
+   "checkpoint_identical": false,
+   "commit": "f0b505a2ad70b3d977d3ad6063378ee8941809b1"
+  },
+  {
+   "kind": "email",
+   "subject": "Scientific paper latest escrow",
+   "email_date": "2026-04-08",
+   "attachments": [
+    "Iscandar_2a.pdf"
+   ],
+   "pdfs": [
+    "iscandar-2026-04-08-latest-escrow.pdf"
+   ],
+   "inserted": "after Overleaf 'Iscandar 2' (sequence 0)",
+   "tags": [
+    "v2a"
+   ],
+   "commit": "7e7bcf78bb28e64b4c89b0c3b9af71e7a9627052"
+  },
+  {
+   "kind": "overleaf",
+   "position": 86,
+   "title": "Iscandar 3",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T123536.510910052Z-100-Iscandar_3.zip",
+   "pdfs": [
+    "iscandar-3.pdf"
+   ],
+   "tags": [
+    "v3"
+   ],
+   "checkpoint_identical": false,
+   "commit": "2733f50b84f1a4b52a9c006b7290d9b3eca71d28"
+  },
+  {
+   "kind": "email",
+   "subject": "Iscandar 3.1",
+   "email_date": "2026-04-09",
+   "attachments": [
+    "Iscandar_3-1.pdf",
+    "Iscandar_3-1.pdf (Fwd copy)"
+   ],
+   "pdfs": [
+    "iscandar-3.1.pdf",
+    "iscandar-3.1-fwd.pdf"
+   ],
+   "inserted": "after Overleaf 'Iscandar 3' (sequence 0)",
+   "tags": [
+    "v3.1"
+   ],
+   "commit": "b2ab5a1e23f8ee87b882287b2876547302a7f6fa"
+  },
+  {
+   "kind": "overleaf",
+   "position": 85,
+   "title": "Iscandar 4",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T123504.130040871Z-99-Iscandar_4.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "54844b940356bf62db2959a9ab57587d46176bbb"
+  },
+  {
+   "kind": "overleaf",
+   "position": 84,
+   "title": "Iscandar 5",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T123441.110756663Z-98-Iscandar_5.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "d1ae63217ad8cb94413fdb9bf1d3936e16c46be5"
+  },
+  {
+   "kind": "overleaf",
+   "position": 83,
+   "title": "Iscandar 4a",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T123412.559991Z-97-Iscandar_4a.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "3a033ac4ca52f8ade437f94f9db31ede95d5e7b4"
+  },
+  {
+   "kind": "email",
+   "subject": "Iscandar 6 skeleton",
+   "email_date": "2026-04-13",
+   "attachments": [
+    "Iscandar_6.pdf"
+   ],
+   "pdfs": [
+    "iscandar-6-skeleton.pdf"
+   ],
+   "inserted": "before Overleaf 'Iscandar 6'",
+   "tags": [
+    "v6-skeleton"
+   ],
+   "commit": "10a94d45a4076ebbee243cedf447dc49661e9d84"
+  },
+  {
+   "kind": "overleaf",
+   "position": 82,
+   "title": "Iscandar 6",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T123338.132873797Z-96-Iscandar_6.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "9eef7d571758d1efb4818aef98fb73161d9fb34b"
+  },
+  {
+   "kind": "email",
+   "subject": "Iscandar 6.2",
+   "email_date": "2026-04-14",
+   "attachments": [
+    "Iscandar_6-2.pdf"
+   ],
+   "pdfs": [
+    "iscandar-6.2.pdf"
+   ],
+   "inserted": "after Overleaf 'Iscandar 6' (sequence 0)",
+   "tags": [
+    "v6.2"
+   ],
+   "commit": "f08c4789a016261602ad8fe50792fd48dc173063"
+  },
+  {
+   "kind": "overleaf",
+   "position": 81,
+   "title": "Iscandar 8",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T123310.721964203Z-95-Iscandar_8.zip",
+   "pdfs": [
+    "iscandar-8.pdf"
+   ],
+   "tags": [
+    "v8"
+   ],
+   "checkpoint_identical": false,
+   "commit": "5fd4cd3023ce1878ac9ce69e10e88683b031e23c"
+  },
+  {
+   "kind": "overleaf",
+   "position": 80,
+   "title": "Iscandar 7",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T123245.186477105Z-94-Iscandar_7.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "e6f5f88ec9aa5542ae821c16304dd11bbfa4b320"
+  },
+  {
+   "kind": "overleaf",
+   "position": 79,
+   "title": "Iscandar 9",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T123218.812107399Z-93-Iscandar_9.zip",
+   "pdfs": [
+    "iscandar-9.pdf"
+   ],
+   "tags": [
+    "v9"
+   ],
+   "checkpoint_identical": false,
+   "commit": "b182d702fd27487b9335f41f7e2c0b630216f21a"
+  },
+  {
+   "kind": "overleaf",
+   "position": 78,
+   "title": "Iscandar 10",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T123149.136517263Z-92-Iscandar_10.zip",
+   "pdfs": [
+    "iscandar-10.pdf"
+   ],
+   "tags": [
+    "v10"
+   ],
+   "checkpoint_identical": false,
+   "commit": "8f7b6b437f94fcc68899c90d8d418a256ed756b0"
+  },
+  {
+   "kind": "email",
+   "subject": "iscandar 10.5",
+   "email_date": "2026-04-15",
+   "attachments": [
+    "Iscandar_10-5.pdf"
+   ],
+   "pdfs": [
+    "iscandar-10.5.pdf"
+   ],
+   "inserted": "after Overleaf 'Iscandar 10' (sequence 0)",
+   "tags": [
+    "v10.5"
+   ],
+   "commit": "b231905107d5a3532ee088bd463a21ef0a6335e4"
+  },
+  {
+   "kind": "email",
+   "subject": "Iscandar 10.6",
+   "email_date": "2026-04-15",
+   "attachments": [
+    "Iscandar_10-6.pdf"
+   ],
+   "pdfs": [
+    "iscandar-10.6.pdf"
+   ],
+   "inserted": "after Overleaf 'Iscandar 10' (sequence 1)",
+   "tags": [
+    "v10.6"
+   ],
+   "commit": "1422285308da27cffbb3cdb4986ef30b651bd016"
+  },
+  {
+   "kind": "email",
+   "subject": "Iscandar 10.7",
+   "email_date": "2026-04-15",
+   "attachments": [
+    "Iscandar_10-7.pdf"
+   ],
+   "pdfs": [
+    "iscandar-10.7.pdf"
+   ],
+   "inserted": "after Overleaf 'Iscandar 10' (sequence 2)",
+   "tags": [
+    "v10.7"
+   ],
+   "commit": "9e9d0d99158f904b2a3ca939a6e9f0849d6673fd"
+  },
+  {
+   "kind": "email",
+   "subject": "(no subject) \u2014 Iscandar_10-8.pdf",
+   "email_date": "2026-04-16",
+   "attachments": [
+    "Iscandar_10-8.pdf"
+   ],
+   "pdfs": [
+    "iscandar-2026-04-16-nosubject.pdf"
+   ],
+   "inserted": "after Overleaf 'Iscandar 10' (sequence 3)",
+   "tags": [
+    "v10.8"
+   ],
+   "commit": "64eaddb8a099e37273583ae2a1d3c6136f00dceb"
+  },
+  {
+   "kind": "email",
+   "subject": "Iscandar 10.9",
+   "email_date": "2026-04-16",
+   "attachments": [
+    "Iscandar_10-9.pdf"
+   ],
+   "pdfs": [
+    "iscandar-10.9.pdf"
+   ],
+   "inserted": "after Overleaf 'Iscandar 10' (sequence 4)",
+   "tags": [
+    "v10.9"
+   ],
+   "commit": "5bbc2bc39fd3e25b1f7d072a0b37c601eaf6bba4"
+  },
+  {
+   "kind": "email",
+   "subject": "Iscandar 10.10",
+   "email_date": "2026-04-16",
+   "attachments": [
+    "Iscandar_10-10.pdf"
+   ],
+   "pdfs": [
+    "iscandar-10.10.pdf"
+   ],
+   "inserted": "after Overleaf 'Iscandar 10' (sequence 5)",
+   "tags": [
+    "v10.10"
+   ],
+   "commit": "670daa67923e543f5b889d26ef69fa3f489d08e4"
+  },
+  {
+   "kind": "overleaf",
+   "position": 77,
+   "title": "Iscandar 11",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T123124.151088144Z-91-Iscandar_11.zip",
+   "pdfs": [
+    "iscandar-11.pdf"
+   ],
+   "tags": [
+    "v11"
+   ],
+   "checkpoint_identical": false,
+   "commit": "1a47d88962d819dc4d715a67eed5eb85d814b583"
+  },
+  {
+   "kind": "email",
+   "subject": "Iscandar 11.1",
+   "email_date": "2026-04-17",
+   "attachments": [
+    "Iscandar_11-1.pdf"
+   ],
+   "pdfs": [
+    "iscandar-11.1.pdf"
+   ],
+   "inserted": "after Overleaf 'Iscandar 11' (sequence 0)",
+   "tags": [
+    "v11.1"
+   ],
+   "commit": "9e84b240a57e7209f9c64e65ab73c0aa6bc1744e"
+  },
+  {
+   "kind": "overleaf",
+   "position": 76,
+   "title": "Iscandar 12",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T123059.714944453Z-90-Iscandar_12.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "0e6c38ac5b803a5ff5a71cabdb471ec78b797c21"
+  },
+  {
+   "kind": "overleaf",
+   "position": 75,
+   "title": "Iscandar 12a",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T123039.315216252Z-89-Iscandar_12a.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "967d16ca36d62335c38124c307f16e0f9349b667"
+  },
+  {
+   "kind": "overleaf",
+   "position": 74,
+   "title": "Iscandar 12b",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122936.098653288Z-88-Iscandar_12b.zip",
+   "pdfs": [
+    "iscandar-12b.pdf"
+   ],
+   "tags": [
+    "v12b"
+   ],
+   "checkpoint_identical": false,
+   "commit": "ff88bedb76b32e672b02b25fd6216348e823ac93"
+  },
+  {
+   "kind": "email",
+   "subject": "Iscandar Full Report beta",
+   "email_date": "2026-04-19",
+   "attachments": [
+    "Iscandar_12b-1.pdf",
+    "Iscandar_12b-1.pdf (Fwd copy)"
+   ],
+   "pdfs": [
+    "iscandar-full-report-beta.pdf",
+    "iscandar-full-report-beta-fwd.pdf"
+   ],
+   "inserted": "after Overleaf 'Iscandar 12b' (sequence 0)",
+   "tags": [
+    "v12b-beta"
+   ],
+   "commit": "353148bd17f635c04481e7cad7f2ed3f9a81e5fc"
+  },
+  {
+   "kind": "overleaf",
+   "position": 73,
+   "title": "Iscandar 12c",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122907.885590538Z-87-Iscandar_12c.zip",
+   "pdfs": [
+    "iscandar-12c.pdf"
+   ],
+   "tags": [
+    "v12c"
+   ],
+   "checkpoint_identical": false,
+   "commit": "936c43675034bfb40bd362677a18054638dc43bf"
+  },
+  {
+   "kind": "email",
+   "subject": "Iscandar",
+   "email_date": "2026-04-20",
+   "attachments": [
+    "Iscandar_12c.pdf"
+   ],
+   "pdfs": [
+    "iscandar-2026-04-20-unversioned.pdf"
+   ],
+   "inserted": "after Overleaf 'Iscandar 12c' (sequence 0)",
+   "tags": [],
+   "commit": "78a74f8c39e58531be76570779b0884a11c0e286"
+  },
+  {
+   "kind": "overleaf",
+   "position": 72,
+   "title": "Iscandar 12d",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122833.495554005Z-86-Iscandar_12d.zip",
+   "pdfs": [
+    "iscandar-12d.pdf",
+    "iscandar-12-d.pdf"
+   ],
+   "tags": [
+    "v12d"
+   ],
+   "checkpoint_identical": false,
+   "commit": "b633b5524164dbdb4e3cd6cae49217533d5bddde"
+  },
+  {
+   "kind": "overleaf",
+   "position": 71,
+   "title": "Iscandar 12e",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122803.149567964Z-85-Iscandar_12e.zip",
+   "pdfs": [
+    "iscandar-12e.pdf"
+   ],
+   "tags": [
+    "v12e"
+   ],
+   "checkpoint_identical": false,
+   "commit": "8e8e161d66c8d017ab462c721a78b90deeb9fc2e"
+  },
+  {
+   "kind": "overleaf",
+   "position": 70,
+   "title": "Iscandar 12f",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122735.491923400Z-84-Iscandar_12f.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "15a5e6086b403909eb2e012b841f9c11f92a2d49"
+  },
+  {
+   "kind": "overleaf",
+   "position": 69,
+   "title": "Iscandar 12g",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122709.715769673Z-83-Iscandar_12g.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "3735781995c74fc4b2d7da29f7d4ced5afc46a13"
+  },
+  {
+   "kind": "email",
+   "subject": "Iscandar 12g-2. Bibliography and Equations lined up",
+   "email_date": "2026-04-21",
+   "attachments": [
+    "Iscandar_12g-2.pdf"
+   ],
+   "pdfs": [
+    "iscandar-12g-2.pdf"
+   ],
+   "inserted": "after Overleaf 'Iscandar 12g' (sequence 0)",
+   "tags": [
+    "v12g-2"
+   ],
+   "commit": "b9bd667e71e083a01c6e05069fb71148948ecbfd"
+  },
+  {
+   "kind": "overleaf",
+   "position": 68,
+   "title": "Iscandar 13",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122644.015216256Z-82-Iscandar_13.zip",
+   "pdfs": [
+    "iscandar-13.pdf"
+   ],
+   "tags": [
+    "v13"
+   ],
+   "checkpoint_identical": false,
+   "commit": "5550166403597c788900802db7e3d5d49901882f"
+  },
+  {
+   "kind": "email",
+   "subject": "Iscandar 13.1, stray label removal",
+   "email_date": "2026-04-21",
+   "attachments": [
+    "Iscandar_13-1.pdf"
+   ],
+   "pdfs": [
+    "iscandar-13.1.pdf"
+   ],
+   "inserted": "after Overleaf 'Iscandar 13' (sequence 0)",
+   "tags": [
+    "v13.1"
+   ],
+   "commit": "408fb42ab9db871696b72874f55c387ed9f61f19"
+  },
+  {
+   "kind": "overleaf",
+   "position": 67,
+   "title": "Iscandar 13a",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122616.602871418Z-81-Iscandar_13a.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "c852e714ed1b565a9489517c73359c5617d199fd"
+  },
+  {
+   "kind": "overleaf",
+   "position": 66,
+   "title": "Iscandar 13b",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122547.628328695Z-80-Iscandar_13b.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "000962c1fb4deae4bcda9cd5d5e1b01802cfdbc3"
+  },
+  {
+   "kind": "overleaf",
+   "position": 65,
+   "title": "Iscandar 13c",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122521.772981933Z-79-Iscandar_13c.zip",
+   "pdfs": [
+    "iscandar-13c.pdf"
+   ],
+   "tags": [
+    "v13c"
+   ],
+   "checkpoint_identical": false,
+   "commit": "211ddd388608e78c7a8e81f02daa5687ff62324a"
+  },
+  {
+   "kind": "overleaf",
+   "position": 64,
+   "title": "Iscandar 13d",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122453.219969216Z-78-Iscandar_13d.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "f39f567f7e0ad483d6a2d8aaeafa46fd6a09c077"
+  },
+  {
+   "kind": "overleaf",
+   "position": 63,
+   "title": "Iscandar 13e: diagrams ready",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122428.004070135Z-77-Iscandar_13e__diagrams_ready.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "c9142c7b612f701134f62261253a30fdcc3efac4"
+  },
+  {
+   "kind": "overleaf",
+   "position": 62,
+   "title": "Iscandar 13f: ready to fix TOC",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122404.203848974Z-76-Iscandar_13f__ready_to_fix_TOC.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "0f84f3562a982e85583976d2c8e6e9c9b0923dc2"
+  },
+  {
+   "kind": "overleaf",
+   "position": 61,
+   "title": "Iscandar 13g: all equations accounted for",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122336.589164967Z-75-Iscandar_13g__all_equations_accounted_for.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "47538bbf2ab76d7b4171eacfef2142a9a9b40d99"
+  },
+  {
+   "kind": "overleaf",
+   "position": 60,
+   "title": "Iscandar 13h: all but one figure accounted for",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122305.487294445Z-74-Iscandar_13h__all_but_one_figure_accounted_for.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "71c1c7be320eb8f5c6b6cfa9e8ef8787fc66c4ec"
+  },
+  {
+   "kind": "overleaf",
+   "position": 59,
+   "title": "Iscandar 14",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122241.890998592Z-73-Iscandar_14.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "26cf34e680b2cd0c58c144a824bdaf7e23c6234f"
+  },
+  {
+   "kind": "overleaf",
+   "position": 58,
+   "title": "Iscandar 14a",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122222.590753117Z-72-Iscandar_14a.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "f7cd424ab8afc21ab2ac492190161bb1872be084"
+  },
+  {
+   "kind": "overleaf",
+   "position": 57,
+   "title": "Iscandar 14b",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122157.244621534Z-71-Iscandar_14b.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "1225c4131109b6d92ebad236fdc9dd8992e0719c"
+  },
+  {
+   "kind": "overleaf",
+   "position": 56,
+   "title": "Iscandar 14c",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122132.453708768Z-70-Iscandar_14c.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "101eab1d0720273eff5b285cc69970f0a1ecfa8d"
+  },
+  {
+   "kind": "overleaf",
+   "position": 55,
+   "title": "Iscandar 14d",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122109.987498777Z-69-Iscandar_14d.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "f37e58d9312ee5979ab164021fb6a233362d2abf"
+  },
+  {
+   "kind": "overleaf",
+   "position": 54,
+   "title": "Iscandar 14e",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122037.691892004Z-68-Iscandar_14e.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "3e0e6a5c9d5eb15ba749a11408eb7434cd4ed111"
+  },
+  {
+   "kind": "overleaf",
+   "position": 53,
+   "title": "Iscandar 14f",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T122002.352523711Z-67-Iscandar_14f.zip",
+   "pdfs": [
+    "iscandar-14f.pdf"
+   ],
+   "tags": [
+    "v14f"
+   ],
+   "checkpoint_identical": false,
+   "commit": "ee04b292490b5b3ca5ba2e138059d70476ce6b4a"
+  },
+  {
+   "kind": "overleaf",
+   "position": 52,
+   "title": "Iscandar 15",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T121937.787839990Z-66-Iscandar_15.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "3eade296e9a39ea5c160329de0a1fc68c585d35f"
+  },
+  {
+   "kind": "overleaf",
+   "position": 51,
+   "title": "Iscandar 15a",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T121917.142432412Z-65-Iscandar_15a.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "cb18309fed0adbd65bc89955291c1fd0cdfe877a"
+  },
+  {
+   "kind": "overleaf",
+   "position": 50,
+   "title": "Iscandar 15b",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T121855.478358271Z-64-Iscandar_15b.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "b5e308b1861bbae90240f3b4b9aadba575a8bba2"
+  },
+  {
+   "kind": "overleaf",
+   "position": 49,
+   "title": "Iscandar 15c",
+   "label": "6 months ago",
+   "zip": "browser-download-20261022T121826.164299644Z-63-Iscandar_15c.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "9f9b2c2697f765e922fae29371b5631be8eaf51a"
+  },
+  {
+   "kind": "overleaf",
+   "position": 48,
+   "title": "Iscandar 16",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T121802.488273399Z-62-Iscandar_16.zip",
+   "pdfs": [
+    "iscandar-16.pdf"
+   ],
+   "tags": [
+    "v16"
+   ],
+   "checkpoint_identical": false,
+   "commit": "4427bf84a6c996315ddde80a207b35df2db858d6"
+  },
+  {
+   "kind": "overleaf",
+   "position": 47,
+   "title": "Iscandar 16a",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T121657.159431038Z-61-Iscandar_16a.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "f90576da2d11c5fca104f07a18037b05d42514e7"
+  },
+  {
+   "kind": "overleaf",
+   "position": 46,
+   "title": "Iscandar 17",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T121629.188466327Z-60-Iscandar_17.zip",
+   "pdfs": [
+    "iscandar-17.pdf"
+   ],
+   "tags": [
+    "v17"
+   ],
+   "checkpoint_identical": false,
+   "commit": "42f4724c8219544f3ab501ea7d3e9e3173f80f98"
+  },
+  {
+   "kind": "overleaf",
+   "position": 45,
+   "title": "Iscandar 17a",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T121601.560375552Z-59-Iscandar_17a.zip",
+   "pdfs": [
+    "iscandar-17a.pdf"
+   ],
+   "tags": [
+    "v17a"
+   ],
+   "checkpoint_identical": false,
+   "commit": "8929a3b5a4fb18fa6bbba8b4ef936290892365f8"
+  },
+  {
+   "kind": "email",
+   "subject": "(no subject) \u2014 Iscandar_17a-1.pdf",
+   "email_date": "2026-05-08",
+   "attachments": [
+    "Iscandar_17a-1.pdf"
+   ],
+   "pdfs": [
+    "iscandar-2026-05-08-nosubject.pdf"
+   ],
+   "inserted": "after Overleaf 'Iscandar 17a' (sequence 0)",
+   "tags": [],
+   "commit": "d74535b0407812015ed23be5dccdc1c8c0e51ec9"
+  },
+  {
+   "kind": "email",
+   "subject": "Iscandar 17a1",
+   "email_date": "2026-05-08",
+   "attachments": [
+    "Iscandar_17a-1.pdf"
+   ],
+   "pdfs": [
+    "iscandar-17a1.pdf"
+   ],
+   "inserted": "after Overleaf 'Iscandar 17a' (sequence 1)",
+   "tags": [
+    "v17a1"
+   ],
+   "commit": "6823909deae0b2070f47c0ededf0189987655d14"
+  },
+  {
+   "kind": "overleaf",
+   "position": 44,
+   "title": "Iscandar 17b",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T121529.306761894Z-58-Iscandar_17b.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "be5c1bed6068c2aad2e0091c8c67c5213090e049"
+  },
+  {
+   "kind": "overleaf",
+   "position": 43,
+   "title": "Iscandar 17c",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T121456.792880188Z-57-Iscandar_17c.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "0fe3cb88d24124e3b530f925be93fc7dd084ca43"
+  },
+  {
+   "kind": "overleaf",
+   "position": 42,
+   "title": "Iscandar 17d",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T121426.343328912Z-56-Iscandar_17d.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "d4b6b093b6feb12c2d27b1401bdaf176ea1d4ac5"
+  },
+  {
+   "kind": "overleaf",
+   "position": 41,
+   "title": "Iscandar 17e",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T121359.533619417Z-55-Iscandar_17e.zip",
+   "pdfs": [
+    "iscandar-17e.pdf"
+   ],
+   "tags": [
+    "v17e"
+   ],
+   "checkpoint_identical": false,
+   "commit": "b9952cd1d789c38211aa620faa7496405ec9e07d"
+  },
+  {
+   "kind": "overleaf",
+   "position": 40,
+   "title": "Iscandar 17f",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T121325.433668388Z-54-Iscandar_17f.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "f674b8afcc691826f252a0f458069eef94bcd2b9"
+  },
+  {
+   "kind": "overleaf",
+   "position": 39,
+   "title": "Iscandar 17g",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T121258.882570665Z-53-Iscandar_17g.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "031fe53d6c707b654cb7a71d80b8ed5d7be1a8f9"
+  },
+  {
+   "kind": "overleaf",
+   "position": 38,
+   "title": "Iscandar 17h",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T121232.459105220Z-52-Iscandar_17h.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "4ffb5adf81eb518cce20b2710f390f4274940ccc"
+  },
+  {
+   "kind": "overleaf",
+   "position": 37,
+   "title": "Iscandar 17j",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T121202.691039137Z-51-Iscandar_17j.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "0b594710d1afc1118cc9da5e9e382c67a488b3ea"
+  },
+  {
+   "kind": "overleaf",
+   "position": 36,
+   "title": "Iscandar 17k",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T121135.361934649Z-50-Iscandar_17k.zip",
+   "pdfs": [
+    "iscandar-17k.pdf"
+   ],
+   "tags": [
+    "v17k"
+   ],
+   "checkpoint_identical": false,
+   "commit": "dc6289e3303eaad609d7c314a8fde5de2c0c287e"
+  },
+  {
+   "kind": "overleaf",
+   "position": 35,
+   "title": "Iscandar 18",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T121108.383273482Z-49-Iscandar_18.zip",
+   "pdfs": [
+    "iscandar-18.pdf"
+   ],
+   "tags": [
+    "v18"
+   ],
+   "checkpoint_identical": false,
+   "commit": "ced50f6f8b693f8b8c318c26e0508dc47479edc3"
+  },
+  {
+   "kind": "overleaf",
+   "position": 34,
+   "title": "Iscandar 18a",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T121046.995155983Z-48-Iscandar_18a.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "b4cf707562c36d129e2a77e9c3b2534c78712b92"
+  },
+  {
+   "kind": "overleaf",
+   "position": 33,
+   "title": "Iscandar 18b",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T121016.370338995Z-47-Iscandar_18b.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "285de5ed6b8c613a0715cc531843cf441ddebb69"
+  },
+  {
+   "kind": "overleaf",
+   "position": 32,
+   "title": "Iscandar 18c",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120948.285913672Z-46-Iscandar_18c.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "d4bfef140dc4daa31e5e2cb63dbab889177b72d6"
+  },
+  {
+   "kind": "overleaf",
+   "position": 31,
+   "title": "Iscandar 19",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120908.628011258Z-45-Iscandar_19.zip",
+   "pdfs": [
+    "iscandar-19.pdf"
+   ],
+   "tags": [
+    "v19"
+   ],
+   "checkpoint_identical": false,
+   "commit": "1964599f80aa4e43cbe948a6b9d79ba3d65ce277"
+  },
+  {
+   "kind": "overleaf",
+   "position": 30,
+   "title": "Iscandar 19a",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120849.365111791Z-44-Iscandar_19a.zip",
+   "pdfs": [
+    "iscandar-19a.pdf"
+   ],
+   "tags": [
+    "v19a"
+   ],
+   "checkpoint_identical": false,
+   "commit": "f2f573dbc6eb428c298264ff9cb1e79c8b9c9d2b"
+  },
+  {
+   "kind": "overleaf",
+   "position": 29,
+   "title": "Iscandar 19b",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120828.925096535Z-43-Iscandar_19b.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "547f3c433f7dbc97132a2fc746528b7bfce3cfcf"
+  },
+  {
+   "kind": "overleaf",
+   "position": 28,
+   "title": "Iscandar 19c",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120805.800806559Z-42-Iscandar_19c.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "0e36002f438108ebff7de139b2e4cd6063ba17ac"
+  },
+  {
+   "kind": "overleaf",
+   "position": 27,
+   "title": "Iscandar 19d",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120740.745574472Z-41-Iscandar_19d.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": true,
+   "identical_to": "Iscandar 19c",
+   "collapsed_into_commit": "0e36002f438108ebff7de139b2e4cd6063ba17ac",
+   "commit": null
+  },
+  {
+   "kind": "overleaf",
+   "position": 26,
+   "title": "Iscandar 20",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120713.804526686Z-40-Iscandar_20.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "01b59a088b853262ea026ed19c23c9c65408233d"
+  },
+  {
+   "kind": "overleaf",
+   "position": 25,
+   "title": "Iscandar 20a",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120655.706326195Z-39-Iscandar_20a.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "bf661724cb3895e2043ad0a44f5d4107f184c730"
+  },
+  {
+   "kind": "overleaf",
+   "position": 24,
+   "title": "Iscandar 20b",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120635.894089392Z-38-Iscandar_20b.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "05e9a9f7ee7b9764f50d9728972b943c0771ffb4"
+  },
+  {
+   "kind": "overleaf",
+   "position": 23,
+   "title": "Iscandar 20c",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120616.505598801Z-37-Iscandar_20c.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "3108a4acb93fbea78db49c71374abb37219d1a32"
+  },
+  {
+   "kind": "overleaf",
+   "position": 22,
+   "title": "Iscandar 20d",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120459.371035244Z-36-Iscandar_20d.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "3ca2af7254fc974b4f9eb1f1db986940a47e5e62"
+  },
+  {
+   "kind": "overleaf",
+   "position": 21,
+   "title": "Iscandar 20e",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120425.717735516Z-35-Iscandar_20e.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "16199b71f66f40cd9456a673a4467ce2bbe06d6b"
+  },
+  {
+   "kind": "overleaf",
+   "position": 20,
+   "title": "Iscandar 20f",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120353.355338017Z-34-Iscandar_20f.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "faeaff91410dc33a09feb17c32bcae47da4cc93a"
+  },
+  {
+   "kind": "overleaf",
+   "position": 19,
+   "title": "Iscandar 20g",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120326.290171868Z-33-Iscandar_20g.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "618bc0b7cbc750e7758e9a7bd80d8e52a07cfa6b"
+  },
+  {
+   "kind": "overleaf",
+   "position": 18,
+   "title": "Iscandar 20h",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120300.077077589Z-32-Iscandar_20h.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "06953f44125914ccdb5f2e109ade521970a8e400"
+  },
+  {
+   "kind": "overleaf",
+   "position": 17,
+   "title": "Iscandar 21",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120231.008047700Z-31-Iscandar_21.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "acc4e6d1500c460c487569cc581a242a0d207bf8"
+  },
+  {
+   "kind": "overleaf",
+   "position": 16,
+   "title": "Iscandar 22",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120201.005024099Z-30-Iscandar_22.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "29049f1a47f02156d5fdc3892b50cdabb57c473c"
+  },
+  {
+   "kind": "overleaf",
+   "position": 15,
+   "title": "Iscandar 22a",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120137.717717371Z-29-Iscandar_22a.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "c29267c806d99fc8e586c040c189262c296eaf07"
+  },
+  {
+   "kind": "overleaf",
+   "position": 14,
+   "title": "Iscandar 22a1",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120112.164500986Z-28-Iscandar_22a1.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "319c4167690dfe3665c83551de54a56c23e6e26e"
+  },
+  {
+   "kind": "overleaf",
+   "position": 13,
+   "title": "Iscandar 22a2",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T120048.393739233Z-27-Iscandar_22a2.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "4f18fbb116c293019217a954a25d2b9fe521500f"
+  },
+  {
+   "kind": "overleaf",
+   "position": 12,
+   "title": "Iscandar 23",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T115957.162507349Z-26-Iscandar_23.zip",
+   "pdfs": [
+    "iscandar-23.pdf"
+   ],
+   "tags": [
+    "v23"
+   ],
+   "checkpoint_identical": false,
+   "commit": "7eb7287431dd425502f44f70a96edbfe0effde72"
+  },
+  {
+   "kind": "overleaf",
+   "position": 11,
+   "title": "Iscandar 23a",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T115935.227690614Z-25-Iscandar_23a.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "2b4aba8154bb7f92d3b0167e6a0e79fef01c956d"
+  },
+  {
+   "kind": "overleaf",
+   "position": 10,
+   "title": "Iscandar 23b",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T115909.018687698Z-24-Iscandar_23b.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "228ea2e6bdf4c974337f76d45a03f5fc1894ded1"
+  },
+  {
+   "kind": "overleaf",
+   "position": 9,
+   "title": "Iscandar 23c",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T115842.088574938Z-23-Iscandar_23c.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "6319e229092c44cd06f181fcf54c05b95dc3d255"
+  },
+  {
+   "kind": "overleaf",
+   "position": 8,
+   "title": "Iscandar 23d",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T115803.074481763Z-22-Iscandar_23d.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "a3d38ae3e1fcbcb8410b5d175909a39d0592792b"
+  },
+  {
+   "kind": "overleaf",
+   "position": 7,
+   "title": "Iscandar 23e",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T115741.221942844Z-21-Iscandar_23e.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "4ab43dabe293e50dbb431a9b988344cb465754fd"
+  },
+  {
+   "kind": "overleaf",
+   "position": 6,
+   "title": "Iscandar 23f",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T115705.648868392Z-20-Iscandar_23f.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "d3348fb8a125317952ee94afc236846ad4e7e2a1"
+  },
+  {
+   "kind": "overleaf",
+   "position": 5,
+   "title": "Iscandar 23g",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T115639.436750549Z-19-Iscandar_23g.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "d40cb0751aa3b60baa65ddffc596462276f5c5bf"
+  },
+  {
+   "kind": "overleaf",
+   "position": 4,
+   "title": "Iscandar 24",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T115611.923650013Z-18-Iscandar_24.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "770a236cf0418c3cb52c4ab8c29738eecfd0894c"
+  },
+  {
+   "kind": "overleaf",
+   "position": 3,
+   "title": "Iscandar 24a",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T115542.797350063Z-17-Iscandar_24a.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "35a2764040b853e7689b34a9d43796bbed1ab237"
+  },
+  {
+   "kind": "overleaf",
+   "position": 2,
+   "title": "Iscandar 24b",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T115317.081286824Z-16-Iscandar_24b.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": false,
+   "commit": "72764c11524c4814b8e349927287a54b000e0d1d"
+  },
+  {
+   "kind": "overleaf",
+   "position": 1,
+   "title": "Iscandar 24c",
+   "label": "5 months ago",
+   "zip": "browser-download-20261022T115303.652763017Z-15-Iscandar_24c.zip",
+   "pdfs": [],
+   "tags": [],
+   "checkpoint_identical": true,
+   "identical_to": "Iscandar 24b",
+   "collapsed_into_commit": "72764c11524c4814b8e349927287a54b000e0d1d",
+   "commit": null
+  }
+ ],
+ "tags": {
+  "vpaper4": "4a612e159900d54789c9d2683a641a46910a0d1c",
+  "v2": "f0b505a2ad70b3d977d3ad6063378ee8941809b1",
+  "v2a": "7e7bcf78bb28e64b4c89b0c3b9af71e7a9627052",
+  "v3": "2733f50b84f1a4b52a9c006b7290d9b3eca71d28",
+  "v3.1": "b2ab5a1e23f8ee87b882287b2876547302a7f6fa",
+  "v6-skeleton": "10a94d45a4076ebbee243cedf447dc49661e9d84",
+  "v6.2": "f08c4789a016261602ad8fe50792fd48dc173063",
+  "v8": "5fd4cd3023ce1878ac9ce69e10e88683b031e23c",
+  "v9": "b182d702fd27487b9335f41f7e2c0b630216f21a",
+  "v10": "8f7b6b437f94fcc68899c90d8d418a256ed756b0",
+  "v10.5": "b231905107d5a3532ee088bd463a21ef0a6335e4",
+  "v10.6": "1422285308da27cffbb3cdb4986ef30b651bd016",
+  "v10.7": "9e9d0d99158f904b2a3ca939a6e9f0849d6673fd",
+  "v10.8": "64eaddb8a099e37273583ae2a1d3c6136f00dceb",
+  "v10.9": "5bbc2bc39fd3e25b1f7d072a0b37c601eaf6bba4",
+  "v10.10": "670daa67923e543f5b889d26ef69fa3f489d08e4",
+  "v11": "1a47d88962d819dc4d715a67eed5eb85d814b583",
+  "v11.1": "9e84b240a57e7209f9c64e65ab73c0aa6bc1744e",
+  "v12b": "ff88bedb76b32e672b02b25fd6216348e823ac93",
+  "v12b-beta": "353148bd17f635c04481e7cad7f2ed3f9a81e5fc",
+  "v12c": "936c43675034bfb40bd362677a18054638dc43bf",
+  "v12d": "b633b5524164dbdb4e3cd6cae49217533d5bddde",
+  "v12e": "8e8e161d66c8d017ab462c721a78b90deeb9fc2e",
+  "v12g-2": "b9bd667e71e083a01c6e05069fb71148948ecbfd",
+  "v13": "5550166403597c788900802db7e3d5d49901882f",
+  "v13.1": "408fb42ab9db871696b72874f55c387ed9f61f19",
+  "v13c": "211ddd388608e78c7a8e81f02daa5687ff62324a",
+  "v14f": "ee04b292490b5b3ca5ba2e138059d70476ce6b4a",
+  "v16": "4427bf84a6c996315ddde80a207b35df2db858d6",
+  "v17": "42f4724c8219544f3ab501ea7d3e9e3173f80f98",
+  "v17a": "8929a3b5a4fb18fa6bbba8b4ef936290892365f8",
+  "v17a1": "6823909deae0b2070f47c0ededf0189987655d14",
+  "v17e": "b9952cd1d789c38211aa620faa7496405ec9e07d",
+  "v17k": "dc6289e3303eaad609d7c314a8fde5de2c0c287e",
+  "v18": "ced50f6f8b693f8b8c318c26e0508dc47479edc3",
+  "v19": "1964599f80aa4e43cbe948a6b9d79ba3d65ce277",
+  "v19a": "f2f573dbc6eb428c298264ff9cb1e79c8b9c9d2b",
+  "v23": "7eb7287431dd425502f44f70a96edbfe0effde72"
+ },
+ "problems": [],
+ "escrow_pdfs_used": 43
+}
