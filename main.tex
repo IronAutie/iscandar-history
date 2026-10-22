@@ -918,49 +918,49 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \pagenumbering{gobble}
 \begin{Iscandar}[HeuristicSmall.apl]
 :Namespace Heuristic
+  :Namespace HeuristicSmall
+    ⍝ --- Constants ---
+    OK ← CONSTANT.STATUS_SUCCESS
+    FAIL ← CONSTANT.STATUS_FAILURE
+    LIMIT ← 1022 ⍝ Pivot limit for pair lookahead
 
-    :Namespace HeuristicSmall
+    ⍝ --- Function: SectorChecker ---
+    ⍝ Args: (Row Offset L)
+    ∇ Result ← SectorChecker Args;Row;Offset;L;GR1;GR2;S1;S2;P;Q;M
+      (Row Offset L) ← Args
+      GR1 ← Row + Offset
+      GR2 ← GR1 + 1
 
-        ⍝ --- Constants ---
-        OK ← CONSTANT.STATUS_SUCCESS
-        FAIL ← CONSTANT.STATUS_FAILURE
+      ⍝ Boundary Check: Final pivot is 1022
+      →(GR1 > LIMIT)/FAIL_EXIT
 
-        ⍝ --- Function: SectorChecker ---
-        ∇ (Status PositionL) ← Row Offset SectorChecker R
-          :Local X,S,UsageL,Y,T,PositionR,UsageR
-          
-          X ← (Row + Offset) ⊃ Cube.Rows
-          S ← X.sectors
-          
-          PositionL ← Oracle.Left[S]
+      ⍝ Load Sectors from Cube
+      S1 ← (Cube.Rows[GR1]).sectors
+      S2 ← (Cube.Rows[GR2]).sectors
+      
+      ⍝ --- Scan Phase: S1 Left ---
+      P ← Oracle.Left[S1]
+      →(L > P)/SUPPLEMENT 
+      Result ← OK L ⋄ →END
 
-          → (PositionL < 0) / FAIL_EXIT
-          
-          UsageL ← CONSTANT.ROW - PositionL
-          → (R ≤ UsageL) / SUCCESS_L
+    SUPPLEMENT:
+      Q ← Oracle.Right[S2]
+      M ← L - P
+      →(M > Q)/FAIL_EXIT
+      Result ← OK L ⋄ →END
+      
+    FAIL_EXIT: 
+        Result ← FAIL 0
+      END:
+    ∇
 
-          Y ← (Row + Offset + 1) ⊃ Cube.Rows
-          T ← Y.sectors
-          PositionR ← Oracle.Left[T]
-          → (PositionR < 0) / FAIL_EXIT
-          
-          UsageR ← CONSTANT.ROW - PositionR
-          → (R > (UsageL + UsageR)) / FAIL_EXIT
-
-          SUCCESS_L: Status ← OK ⋄ → END
-          FAIL_EXIT: Status ← FAIL ⋄ PositionL ← 0
-          END:
-        ∇
-
-        ⍝ --- Function: Main ---
-        ∇ Result ← Main R;Offset
-          Offset ← 0
-          Args ← PairsDriver.Run R
-          Result ← RowsDriver.Run SectorChecker Offset Args
-        ∇
-
-    :EndNamespace
-
+    ⍝ --- Function: Main ---
+    ∇ Result ← Main L;Offset
+      Offset ← 0
+      Result ← SectorChecker PairsRowsDriver.Run 
+               PlanesDriver.Run (Offset L)
+    ∇
+  :EndNamespace
 :EndNamespace
 \end{Iscandar}
 \thispagestyle{empty}
@@ -1037,50 +1037,47 @@ This represents the leaf-level execution of the deterministic descent. By utiliz
 \pagenumbering{gobble}
 \begin{Iscandar}[HeuristicTiny.apl]
 :Namespace Heuristic
+  :Namespace HeuristicTiny
+    ⍝ --- Constants ---
+    OK ← CONSTANT.STATUS_SUCCESS
+    FAIL ← CONSTANT.STATUS_FAILURE
+    LIMIT ← 1023
 
-    :Namespace HeuristicTiny
+    ⍝ --- Function: SectorChecker ---
+    ⍝ Args: (Row Offset L)
+    ∇ Result ← SectorChecker Args;Row;Offset;L
+      ∇ Result ← SectorChecker Args;GlobalRow;X;S;P
+      (Row Offset L) ← Args
+      GlobalRow ← Row + Offset
 
-        ⍝ --- Constants ---
-        OK ← CONSTANT.STATUS_SUCCESS
-        FAIL ← CONSTANT.STATUS_FAILURE
+      ⍝ Boundary Check
+      →(GlobalRow > LIMIT)/FAIL_EXIT
 
-        ⍝ --- Function: SectorChecker ---
-        ⍝ Row: Index within segment (0-31)
-        ⍝ Offset: Global segment displacement
-        ⍝ R: Unsigned byte request
-        ∇ (Status Position) ← Row Offset SectorChecker R;X;S
-          ⍝ Pick Row object, then extract sectors u32
-          X ← (Row + Offset) ⊃ Cube.Rows
-          S ← X.sectors
-          
-          ⍝ First attempt: Oracle.Left
-          Position ← Oracle.Left[S;R]
+      X ← Cube.Rows[GlobalRow]
+      S ← X.sectors
+      
+      ⍝ 2D Indexing: Use Oracle as bit scan
+      P ← Oracle.Left[S;L]
+      →(P < 0)/SECOND_CHANCE
+      Result ← OK P ⋄ →END
 
-          ⍝ Oracle sentinel check with second chance
-          → (Position < 0) / FAIL_SECOND_CHANCE
-          Status ← OK ⋄ → END
+      SECOND_CHANCE:
+      P ← Oracle.Right[S;L]
+      →(P < 0)/FAIL_EXIT
+      Result ← OK P ⋄ →END
 
-          FAIL_SECOND_CHANCE:
-          ⍝ Second attempt: Oracle.Right
-          Position ← Oracle.Right[S;R]
-          → (Position < 0) / FAIL_EXIT
-          Status ← OK ⋄ → END
+      FAIL_EXIT: 
+        Result ← FAIL 0
+      END:
+    ∇
 
-          FAIL_EXIT: Status ← FAIL ⋄ Position ← 0
-          END:
-        ∇
-
-        ⍝ --- Function: Main ---
-        ⍝ Entry point for HeuristicTiny resolution
-        ∇ Result ← Main R;Offset
-          Offset ← 0
-          ⍝ Unified call to the dispatch hierarchy
-          Result ← RowsDriver.Run SectorChecker Offset
-                   PlanesDriver.Run R
-        ∇
-
-    :EndNamespace
-
+    ⍝ --- Function: Main ---
+    ∇ Result ← Main L;Offset
+      Offset ← 0
+      Result ← SectorChecker RowsDriver.Run 
+               PlanesDriver.Run (Offset L)
+    ∇
+  :EndNamespace
 :EndNamespace
 \end{Iscandar}
 \thispagestyle{empty}
@@ -2162,23 +2159,14 @@ $W.Close(); $S_i.Close()
 :Namespace PairRowsDriver
 
     ⍝ --- Constants ---
-    A ← CONSTANT.ROW
-    OK ← CONSTANT.STATUS_SUCCESS
-    FAIL ← CONSTANT.STATUS_FAILURE
-
-    ⍝ Bit-weights B_0 through B_31
-    B_0←2*0 ⋄ B_1←2*1 ⋄ B_2←2*2 ⋄ B_3←2*3 ⋄ B_4←2*4
-    B_5←2*5 ⋄ B_6←2*6 ⋄ B_7←2*7 ⋄ B_8←2*8 ⋄ B_9←2*9
-    B_10←2*10⋄ B_11←2*11⋄ B_12←2*12⋄ B_13←2*13⋄ B_14←2*14
-    B_15←2*15⋄ B_16←2*16⋄ B_17←2*17⋄ B_18←2*18⋄ B_19←2*19
-    B_20←2*20⋄ B_21←2*21⋄ B_22←2*22⋄ B_23←2*23⋄ B_24←2*24
-    B_25←2*25⋄ B_26←2*26⋄ B_27←2*27⋄ B_28←2*28⋄ B_29←2*29
-    B_30←2*30⋄ B_31←2*31
+    A ← 32 ⍝ Standard Row Width (FIM-32 Lattice)
+    OK ← 1 ⋄ FAIL ← 0
 
     ⍝ --- Function: Run ---
+    ⍝ Entry point for the Small Heuristic (33-64 sectors).
     ∇ Result ← CS Offset CR Run R;V
       V ← ExecutionVector Offset R
-      → (0 = V) / NULL_SET
+      →(0 = V) / NULL_SET
       Result ← CS CR V Offset ExecuteVector R
       → END
       NULL_SET: Result ← FAIL 0
@@ -2186,151 +2174,122 @@ $W.Close(); $S_i.Close()
     ∇
 
     ⍝ --- Function: ExecutionVector ---
-    ∇ V ← ExecutionVector Offset R;F
+    ⍝ Generates a 32-bit radar mask of potential row-pair bridges.
+    ∇ V ← ExecutionVector Offset R;F;Counts
       F ← Offset ⋄ V ← 0
-      V +← (R ≤ ((0+F)⊃Cube.Rows).count + ((1+F)⊃Cube.Rows).count) × B_0
-      V +← (R ≤ ((1+F)⊃Cube.Rows).count + ((2+F)⊃Cube.Rows).count) × B_1
-      V +← (R ≤ ((2+F)⊃Cube.Rows).count + ((3+F)⊃Cube.Rows).count) × B_2
-      V +← (R ≤ ((3+F)⊃Cube.Rows).count + ((4+F)⊃Cube.Rows).count) × B_3
-      V +← (R ≤ ((4+F)⊃Cube.Rows).count + ((5+F)⊃Cube.Rows).count) × B_4
-      V +← (R ≤ ((5+F)⊃Cube.Rows).count + ((6+F)⊃Cube.Rows).count) × B_5
-      V +← (R ≤ ((6+F)⊃Cube.Rows).count + ((7+F)⊃Cube.Rows).count) × B_6
-      V +← (R ≤ ((7+F)⊃Cube.Rows).count + ((8+F)⊃Cube.Rows).count) × B_7
-      V +← (R ≤ ((8+F)⊃Cube.Rows).count + ((9+F)⊃Cube.Rows).count) × B_8
-      V +← (R ≤ ((9+F)⊃Cube.Rows).count + ((10+F)⊃Cube.Rows).count) × B_9
-      V +← (R ≤ ((10+F)⊃Cube.Rows).count + ((11+F)⊃Cube.Rows).count) × B_10
-      V +← (R ≤ ((11+F)⊃Cube.Rows).count + ((12+F)⊃Cube.Rows).count) × B_11
-      V +← (R ≤ ((12+F)⊃Cube.Rows).count + ((13+F)⊃Cube.Rows).count) × B_12
-      V +← (R ≤ ((13+F)⊃Cube.Rows).count + ((14+F)⊃Cube.Rows).count) × B_13
-      V +← (R ≤ ((14+F)⊃Cube.Rows).count + ((15+F)⊃Cube.Rows).count) × B_14
-      V +← (R ≤ ((15+F)⊃Cube.Rows).count + ((16+F)⊃Cube.Rows).count) × B_15
-      V +← (R ≤ ((16+F)⊃Cube.Rows).count + ((17+F)⊃Cube.Rows).count) × B_16
-      V +← (R ≤ ((17+F)⊃Cube.Rows).count + ((18+F)⊃Cube.Rows).count) × B_17
-      V +← (R ≤ ((18+F)⊃Cube.Rows).count + ((19+F)⊃Cube.Rows).count) × B_18
-      V +← (R ≤ ((19+F)⊃Cube.Rows).count + ((20+F)⊃Cube.Rows).count) × B_19
-      V +← (R ≤ ((20+F)⊃Cube.Rows).count + ((21+F)⊃Cube.Rows).count) × B_20
-      V +← (R ≤ ((21+F)⊃Cube.Rows).count + ((22+F)⊃Cube.Rows).count) × B_21
-      V +← (R ≤ ((22+F)⊃Cube.Rows).count + ((23+F)⊃Cube.Rows).count) × B_22
-      V +← (R ≤ ((23+F)⊃Cube.Rows).count + ((24+F)⊃Cube.Rows).count) × B_23
-      V +← (R ≤ ((24+F)⊃Cube.Rows).count + ((25+F)⊃Cube.Rows).count) × B_24
-      V +← (R ≤ ((25+F)⊃Cube.Rows).count + ((26+F)⊃Cube.Rows).count) × B_25
-      V +← (R ≤ ((26+F)⊃Cube.Rows).count + ((27+F)⊃Cube.Rows).count) × B_26
-      V +← (R ≤ ((27+F)⊃Cube.Rows).count + ((28+F)⊃Cube.Rows).count) × B_27
-      V +← (R ≤ ((28+F)⊃Cube.Rows).count + ((29+F)⊃Cube.Rows).count) × B_28
-      V +← (R ≤ ((29+F)⊃Cube.Rows).count + ((30+F)⊃Cube.Rows).count) × B_29
-      V +← (R ≤ ((30+F)⊃Cube.Rows).count + ((31+F)⊃Cube.Rows).count) × B_30
+      Counts ← Cube.Rows.count
       
-      ⍝ Edge Guard: Skip final pair if neighbor exceeds lattice bounds
-      → (32 + F ≥ 1023) / END_V
-      V +← (R ≤ ((31+F)⊃Cube.Rows).count + ((32+F)⊃Cube.Rows).count) × B_31
+      ⍝ Bit-weighted volume checks: (R ≤ Row[i].count + Row[i+1].count)
+      V +← (R ≤ Counts[F+0]  + Counts[F+1])  × 2*0
+      V +← (R ≤ Counts[F+1]  + Counts[F+2])  × 2*1
+      V +← (R ≤ Counts[F+2]  + Counts[F+3])  × 2*2
+      V +← (R ≤ Counts[F+3]  + Counts[F+4])  × 2*3
+      V +← (R ≤ Counts[F+4]  + Counts[F+5])  × 2*4
+      V +← (R ≤ Counts[F+5]  + Counts[F+6])  × 2*5
+      V +← (R ≤ Counts[F+6]  + Counts[F+7])  × 2*6
+      V +← (R ≤ Counts[F+7]  + Counts[F+8])  × 2*7
+      V +← (R ≤ Counts[F+8]  + Counts[F+9])  × 2*8
+      V +← (R ≤ Counts[F+9]  + Counts[F+10]) × 2*9
+      V +← (R ≤ Counts[F+10] + Counts[F+11]) × 2*10
+      V +← (R ≤ Counts[F+11] + Counts[F+12]) × 2*11
+      V +← (R ≤ Counts[F+12] + Counts[F+13]) × 2*12
+      V +← (R ≤ Counts[F+13] + Counts[F+14]) × 2*13
+      V +← (R ≤ Counts[F+14] + Counts[F+15]) × 2*14
+      V +← (R ≤ Counts[F+15] + Counts[F+16]) × 2*15
+      V +← (R ≤ Counts[F+16] + Counts[F+17]) × 2*16
+      V +← (R ≤ Counts[F+17] + Counts[F+18]) × 2*17
+      V +← (R ≤ Counts[F+18] + Counts[F+19]) × 2*18
+      V +← (R ≤ Counts[F+19] + Counts[F+20]) × 2*19
+      V +← (R ≤ Counts[F+20] + Counts[F+21]) × 2*20
+      V +← (R ≤ Counts[F+21] + Counts[F+22]) × 2*21
+      V +← (R ≤ Counts[F+22] + Counts[F+23]) × 2*22
+      V +← (R ≤ Counts[F+23] + Counts[F+24]) × 2*23
+      V +← (R ≤ Counts[F+24] + Counts[F+25]) × 2*24
+      V +← (R ≤ Counts[F+25] + Counts[F+26]) × 2*25
+      V +← (R ≤ Counts[F+26] + Counts[F+27]) × 2*26
+      V +← (R ≤ Counts[F+27] + Counts[F+28]) × 2*27
+      V +← (R ≤ Counts[F+28] + Counts[F+29]) × 2*28
+      V +← (R ≤ Counts[F+29] + Counts[F+30]) × 2*29
+      V +← (R ≤ Counts[F+30] + Counts[F+31]) × 2*30
+      
+      →(F + 32 ≥ ⍴Counts) / END_V
+      V +← (R ≤ Counts[F+31] + Counts[F+32]) × 2*31
       END_V:
     ∇
 
     ⍝ --- Function: ExecuteVector ---
+    ⍝ Unrolled jump-table for sequential chance recovery.
     ∇ Result ← CS CR V Offset ExecuteVector R;s;b
-      P_0: →(0 = V ∧ B_0) / P_1
-      (s b) ← CS 0 Offset R ⋄ →(s ≠ OK) / P_1
-      Result ← OK((A×0)+b) ⋄ →END
-      P_1: →(0 = V ∧ B_1) / P_2
-      (s b) ← CS 1 Offset R ⋄ →(s ≠ OK) / P_2
-      Result ← OK((A×1)+b) ⋄ →END
-      P_2: →(0 = V ∧ B_2) / P_3
-      (s b) ← CS 2 Offset R ⋄ →(s ≠ OK) / P_3
-      Result ← OK((A×2)+b) ⋄ →END
-      P_3: →(0 = V ∧ B_3) / P_4
-      (s b) ← CS 3 Offset R ⋄ →(s ≠ OK) / P_4
-      Result ← OK((A×3)+b) ⋄ →END
-      P_4: →(0 = V ∧ B_4) / P_5
-      (s b) ← CS 4 Offset R ⋄ →(s ≠ OK) / P_5
-      Result ← OK((A×4)+b) ⋄ →END
-      P_5: →(0 = V ∧ B_5) / P_6
-      (s b) ← CS 5 Offset R ⋄ →(s ≠ OK) / P_6
-      Result ← OK((A×5)+b) ⋄ →END
-      P_6: →(0 = V ∧ B_6) / P_7
-      (s b) ← CS 6 Offset R ⋄ →(s ≠ OK) / P_7
-      Result ← OK((A×6)+b) ⋄ →END
-      P_7: →(0 = V ∧ B_7) / P_8
-      (s b) ← CS 7 Offset R ⋄ →(s ≠ OK) / P_8
-      Result ← OK((A×7)+b) ⋄ →END
-      P_8: →(0 = V ∧ B_8) / P_9
-      (s b) ← CS 8 Offset R ⋄ →(s ≠ OK) / P_9
-      Result ← OK((A×8)+b) ⋄ →END
-      P_9: →(0 = V ∧ B_9) / P_10
-      (s b) ← CS 9 Offset R ⋄ →(s ≠ OK) / P_10
-      Result ← OK((A×9)+b) ⋄ →END
-      P_10: →(0 = V ∧ B_10) / P_11
-      (s b) ← CS 10 Offset R ⋄ →(s ≠ OK) / P_11
-      Result ← OK((A×10)+b) ⋄ →END
-      P_11: →(0 = V ∧ B_11) / P_12
-      (s b) ← CS 11 Offset R ⋄ →(s ≠ OK) / P_11
-      Result ← OK((A×11)+b) ⋄ →END
-      P_12: →(0 = V ∧ B_12) / P_13
-      (s b) ← CS 12 Offset R ⋄ →(s ≠ OK) / P_13
-      Result ← OK((A×12)+b) ⋄ →END
-      P_13: →(0 = V ∧ B_13) / P_14
-      (s b) ← CS 13 Offset R ⋄ →(s ≠ OK) / P_14
-      Result ← OK((A×13)+b) ⋄ →END
-      P_14: →(0 = V ∧ B_14) / P_15
-      (s b) ← CS 14 Offset R ⋄ →(s ≠ OK) / P_15
-      Result ← OK((A×14)+b) ⋄ →END
-      P_15: →(0 = V ∧ B_15) / P_16
-      (s b) ← CS 15 Offset R ⋄ →(s ≠ OK) / P_16
-      Result ← OK((A×15)+b) ⋄ →END
-      P_16: →(0 = V ∧ B_16) / P_17
-      (s b) ← CS 16 Offset R ⋄ →(s ≠ OK) / P_17
-      Result ← OK((A×16)+b) ⋄ →END
-      P_17: →(0 = V ∧ B_17) / P_18
-      (s b) ← CS 17 Offset R ⋄ →(s ≠ OK) / P_18
-      Result ← OK((A×17)+b) ⋄ →END
-      P_18: →(0 = V ∧ B_18) / P_19
-      (s b) ← CS 18 Offset R ⋄ →(s ≠ OK) / P_19
-      Result ← OK((A×18)+b) ⋄ →END
-      P_19: →(0 = V ∧ B_19) / P_20
-      (s b) ← CS 19 Offset R ⋄ →(s ≠ OK) / P_20
-      Result ← OK((A×19)+b) ⋄ →END
-      P_20: →(0 = V ∧ B_20) / P_21
-      (s b) ← CS 20 Offset R ⋄ →(s ≠ OK) / P_21
-      Result ← OK((A×20)+b) ⋄ →END
-      P_21: →(0 = V ∧ B_21) / P_22
-      (s b) ← CS 21 Offset R ⋄ →(s ≠ OK) / P_22
-      Result ← OK((A×21)+b) ⋄ →END
-      P_22: →(0 = V ∧ B_22) / P_23
-      (s b) ← CS 22 Offset R ⋄ →(s ≠ OK) / P_23
-      Result ← OK((A×22)+b) ⋄ →END
-      P_23: →(0 = V ∧ B_23) / P_24
-      (s b) ← CS 23 Offset R ⋄ →(s ≠ OK) / P_24
-      Result ← OK((A×23)+b) ⋄ →END
-      P_24: →(0 = V ∧ B_24) / P_25
-      (s b) ← CS 24 Offset R ⋄ →(s ≠ OK) / P_25
-      Result ← OK((A×24)+b) ⋄ →END
-      P_25: →(0 = V ∧ B_25) / P_26
-      (s b) ← CS 25 Offset R ⋄ →(s ≠ OK) / P_26
-      Result ← OK((A×25)+b) ⋄ →END
-      P_26: →(0 = V ∧ B_26) / P_27
-      (s b) ← CS 26 Offset R ⋄ →(s ≠ OK) / P_27
-      Result ← OK((A×26)+b) ⋄ →END
-      P_27: →(0 = V ∧ B_27) / P_28
-      (s b) ← CS 27 Offset R ⋄ →(s ≠ OK) / P_28
-      Result ← OK((A×27)+b) ⋄ →END
-      P_28: →(0 = V ∧ B_28) / P_29
-      (s b) ← CS 28 Offset R ⋄ →(s ≠ OK) / P_29
-      Result ← OK((A×28)+b) ⋄ →END
-      P_29: →(0 = V ∧ B_29) / P_30
-      (s b) ← CS 29 Offset R ⋄ →(s ≠ OK) / P_30
-      Result ← OK((A×29)+b) ⋄ →END
-      P_30: →(0 = V ∧ B_30) / P_31
-      (s b) ← CS 30 Offset R ⋄ →(s ≠ OK) / P_31
-      Result ← OK((A×30)+b) ⋄ →END
-      P_31: →(0 = V ∧ B_31) / FAIL_EXIT
-      ⍝ Lattice Guard
-      → (32 + Offset > 1023) / FAIL_EXIT
-      (s b) ← CS 31 Offset R ⋄ →(s ≠ OK) / FAIL_EXIT
-      Result ← OK((A×31)+b) ⋄ →END
+      P_0:  →(0 = V ∧ 2*0)  / P_1 ⋄ (s b) ← CS 0 Offset R ⋄ →(s ≠ OK) / P_1
+            Result ← OK((A×0)+b) ⋄ →END
+      P_1:  →(0 = V ∧ 2*1)  / P_2 ⋄ (s b) ← CS 1 Offset R ⋄ →(s ≠ OK) / P_2
+            Result ← OK((A×1)+b) ⋄ →END
+      P_2:  →(0 = V ∧ 2*2)  / P_3 ⋄ (s b) ← CS 2 Offset R ⋄ →(s ≠ OK) / P_3
+            Result ← OK((A×2)+b) ⋄ →END
+      P_3:  →(0 = V ∧ 2*3)  / P_4 ⋄ (s b) ← CS 3 Offset R ⋄ →(s ≠ OK) / P_4
+            Result ← OK((A×3)+b) ⋄ →END
+      P_4:  →(0 = V ∧ 2*4)  / P_5 ⋄ (s b) ← CS 4 Offset R ⋄ →(s ≠ OK) / P_5
+            Result ← OK((A×4)+b) ⋄ →END
+      P_5:  →(0 = V ∧ 2*5)  / P_6 ⋄ (s b) ← CS 5 Offset R ⋄ →(s ≠ OK) / P_6
+            Result ← OK((A×5)+b) ⋄ →END
+      P_6:  →(0 = V ∧ 2*6)  / P_7 ⋄ (s b) ← CS 6 Offset R ⋄ →(s ≠ OK) / P_7
+            Result ← OK((A×6)+b) ⋄ →END
+      P_7:  →(0 = V ∧ 2*7)  / P_8 ⋄ (s b) ← CS 7 Offset R ⋄ →(s ≠ OK) / P_8
+            Result ← OK((A×7)+b) ⋄ →END
+      P_8:  →(0 = V ∧ 2*8)  / P_9 ⋄ (s b) ← CS 8 Offset R ⋄ →(s ≠ OK) / P_9
+            Result ← OK((A×8)+b) ⋄ →END
+      P_9:  →(0 = V ∧ 2*9)  / P_10 ⋄ (s b) ← CS 9 Offset R ⋄ →(s ≠ OK) / P_10
+            Result ← OK((A×9)+b) ⋄ →END
+      P_10: →(0 = V ∧ 2*10) / P_11 ⋄ (s b) ← CS 10 Offset R ⋄ →(s ≠ OK) / P_11
+            Result ← OK((A×10)+b) ⋄ →END
+      P_11: →(0 = V ∧ 2*11) / P_12 ⋄ (s b) ← CS 11 Offset R ⋄ →(s ≠ OK) / P_12
+            Result ← OK((A×11)+b) ⋄ →END
+      P_12: →(0 = V ∧ 2*12) / P_13 ⋄ (s b) ← CS 12 Offset R ⋄ →(s ≠ OK) / P_13
+            Result ← OK((A×12)+b) ⋄ →END
+      P_13: →(0 = V ∧ 2*13) / P_14 ⋄ (s b) ← CS 13 Offset R ⋄ →(s ≠ OK) / P_14
+            Result ← OK((A×13)+b) ⋄ →END
+      P_14: →(0 = V ∧ 2*14) / P_15 ⋄ (s b) ← CS 14 Offset R ⋄ →(s ≠ OK) / P_15
+            Result ← OK((A×14)+b) ⋄ →END
+      P_15: →(0 = V ∧ 2*15) / P_16 ⋄ (s b) ← CS 15 Offset R ⋄ →(s ≠ OK) / P_16
+            Result ← OK((A×15)+b) ⋄ →END
+      P_16: →(0 = V ∧ 2*16) / P_17 ⋄ (s b) ← CS 16 Offset R ⋄ →(s ≠ OK) / P_17
+            Result ← OK((A×16)+b) ⋄ →END
+      P_17: →(0 = V ∧ 2*17) / P_18 ⋄ (s b) ← CS 17 Offset R ⋄ →(s ≠ OK) / P_18
+            Result ← OK((A×17)+b) ⋄ →END
+      P_18: →(0 = V ∧ 2*18) / P_19 ⋄ (s b) ← CS 18 Offset R ⋄ →(s ≠ OK) / P_19
+            Result ← OK((A×18)+b) ⋄ →END
+      P_19: →(0 = V ∧ 2*19) / P_20 ⋄ (s b) ← CS 19 Offset R ⋄ →(s ≠ OK) / P_20
+            Result ← OK((A×19)+b) ⋄ →END
+      P_20: →(0 = V ∧ 2*20) / P_21 ⋄ (s b) ← CS 20 Offset R ⋄ →(s ≠ OK) / P_21
+            Result ← OK((A×20)+b) ⋄ →END
+      P_21: →(0 = V ∧ 2*21) / P_22 ⋄ (s b) ← CS 21 Offset R ⋄ →(s ≠ OK) / P_22
+            Result ← OK((A×21)+b) ⋄ →END
+      P_22: →(0 = V ∧ 2*22) / P_23 ⋄ (s b) ← CS 22 Offset R ⋄ →(s ≠ OK) / P_23
+            Result ← OK((A×22)+b) ⋄ →END
+      P_23: →(0 = V ∧ 2*23) / P_24 ⋄ (s b) ← CS 23 Offset R ⋄ →(s ≠ OK) / P_24
+            Result ← OK((A×23)+b) ⋄ →END
+      P_24: →(0 = V ∧ 2*24) / P_25 ⋄ (s b) ← CS 24 Offset R ⋄ →(s ≠ OK) / P_25
+            Result ← OK((A×24)+b) ⋄ →END
+      P_25: →(0 = V ∧ 2*25) / P_26 ⋄ (s b) ← CS 25 Offset R ⋄ →(s ≠ OK) / P_26
+            Result ← OK((A×25)+b) ⋄ →END
+      P_26: →(0 = V ∧ 2*26) / P_27 ⋄ (s b) ← CS 26 Offset R ⋄ →(s ≠ OK) / P_27
+            Result ← OK((A×26)+b) ⋄ →END
+      P_27: →(0 = V ∧ 2*27) / P_28 ⋄ (s b) ← CS 27 Offset R ⋄ →(s ≠ OK) / P_28
+            Result ← OK((A×27)+b) ⋄ →END
+      P_28: →(0 = V ∧ 2*28) / P_29 ⋄ (s b) ← CS 28 Offset R ⋄ →(s ≠ OK) / P_29
+            Result ← OK((A×28)+b) ⋄ →END
+      P_29: →(0 = V ∧ 2*29) / P_30 ⋄ (s b) ← CS 29 Offset R ⋄ →(s ≠ OK) / P_30
+            Result ← OK((A×29)+b) ⋄ →END
+      P_30: →(0 = V ∧ 2*30) / P_31 ⋄ (s b) ← CS 30 Offset R ⋄ →(s ≠ OK) / P_31
+            Result ← OK((A×30)+b) ⋄ →END
+      P_31: →(0 = V ∧ 2*31) / FAIL_EXIT
+            →(32 + Offset > 1023) / FAIL_EXIT
+            (s b) ← CS 31 Offset R ⋄ →(s ≠ OK) / FAIL_EXIT
+            Result ← OK((A×31)+b) ⋄ →END
 
       FAIL_EXIT: Result ← FAIL 0
       END:
     ∇
-
 :EndNamespace
 \end{Iscandar}
 \thispagestyle{empty}
