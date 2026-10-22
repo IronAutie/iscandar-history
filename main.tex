@@ -41,6 +41,18 @@
              {comment}{{$\text{\color{gray} \small $\dashv$}$}}1 % 1994-style comment flag
 }
 
+\usepackage{marginnote}
+
+% Create a new counter for margin figures
+\newcounter{marginfig}
+\renewcommand{\themarginfig}{\Alph{marginfig}} % Set to Alpha (A, B, C...)
+
+% Define the command to stamp the margin
+\newcommand{\fignote}{%
+  \stepcounter{marginfig}%
+  \marginnote{\textbf{Figure \themarginfig}}%
+}
+
 \title{\textbf{An Extension of Buddy Systems to Arbitrary Radix for Deterministic Memory Allocation}}
 \author{Andrew Jonathan Fine\\Independent Student in Computer Architecture\\i.am.extremely.useful@gmail.com}
 \date{April 2026}
@@ -290,8 +302,6 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 
 \subsection*{Polytope Formation At Row and Plane Levels}
 
-
-
 \subsubsection*{The Huge Resolution ($\mathcal{A}^2 < L < \mathcal{A}^3$) }
 
 \begin{description}
@@ -319,90 +329,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     This represents the final join-level resolution of the hierarchy. It manages the 32-radix plane counts, welding 2D plane segments into a unified 3D volume request. By treating planes as the fundamental unit of resolution at this tier, the system ensures that even the largest possible allocations are resolved with identical determinism. The Huge allocator calculates the specific number of Planes required to weld a unified 3D volume, treating each Plane count as a subordinate metric for the total Cube count.
 \end{description}
 
-\subsubsection*{The Large Resolution ( $2\mathcal{A} < L \le \mathcal{A}^2$)}
 
-\begin{description}
-    \item[Domain:] Row-join and sequence resolution within an $\mathcal{A}^2$-sector Plane manifold.
-    
-\vspace{12pt}
-\setcounter{equation}{11}
-\noindent \textbf{Summation Predicate:} 
-\begin{equation}
-    C_{plane} = \sum_{i=0}^{\mathcal{A}-1} (C_{row,i} \cdot [y_{i} = 1])
-    \label{eq:sum_predicate}
-\end{equation}
-\vspace{12pt}
-    
-    \item[Discussion:] 
-    
-\begin{itemize}
-    \item \textbf{Mechanism:} The \textit{Structural Bridge}.
-    \item \textbf{Geometric Event:} \textit{Boundary Handshake} between adjacent vectors.
-    \item \textbf{Resolution:} The system constructs the span via $P + T$. The Right-Hand Lookup (RHL) of Vector A (Preamble) mates with the Left-Hand Lookup (LHL) of Vector B (Tail) to verify connectivity across the boundary, a geometric invariant enforced by these tables.
-\end{itemize}
-
-    This tier represents a fractal expansion of the Level 1 logic. It treats individual rows as the atomic units of resolution, welding row-sequences to satisfy multi-row allocation requests. The Large allocator functions as a resolution engine, calculating a dynamic subset of Rows within the Plane to satisfy continuity requirements.
-\end{description}
-
-\begin{tikzpicture}[x=0.42cm, y=0.42cm]
-    % Axes: Row Position vs Row Magnitude
-    \draw[->, thick] (0,0) -- (33,0) node[right, font=\small] {Row Position};
-    \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Row Magnitude};
-
-    % --- THE PLANE-LEVEL LATTICE (Rows as Bits) ---
-    % Normalizing the 10-row joined region to P=10 to P=20
-    
-    % Plane N: Busy Rows (0-9) - PINK
-    \foreach \x in {0,1,...,9} \fill[magenta!20, draw=white] (\x,-1) rectangle (\x+1,-2);
-    
-    % Plane N: Tail Fracture (Rows 10-14) - GREEN
-    \foreach \x in {10,11,...,14} \fill[green!25, draw=white] (\x,-1) rectangle (\x+1,-2);
-    
-    % RED WELD at P=15 (The Plane Boundary)
-    \draw[ultra thick, red, line cap=round] (15,-0.5) -- (15,-2.5);
-    
-    % Plane N+1: Head Fracture (Rows 15-19) - GREEN
-    \foreach \x in {15,16,...,19} \fill[green!25, draw=white] (\x,-1) rectangle (\x+1,-2);
-    
-    % Plane N+1: Busy Rows (20-31) - PINK
-    \foreach \x in {20,21,...,31} \fill[magenta!20, draw=white] (\x,-1) rectangle (\x+1,-2);
-    
-    % Frame
-    \draw[thick] (0,-1) rectangle (32,-2);
-    \node[below, font=\tiny] at (16,-2.2) {LARGE ALLOCATOR: PLANE BOUNDARY ROW JOIN};
-
-    % --- THE HONEST FRACTAL GEOMETRY (Locked to Row Indices) ---
-
-    % LEFT PINK TRIANGLE (Busy Row Space)
-    % Locked to: P=0 to P=10.
-    \fill[magenta!15, draw=magenta!50, thick] (0,1) -- (10,1) -- (0,11) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (3.5,6) {CLOSED};
-
-    % CENTER GREEN TRIANGLE (The 10-Row Joined Gap)
-    % Locked to: P=10 to P=20.
-    \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,1) -- (20,1) -- (10,11) -- cycle;
-    \draw[dashed, red, thick] (15,1) -- (15,6); % Weld continuation through search space
-    
-    \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,4) {JOINED\\ROW-SPACE};
-    \node[green!60!black, font=\tiny, rotate=-45] at (16.5,7) {$P+M=20$};
-
-    % RIGHT PINK TRIANGLE (Busy Row Space)
-    % Locked to: P=20 to P=32.
-    \fill[magenta!15, draw=magenta!50, thick] (20,1) -- (32,1) -- (20,13) -- cycle;
-    \node[magenta!80, font=\tiny, rotate=-45] at (23.5,6) {CLOSED};
-
-    % --- VERIFICATION ALIGNMENT ---
-    \draw[dashed, gray!40] (10,0) -- (10,1); % Left boundary
-    \draw[dashed, gray!40] (20,0) -- (20,1); % Right boundary
-    \draw[dashed, red!40] (15,0) -- (15,1);  % Symmetry center
-
-    % Ticks
-    \draw[thick] (10,0.1) -- (10,-0.1) node[below=4pt, font=\tiny] {10};
-    \draw[thick] (15,0.1) -- (15,-0.1) node[below=4pt, red, font=\tiny] {Weld};
-    \draw[thick] (20,0.1) -- (20,-0.1) node[below=4pt, font=\tiny] {20};
-    \draw[thick] (0.1,10) -- (-0.1,10) node[left, font=\tiny] {10};
-
-\end{tikzpicture}
 
 \begin{tikzpicture}[x=0.42cm, y=0.42cm]
     % Axes: Plane Position vs Plane Magnitude
@@ -462,6 +389,83 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     \draw[thick] (0.1,10) -- (-0.1,10) node[left, font=\tiny] {10};
 
 \end{tikzpicture}
+
+\subsubsection*{The Large Resolution ( $2\mathcal{A} < L \le \mathcal{A}^2$)}
+
+\begin{description}
+    \item[Domain:] Row-join and sequence resolution within an $\mathcal{A}^2$-sector Plane manifold.
+    
+\vspace{12pt}
+\setcounter{equation}{11}
+\noindent \textbf{Summation Predicate:} 
+\begin{equation}
+    C_{plane} = \sum_{i=0}^{\mathcal{A}-1} (C_{row,i} \cdot [y_{i} = 1])
+    \label{eq:sum_predicate}
+\end{equation}
+\vspace{12pt}
+    
+    \item[Discussion:] 
+    
+\begin{itemize}
+    \item \textbf{Mechanism:} The \textit{Structural Bridge}.
+    \item \textbf{Geometric Event:} \textit{Boundary Handshake} between adjacent vectors.
+    \item \textbf{Resolution:} The system constructs the span via $P + T$. The Right-Hand Lookup (RHL) of Vector A (Preamble) mates with the Left-Hand Lookup (LHL) of Vector B (Tail) to verify connectivity across the boundary, a geometric invariant enforced by these tables.
+\end{itemize}
+
+    This tier represents a fractal expansion of the Level 1 logic. It treats individual rows as the atomic units of resolution, welding row-sequences to satisfy multi-row allocation requests. The Large allocator functions as a resolution engine, calculating a dynamic subset of Rows within the Plane to satisfy continuity requirements.
+\end{description}
+
+
+% --- COMPLETE DIAGRAM ---
+\stepcounter{marginfig}
+\begin{tikzpicture}[x=0.42cm, y=0.42cm]
+    % --- THE MARGIN ANCHOR (Matches Equation Numbering Position) ---
+    \node[anchor=east, font=\bfseries] at (34, 15) {(\themarginfig)};
+
+    % --- AXES & DIMENSION LABELS ---
+    \draw[->, thick] (0,0) -- (33,0);
+    
+    % New Label: Spelled out, below the line, RHS flush with arrow tip (33,0)
+    \node[anchor=north east, font=\small, text=black!80] at (33,-0.1) {Row Position ($P$)};
+    
+    \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Row Magnitude ($M$)};
+
+    % --- THE PLANE-LEVEL LATTICE (S2 TIER) ---
+    % Shifted further down to y=-2.5 to accommodate the new "Row Position" label
+    \foreach \x in {0,1,...,9} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
+    \foreach \x in {10,11,...,14} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
+    \foreach \x in {15,16,...,19} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
+    \foreach \x in {20,21,...,31} \fill[magenta!20, draw=white] (\x,-3) rectangle (\x+1,-4);
+    
+    % Frame and Plane Boundary Weld
+    \draw[thick] (0,-3) rectangle (32,-4);
+    \draw[ultra thick, red, line cap=round] (15,-2.5) -- (15,-4.5);
+    \node[below, font=\tiny, yshift=-2.0cm] at (16,-4) {LARGE ALLOCATOR: PLANE BOUNDARY ROW JOIN};
+
+    % --- THE MANIFOLD GEOMETRY (SEARCH POLYTOPES) ---
+    \fill[magenta!15, draw=magenta!50, thick] (0,0) -- (10,0) -- (0,10) -- cycle;
+    \node[magenta!80, font=\tiny, rotate=-45] at (3.5,3.5) {CLOSED};
+
+    \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (10,0) -- (20,0) -- (10,10) -- cycle;
+    \draw[dashed, red, thick] (15,0) -- (15,5); 
+    
+    \node[green!80!black, font=\bfseries\tiny, align=center] at (12.5,3) {JOINED\\ROW-SPACE};
+    \node[green!60!black, font=\tiny, rotate=-45] at (16.5,6) {$P+M=20$};
+
+    \fill[magenta!15, draw=magenta!50, thick] (20,0) -- (32,0) -- (20,12) -- cycle;
+    \node[magenta!80, font=\tiny, rotate=-45] at (23.5,4.5) {CLOSED};
+
+    % --- TICKS & NUMERICAL LABELS ---
+    % Shifted labels to accommodate the Row Position text
+    \draw[thick] (10,0.2) -- (10,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {10};
+    \draw[thick] (15,0.2) -- (15,-0.2) node[below=14pt, red, font=\tiny, fill=white, inner sep=1pt] {Weld};
+    \draw[thick] (20,0.2) -- (20,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {20};
+    \draw[thick] (0.2,10) -- (-0.2,10) node[left=2pt, font=\tiny] {10};
+
+\end{tikzpicture}
+
+
+
 
 \clearpage
 
