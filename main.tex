@@ -176,7 +176,7 @@ Traditional heap management architectures, such as the binary buddy system, inhe
 \pagenumbering{arabic} % Switch to Page 1, 2, 3...
 \setcounter{page}{1}
 
-\section{Introduction to \textbf{Iscandar}}
+\section{Welcome to \textbf{Iscandar}.}
 
 Unlike allocation models using variable-time search algorithms [1], this architecture employs a hierarchical occupancy map to resolve coordinates deterministically. Extending the traditional binary buddy system to an arbitrary radix replaces it with a geometric steering mechanism.
 
@@ -190,6 +190,27 @@ These axioms establish the geometric and mathematical constraints of the lattice
 \subsection{Axiom I: The State Map (L) and Structural Arity ($\mathcal{A})$}
 
 For modeling and testing purposes this paper demonstrates an $k$-level lattice $L$ of fixed depth ($n=3$) \textbf{defining} a total memory space. The architecture \textbf{maintains} a constant Arity ($\mathcal{A}$) of 32. A hierarchical progression of tiers \textbf{organizes} the lattice: the atomic Sector ($S_{0}$), the Row of Sectors ($S_{1}$), the Plane of Rows ($S_{2}$), and the Cube of Planes ($S_{3}$). Lattice coordinates ($p, r, s$) \textbf{determine} the address of any specific leaf node, where $p, r, s \in \{0, \dots, \mathcal{A}-1\}$. The geometry \textbf{maintains} invariance regardless of the physical byte-width the sector \textbf{occupies}.\footnote[2]{The Large allocator functions as a cross-tier searcher for sequence resolution, managing the fractal logic across the Plane manifold to satistfy multi-Row requests.}
+
+\subsubsection{The Cube Namespace}
+This listing defines the memory allocator data structure, Iscandar's answer to the buddy system heap, in accordance with Axiom I.
+
+\begin{Iscandar}[Cube.apl]
+:Namespace Cube
+    :Namespace Row
+        :Field Public Shared sectors ← 0   ⍝ 32-bit Unsigned Long
+        :Field Public Shared count   ← 0   ⍝ Population Count (0-32)
+    :EndNamespace
+
+    :Namespace Plane
+        :Field Public Shared count   ← 0   ⍝ Summary of 32 Child Rows
+    :EndNamespace
+
+    ⍝ The Physical Lattice Arrays
+    :Field Public Shared Rows   ← CONSTANTS.PLANE ⍴ ⊂Row
+    :Field Public Shared Planes ← CONSTANTS.ARITY ⍴ ⊂Plane
+    :Field Public Shared count  ← 0      ⍝ Total Cube Population
+:EndNamespace
+\end{Iscandar}
 
 \subsection{Axiom II: Hierarchical Occupancy Counters ($\Gamma$)}
 
@@ -212,12 +233,52 @@ This hierarchical summation lets a Global Registrar at the Cube level \textbf{ex
 
 The \textbf{Iscandar} system \textbf{enforces} a mandatory occupancy boundary, the Occupancy Limit ($\Phi$). Traditional allocators search for gaps as memory nears capacity; in contrast, this system \textbf{triggers} a deterministic refusal once $\Gamma_{3}$ reaches the $\Phi$ threshold based on the present occupancy request.
 
-\subsection{Axiom IV: Rotational Steering ($\vec{R}$)}
-A rotational steering vector \textbf{balances} the lattice structure, preventing localized occupancy ``hot spots''. To prevent high-density clusters that necessitate bit-shuffling or metadata updates, the system utilizes $\vec{R}$ to distribute entropy across the manifold [3].
-
-\subsection{Axiom V: The Contiguity Guarantee and Spatial Entropy}
+\subsection{Axiom IV: The Contiguity Guarantee and Spatial Entropy}
 
 Any resolved coordinate sequence \textbf{represents} a continuous physical block in the \textbf{Iscandar} lattice. However, functional contiguity does not imply spatial perfection; a perfect Oracle would preclude fragmentation entirely. The \textbf{Iscandar} Oracle prioritizes \textbf{Temporal Invariance} over maximum packing density, explicitly trading spatial capacity for the elimination of search-time jitter. By utilizing the \textbf{Occupancy Limit ($\Phi$)} as a deterministic guardrail, the system \textbf{maintains} the manifold within a manageable entropy domain. This \textbf{prevents} the lattice from reaching a threshold where bit-mask steering degrades into a non-deterministic linear probe.
+
+\subsubsection{Axiom V: The Coordinate-Address Identity}
+
+The \textit{Iscandar} architecture rejects the traditional separation of logical address space and physical memory geometry. Per Axiom V, we establish a \textbf{Bijective Identity} between a machine-word pointer $P$ (wrapped pointer, see section 5) and its corresponding lattice coordinate $\vec{C}$.\\ 
+
+In a system of depth $k$ and arity $A$, any specific sector is represented by a coordinate vector:
+\begin{equation}
+    \vec{C} = (i_1, i_2, \dots, i_k) \quad \text{where} \quad 0 \leq i_n < A
+\end{equation}
+
+The address $P$ is not an arbitrary token, but the scalar projection of this vector into the linear address space. The isomorphism is defined by the construction:
+\begin{equation}
+    P = \sum_{n=1}^{k} i_n \cdot A^{k-n}
+\end{equation}
+
+For the demonstration project of this paper, ($A=32, k=3$), the address of a sector located at $(\text{Plane } p, \text{Row } r, \text{Sector } s)$ is clearly enumerable from the geometry:
+\begin{equation}
+    P = (p \cdot 32^2) + (r \cdot 32^1) + (s \cdot 32^0)
+\end{equation}
+
+\subsection{APL Definitions}
+This listing is the APL implementation of the basic structure of Section 2.
+\begin{Iscandar}[Definitions.apl]
+:Namespace CONSTANTS
+    :Access Public Shared
+    :Field Public Shared ReadOnly ARITY  ← 32
+    :Field Public Shared ReadOnly LEVELS ← 3
+    :Field Public Shared ReadOnly BYTE   ← ARITY ÷ 4   ⍝ Sectors
+    :Field Public Shared ReadOnly WIDTH  ← BYTE + 1
+    :Field Public Shared ReadOnly ROW    ← ARITY
+    :Field Public Shared ReadOnly PLANE  ← ROW × ROW
+    :Field Public Shared ReadOnly CUBE   ← PLANE × ROW
+    :Field Public Shared ReadOnly QUAD   ← 2 * ARITY
+:EndNamespace
+
+:Namespace RANGES
+    :Access Public Shared
+    :Field Public Shared ReadOnly BYTE  ← ⍳CONSTANTS.BYTE
+    :Field Public Shared ReadOnly ROW   ← ⍳CONSTANTS.ROW
+    :Field Public Shared ReadOnly PLANE ← ⍳CONSTANTS.PLANE
+    :Field Public Shared ReadOnly CUBE  ← ⍳CONSTANTS.CUBE
+:EndNamespace
+\end{Iscandar}
 
 \section{Formal Proof of Deterministic Path Termination}
 
@@ -382,10 +443,118 @@ We show here how non-deterministic latency inherent in traditional memory manage
     
     \item[Handshake Oracle (LHL/RHL/Center)] "Oracle" for short, a Finite State Automaton, being a precomputed body of solutions used at the Tiny (Level 0) and Small (Level 1) allocator levels to bridge ``fractured'' sequences between sectors. It uses Left-Hand Lookahead (LHL), Right-Hand Lookahead (RHL) and Center Lookahead tables to weld adjacent fragments into a contiguous magnitude. In microcontroller implementations these are laid out as ROM tables. 
     
+    \begin{Iscandar}[OracleCenter.ps1]
+# Manufactures the 38.6GB Center Oracle Blob
+# Layout: 2^32 rows x 9 columns (k=0..8)
+# Logic: Motorola Big-Endian (Bit 0 = MSB/Left). First-fit from Left.
+
+$FilePath = "OracleLeft.bin"
+$Stream = [System.IO.File]::Create($FilePath)
+$Writer = New-Object System.IO.BinaryWriter($Stream)
+
+Write-Host "Manufacturing Left Oracle..."
+
+# Iterate through all 2^32 possible occupancy states
+for ([double]$S_double = 0; $S_double -lt 4294967296; $S_double++) {
+    $S = [uint32]$S_double
+
+    # Columns k=0 to 8 represent the requested allocation length
+    for ($k = 0; $k -le 8; $k++) {
+        if ($k -eq 0) {
+            $Writer.Write([byte]0) # Redundant column for k=0 to skip bounds checking
+            continue
+        }
+
+        $foundPos = 0xFF # Default: 0xFF (255) indicates no contiguous block of length k exists
+
+        # Motorola Big-Endian Scan: Scan from Left (Bit 0) to Right (Bit 31)
+        # We terminate at the first success to ensure "Closest to the Left" packing.
+        for ($pos = 0; $pos -le (32 - $k); $pos++) {
+            
+            # Construct Motorola mask: k bits starting at 'pos'
+            # Calculation: (2^k - 1) shifted to the correct Motorola bit position
+            $baseMask = [uint32]([math]::Pow(2, $k) - 1)
+            $mask = $baseMask -shl (32 - $k - $pos)
+            
+            # Deterministic Bit-Check
+            if (($S -band $mask) -eq 0) {
+                $foundPos = [byte]$pos
+                break # TERMINATE: Found the leftmost sequence
+            }
+        }
+        $Writer.Write($foundPos)
+    }
+
+    # Status heartbeat for the factory floor
+    if ($S_double % 100000000 -eq 0) { 
+        $progress = [math]::Round(($S_double/4294967296)*100, 2)
+        Write-Host "Progress: $progress% ($S_double rows processed)" 
+    }
+}
+
+$Writer.Close()
+$Stream.Close()
+Write-Host "Iscandar Center Oracle Manufactured: 38.6GB Motorola Blob Complete."
+\end{Iscandar}
+    
     \item[Polytope Formation] The visual representation of the admissible search space within the lattice. Each hierarchical tier (Cube, Plane, Row) can manifest polytopes that collapse as memory occupancy increases.
     
     \item[Occupancy Limit ($\Phi$)] The mandatory occupancy boundary (Section 4.2) that prevents the system from entering a high-entropy state. Once the floor is reached, the system issues a deterministic refusal rather than engaging in variable-time search.
+
+    \item[Wrapped Pointer]
+The 32-bit machine-side implementation of the \textbf{Bijective Identity} (see section 2.4, Axiom V). It bridges between the memory heap coordinate and a physical MPU.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Bit Range} & \textbf{Field} & \textbf{Description} \\ \hline
+31          & V (Virtual)   & \textbf{Mode Switch:} 1 = Iscandar Virtual, 0 = Real MPU Address. \\ \hline
+30          & R (Reserved)  & Reserved for future architectural parity. \\ \hline
+15--29      & S (Start)     & 15-bit Coordinate Index (Plane, Row, Sector). \\ \hline
+0--14       & L (Length)    & 15-bit Allocation length/depth. \\ \hline
+\end{tabular}
+\caption{Wrapped Pointer Bit-Field Layout}
+\end{table}
 \end{description}
+
+\begin{Iscandar}[WrappedPointer.apl]
+:Namespace WrappedPointer
+    ⍝ --- Iscandar Bijective Pointer Implementation ---
+    ⍝ Layout: [V:1][R:1][S:15][L:15]
+    
+    (V R S L) ← 0 0 0 0
+
+    ∇ Status ← Unwrap P;bits
+      ⍝ 1. Extract Length (Bits 0-14)
+      L ← 32767 ∧ P
+      
+      ⍝ 2. Extract Start Index S (Bits 15-29)
+      ⍝ Equivalent to (P bitshift-right 15) AND 32767
+      S ← 32767 ∧ P ⌊ 2*15
+      
+      ⍝ 3. Extract Control Bits
+      R ← 1 ∧ P ⌊ 2*30      ⍝ Reserved
+      V ← 1 ∧ P ⌊ 2*31      ⍝ Virtual/Real Flag
+      
+      Status ← 1 ⍝ STATUS_SUCCESS
+    ∇
+
+    ∇ Coord ← GetCoordinate
+      ⍝ Implementation of Axiom V (Equation 5)
+      ⍝ Decodes the scalar projection S into vector (p,r,s)
+      Coord ← 32 32 32 ⊤ S
+    ∇
+
+    ∇ P ← Wrap(p r s len v);S_field
+      ⍝ 1. Construct Start Index S from coordinate vector
+      S_field ← 32 ⊥ p r s
+      
+      ⍝ 2. Pack into 32-bit Word: (V * 2^31) + (S * 2^15) + L
+      P ← (v × 2*31) + (S_field × 2*15) + len
+    ∇
+:EndNamespace
+\end{Iscandar}
 
 \section{Updating Memory State Spaces by Mating the Oracle Tables}
 
@@ -1135,6 +1304,25 @@ Write-Host "Iscandar Project Verified." -ForegroundColor Cyan
 
 \subsection{Project Checklist}
 TBD
+
+\section{Project Support}
+The following components support the project for this paper: 
+
+\begin{Iscandar}[Support.apl]
+:Namespace STATUS
+    :Access Public Shared
+    :Field Public Shared ReadOnly SUCCESS    ← 0
+    :Field Public Shared ReadOnly MARK       ← 1
+    :Field Public Shared ReadOnly UNMARK     ← 2
+    :Field Public Shared ReadOnly FAIL_NULL   ← 3
+    :Field Public Shared ReadOnly FAIL_NANO   ← 4
+    :Field Public Shared ReadOnly FAIL_TINY   ← 5
+    :Field Public Shared ReadOnly FAIL_SMALL  ← 6
+    :Field Public Shared ReadOnly FAIL_LARGE  ← 7
+    :Field Public Shared ReadOnly FAIL_HUGE   ← 8
+    :Field Public Shared ReadOnly FAIL_CUBE   ← 9
+:EndNamespace
+\end{Iscandar}
 
 \clearpage % Ensures the last page of the listing also has no number
 
