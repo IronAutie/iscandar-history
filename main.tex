@@ -285,43 +285,37 @@ The resolution time $T$ in the \textbf{Iscandar} architecture is a discrete func
     _{\text{Cube}}\}
 \end{equation}
 
-\begin{Iscandar}[Decision.apl]
+\begin{Iscandar}[DecisionTable.apl]
 :Namespace Decision
-    ⍝ Iscandar Resolution Dispatcher
-    ⍝ Maps request size to Tier FSA
-    
     (⎕IO ⎕ML) ← 0 1
-    Table ← ⍬ ⍝ Dispatch Lattice
 
-    ∇ Init;C;N;T;S;L;H;B
-      :Access Public Shared
-      ⍝ Localize Constants for Clarity
-      B ← ##.CONSTANTS.BYTE
-      R ← ##.CONSTANTS.ROW
-      P ← ##.CONSTANTS.PLANE
-      C ← ##.CONSTANTS.CUBE
-      
-      ⍝ Shape table to full Cube range
-      Table ← C ⍴ ⊂##.Null
-      
-      ⍝ Tier Mapping via Byte-Arity
-      Table[1+⍳B]     ← ⊂##.Nano
-      Table[B+⍳(R-B)] ← ⊂##.Tiny
-      Table[R+⍳R]     ← ⊂##.Small
-      Table[(2×R)+⍳(P-(2×R))] ← ⊂##.Large
-      Table[P+⍳(C-P)] ← ⊂##.Huge
-      Table[C]        ← ⊂##.Cube
-    ∇
+    ⍝ --- Tier Mapping via Byte-Arity ---
+    ⍝ B: 8, R: 32, P: 1024, C: 32768
+    
+    Table ← C ⍴ ⊂##.Heuristic.Null
+    
+    Table[1+⍳B] ← ⊂##.Heuristic.Nano
+    Table[B+⍳(R-B)] ← ⊂##.Heuristic.Tiny
+    Table[R+⍳R] ← ⊂##.Heuristic.Small
+    Table[(2×R)+⍳(P-(2×R))] ← ⊂##.Heuristic.Large
+    Table[P+⍳(C-P)] ← ⊂##.Heuristic.Huge
+    Table[C] ← ⊂##.Heuristic.Cube
 
-    ∇ res ← Call idx
+    ∇ R ← Resolve s;Tier
       :Access Public Shared
-      ⍝ FSA Pivot: Executes Tier logic
-      res ← (Table[idx]) ⍬
+      
+      ⍝ 1. Range Guard
+      :If (s < 1) ∨ (s > C)
+          R ← ##.STATUS_FAILURE ⍬ ⋄ :Return
+      :EndIf
+
+      ⍝ 2. Select the Namespace Reference
+      Tier ← ⊃Table[s]
+      
+      ⍝ 3. Invoke standardized Dispatch
+      R ← Tier.Dispatch s
     ∇
 :EndNamespace
-
-Decision.Init
-Decision ← Decision.Call
 \end{Iscandar}
 
 \subsection{Guaranteed Path Termination}
@@ -653,30 +647,23 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     \item[Discussion:] The Cube Scale Allocator computes the unique  \textbf{``Gatekeeper''} sector count of the architecture. It provides the primary fast-fail heuristic for the system; if a request $(S, M)$ is determined to be non-admissible at this tier, the algorithm immediately terminates without initiating a descent. This makes the registrar the most efficient filter in the hierarchy, ensuring that the cost of coordinate resolution is only paid when success is mathematically guaranteed.
 \end{description}
 
+\thispagestyle{empty}
 \begin{Iscandar}[HeuristicCube.apl]
 :Namespace Heuristic
-    (⎕IO ⎕ML) ← 0 1
+    :Namespace Cube
+        (⎕IO ⎕ML) ← 0 1
 
-    ∇ R ← Cube s;P;p;r;idx;v
-      :Access Public Shared
-      ⍝ Full-Manifold Saturation Path
-      ⍝ s: Must be exactly 32768
-      
-      :If s ≠ 32768
-          R ← 1 ⍬
-      :ElseIf ##.Cube.count ≠ 0
-          R ← 1 ⍬
-      :Else
-          ⍝ 1. Origin coordinates and Real flag
-          (p r idx v) ← 0 0 0 0
-          
-          ⍝ 2. Pack the 32-bit Pointer word
-          P ← ##.WrappedPointer.Wrap p r idx s v
-          
-          ⍝ 3. Return (Status, Pointer) Tuple
-          R ← (##.WrappedPointer.Mark P) P
-      :EndIf
-    ∇
+        ∇ R ← Dispatch s
+          :Access Public Shared
+          ⍝ Tier-5: Maximum volume (32768 sectors)
+          ⍝ 1. Check if the entire Cube is clear
+          :If 32768 = ##.##.Lattice.TotalCount
+              R ← ##.##.STATUS_SUCCESS ##.##.CubePointer
+          :Else
+              R ← ##.##.STATUS_FAILURE ⍬
+          :EndIf
+        ∇
+    :EndNamespace
 :EndNamespace
 \end{Iscandar}
 
@@ -928,6 +915,54 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     \label{fig:small_allocator_bit_join}
 \end{figure}
 
+\thispagestyle{empty}
+\begin{Iscandar}[HeuristicSmall.apl]
+:Namespace Heuristic
+    :Namespace Small
+        (⎕IO ⎕ML) ← 0 1
+
+        ∇ R ← Dispatch s
+          :Access Public Shared
+          ⍝ Small starts at 1 to allow look-back
+          R ← ##.##.Lattice.SearchAndResolve s ⍴
+                                'Origin' 'Check' 'Isolate'
+        ∇
+
+        ∇ i ← Origin ⋄ i ← 1 ⋄ ∇
+
+        ∇ bool ← Check(row s idx);st;lo;p_row
+          p_row ← ##.##.Rows[idx-1]
+          ⍝ 1. Check if row[idx-1] has it via Left
+          (st lo) ← ##.##.OracleLeft.Resolve p_row.sectors s
+          :If st = ##.##.STATUS_SUCCESS ⋄ bool ← 1 ⋄ :Return ⋄ :EndIf
+          
+          ⍝ 2. Check if bridge exists between rows
+          ⍝ (Logic handled by OracleBridge or Combined check)
+          (st lo) ← ##.##.OracleBridge.Resolve p_row row s
+          bool ← st = ##.##.STATUS_SUCCESS
+        ∇
+
+        ∇ res ← Isolate(row s idx);st;lo;P;p_row
+          p_row ← ##.##.Rows[idx-1]
+          ⍝ Re-run logic to commit
+          (st lo) ← ##.##.OracleLeft.Resolve p_row.sectors s
+          
+          :If st ≠ ##.##.STATUS_SUCCESS
+              (st lo) ← ##.##.OracleBridge.Resolve p_row row s
+          :EndIf
+          
+          :If st ≠ ##.##.STATUS_SUCCESS
+              res ← ##.##.STATUS_FAILURE ⍬
+          :Else
+              ⍝ P identifies the global start in the Cube
+              P ← ##.##.WrappedPointer.WrapFromBridge p_row lo s
+              res ← (##.##.WrappedPointer.Mark P) P
+          :EndIf
+        ∇
+    :EndNamespace
+:EndNamespace
+\end{Iscandar}
+
 \subsection*{Polytope Formation Within Row}
 
 \subsubsection*{The Tiny Resolution ($\mathcal{A}/4 < L \le \mathcal{A}$)}
@@ -997,6 +1032,50 @@ This represents the leaf-level execution of the deterministic descent. By utiliz
     \label{fig:tiny_allocator_fracture}
 \end{figure}
 
+\thispagestyle{empty}
+\begin{Iscandar}[HeuristicTiny.apl]
+:Namespace Heuristic
+    :Namespace Tiny
+        (⎕IO ⎕ML) ← 0 1
+
+        ∇ R ← Dispatch s
+          :Access Public Shared
+          R ← ##.##.Lattice.SearchAndResolve s ⍴
+                                'Origin' 'Check' 'Isolate'
+        ∇
+
+        ∇ i ← Origin ⋄ i ← 0 ⋄ ∇
+
+        ∇ bool ← Check(row s idx);st;lo
+          ⍝ 1. Check Left Oracle
+          (st lo) ← ##.##.OracleLeft.Resolve row.sectors s
+          :If st = ##.##.STATUS_SUCCESS ⋄ bool ← 1 ⋄ :Return ⋄ :EndIf
+          
+          ⍝ 2. Fallback: Check Right Oracle
+          (st lo) ← ##.##.OracleRight.Resolve row.sectors s
+          bool ← st = ##.##.STATUS_SUCCESS
+        ∇
+
+        ∇ res ← Isolate(row s idx);st;lo;P
+          ⍝ 1. Try Left First
+          (st lo) ← ##.##.OracleLeft.Resolve row.sectors s
+          
+          ⍝ 2. Try Right if Left failed
+          :If st ≠ ##.##.STATUS_SUCCESS
+              (st lo) ← ##.##.OracleRight.Resolve row.sectors s
+          :EndIf
+          
+          :If st ≠ ##.##.STATUS_SUCCESS
+              res ← ##.##.STATUS_FAILURE ⍬
+          :Else
+              P ← ##.##.WrappedPointer.WrapFromRow row lo s
+              res ← (##.##.WrappedPointer.Mark P) P
+          :EndIf
+        ∇
+    :EndNamespace
+:EndNamespace
+\end{Iscandar}
+
 \subsubsection*{The Nano Resolution ($L \le \mathcal{A}/4$)}
 
 \begin{description}
@@ -1047,6 +1126,42 @@ This represents the leaf-level execution of the deterministic descent. By utiliz
     \end{tikzpicture}
     \caption*{Nano mode seed polytopes from indexing Center Oracle.}
 \end{figure}
+
+\thispagestyle{empty}
+\begin{Iscandar}[HeuristicNano.apl]
+:Namespace Heuristic
+    :Namespace Nano
+        (⎕IO ⎕ML) ← 0 1
+
+        ∇ R ← Dispatch s
+          :Access Public Shared
+          ⍝ Invoke driver with Nano strategies
+          R ← ##.##.Lattice.SearchAndResolve s ⍴
+                                'Origin' 'Check' 'Isolate'
+        ∇
+
+        ∇ i ← Origin ⋄ i ← 0 ⋄ ∇
+
+        ∇ bool ← Check(row s idx)
+          ⍝ Nano: Single-row capacity check
+          bool ← (row.count + s) ≤ 32
+        ∇
+
+        ∇ res ← Isolate(row s idx);stat;loc;P
+          ⍝ 1. Consult Oracle Center for bit-logic
+          (stat loc) ← ##.##.Oracle.Center row.sectors s
+          
+          :If stat ≠ ##.##.STATUS_SUCCESS
+              res ← ##.##.STATUS_FAILURE ⍬
+          :Else
+              ⍝ 2. Wrap and commit
+              P ← ##.##.WrappedPointer.WrapFromRow row loc s
+              res ← (##.##.WrappedPointer.Mark P) P
+          :EndIf
+        ∇
+    :EndNamespace
+:EndNamespace
+\end{Iscandar}
 
 \section{Description of Instruction Groups}
 
@@ -1690,19 +1805,47 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
+\thispagestyle{empty}
 \begin{Iscandar}[HeuristicNull.apl]
 :Namespace Heuristic
-    (⎕IO ⎕ML) ← 0 1
+    :Namespace Null
+        (⎕IO ⎕ML) ← 0 1
 
-    ∇ R ← Null s
-      :Access Public Shared
-      ⍝ Default failure path: returns tuple (Status, NullPointer)
-      R ← 1 ⍬
-    ∇
-
+        ∇ R ← Dispatch s
+          :Access Public Shared
+          ⍝ Ground state: all requests here fail
+          ⍝ Returns (STATUS_FAILURE, NullPointer)
+          R ← ##.##.STATUS_FAILURE ⍬
+        ∇
+    :EndNamespace
 :EndNamespace
 \end{Iscandar}
 
+\begin{Iscandar}[LatticeDriver.apl]
+:Namespace Lattice
+    (⎕IO ⎕ML) ← 0 1
+
+    ∇ R ← SearchAndResolve(s Origin Predicate Transform);idx
+      :Access Public Shared
+      ⍝ s: length
+      ⍝ Origin: Function pointer for start index
+      ⍝ Predicate: Candidacy check
+      ⍝ Transform: Bit-level isolation
+
+      idx ← ⍎Origin
+      :While idx < 1024
+          :If (⍎Predicate) (##.Rows[idx]) s idx
+              R ← (⍎Transform) (##.Rows[idx]) s idx
+              :If (⊃R) = ##.STATUS_SUCCESS
+                  :Return
+              :EndIf
+          :EndIf
+          idx +← 1
+      :EndWhile
+      R ← ##.STATUS_FAILURE ⍬
+    ∇
+:EndNamespace
+\end{Iscandar}
 
 \clearpage % Ensures the last page of the listing also has no number
 
