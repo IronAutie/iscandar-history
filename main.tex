@@ -50,6 +50,7 @@
 \usepackage{tocloft}
 \usepackage[most]{tcolorbox} 
 \usepackage{fancyvrb}
+\fvset{commandchars=none} % Instantly disables macro parsing globally inside all Verbatim blocks
 \usepackage{alltt}
 
 % --- Custom List of APL Source Listings Setup ---
@@ -1191,6 +1192,7 @@ To contrast, a theoretical binary buddy system was simulated for a heap size com
 
 \vspace{0.5em}
 \noindent\hrulefill
+\pagestyle{empty}
 
 % =========================================================================
 % APPENDIX A: GLOBAL CONFIGURATION PASSTHROUGH
@@ -1268,7 +1270,7 @@ Write-Host "Iscandar Project Verified." -ForegroundColor Cyan
 
 \section{Oracle Manufacture}
 
-\begin{Iscandar}[OracleCenter.apl]
+\begin{Iscandar}[OracleCenter.apl]{}
 :Namespace OracleCenter
     (⎕IO ⎕ML) ← 0 1
     Data ← ⍬  ⍝ Placeholder for the memory-mapped matrix
@@ -1311,7 +1313,7 @@ Write-Host "Iscandar Project Verified." -ForegroundColor Cyan
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[OracleLeft.apl]
+\begin{Iscandar}[OracleLeft.apl]{}
 :Namespace OracleLeft
     (⎕IO ⎕ML) ← 0 1
     Data ← ⍬
@@ -1340,7 +1342,7 @@ Write-Host "Iscandar Project Verified." -ForegroundColor Cyan
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[OracleRight.apl]
+\begin{Iscandar}[OracleRight.apl]{}
 :Namespace OracleRight
     (⎕IO ⎕ML) ← 0 1
     Data ← ⍬
@@ -1540,7 +1542,7 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[Support.apl]
+\begin{Iscandar}[Support.apl]{}
 :Namespace STATUS
     :Access Public Shared
     :Field Public Shared ReadOnly SUCCESS    ← 0
@@ -1554,8 +1556,9 @@ $W.Close(); $S_i.Close()
     :Field Public Shared ReadOnly FAIL_HUGE   ← 8
     :Field Public Shared ReadOnly FAIL_CUBE   ← 9
 :EndNamespace
+\end{Iscandar}
 
-\begin{Iscandar}[Cube.apl]
+\begin{Iscandar}[Cube.apl]{}
 :Namespace Cube
     :Namespace Row
         :Field Public Shared sectors ← 0   ⍝ 32-bit Unsigned Long
@@ -1575,7 +1578,7 @@ $W.Close(); $S_i.Close()
 
 \subsection{APL Definitions}
 This listing is the APL implementation of the basic structure of Section 2.
-\begin{Iscandar}[Definitions.apl]
+\begin{Iscandar}[Definitions.apl]{}
 :Namespace CONSTANTS
     :Access Public Shared
     :Field Public Shared ReadOnly ARITY  ← 32
@@ -1597,7 +1600,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[Iscandar.apl]
+\begin{Iscandar}[Iscandar.apl]{}
 :Namespace Iscandar
 
     A←32 ⋄ OK←1
@@ -1653,7 +1656,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[WrappedPointer.apl]
+\begin{Iscandar}[WrappedPointer.apl]{}
 :Namespace WrappedPointer
     ⍝ --- Iscandar Bijective Pointer Implementation ---
     ⍝ Layout: [V:1][R:1][S:15][L:15]
@@ -1691,7 +1694,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[Cube.apl]
+\begin{Iscandar}[Cube.apl]{}
 :Namespace Cube
     :Namespace Row
         :Field Public Shared sectors ← 0   ⍝ 32-bit Unsigned Long
@@ -1709,7 +1712,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[Decision.apl]
+\begin{Iscandar}[Decision.apl]{}
 :Namespace Decision
     (⎕IO ⎕ML) ← 0 1
 
@@ -1743,7 +1746,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 \end{Iscandar}
 
 
-\begin{Iscandar}[HeuristicCube.apl]
+\begin{Iscandar}[HeuristicCube.apl]{}
 :Namespace Heuristic
     :Namespace Cube
         (⎕IO ⎕ML) ← 0 1
@@ -1762,7 +1765,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[HeuristicNano.apl]
+\begin{Iscandar}[HeuristicNano.apl]{}
 :Namespace Heuristic
   :Namespace HeuristicNano
     ⍝ --- Constants ---
@@ -1804,7 +1807,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[HeuristicTiny.apl]
+\begin{Iscandar}[HeuristicTiny.apl]{}
 :Namespace Heuristic
   :Namespace HeuristicTiny
     ⍝ --- Constants ---
@@ -1850,7 +1853,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[HeuristicSmall.apl]
+\begin{Iscandar}[HeuristicSmall.apl]{}
 :Namespace Heuristic
   :Namespace HeuristicSmall
     ⍝ --- Constants ---
@@ -1899,7 +1902,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 \end{Iscandar}
 
 
-\begin{Iscandar}[HeuristicLarge.apl]
+\begin{Iscandar}[HeuristicLarge.apl]{}
 :Namespace HeuristicLarge
 
     ARITY ← 32 ⋄ OK ← 1 ⋄ FAIL ← 0
@@ -1958,7 +1961,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 \end{Iscandar}
 
 
-\begin{Iscandar}[HeuristicHuge.apl]
+\begin{Iscandar}[HeuristicHuge.apl]{}
 :Namespace HeuristicHuge
 
     ∇ (S B) ← Run W_Core W_Rem
@@ -1979,7 +1982,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[MarkPlanes.apl]
+\begin{Iscandar}[MarkPlanes.apl]{}
 :Namespace WrappedPointer
 
   ∇ Status ← MarkPlanes Pointer;plane;row;sector;length
@@ -2029,7 +2032,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 
 
 
-\begin{Iscandar}[UnMarkPlanes.apl]
+\begin{Iscandar}[UnMarkPlanes.apl]{}
 :Namespace WrappedPointer
 
   ∇ Status ← UnMarkPlanes Pointer;plane;row;sector;length
@@ -2077,7 +2080,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[MarkSingleRow.apl]
+\begin{Iscandar}[MarkSingleRow.apl]{}
 :Namespace WrappedPointer
 
   ∇ Status ← MarkSingleRow(plane row sector length);Mask
@@ -2116,7 +2119,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[UnMarkSingleRow.apl]
+\begin{Iscandar}[UnMarkSingleRow.apl]{}
 :Namespace WrappedPointer
 
   ∇ Status ← UnMarkSingleRow(plane row sector length);Mask
@@ -2156,7 +2159,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[MarkRows.apl]
+\begin{Iscandar}[MarkRows.apl]{}
 :Namespace WrappedPointer
 
   ∇ Status ← MarkRows(plane row sector length);A;Z;L_A;L_Z;Sequence;RowMatrix
@@ -2216,7 +2219,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[UnMarkRows.apl]
+\begin{Iscandar}[UnMarkRows.apl]{}
 :Namespace WrappedPointer
 
   ∇ Status ← UnMarkRows(plane row sector length);A;Z;L_A;L_Z;Sequence;RowMatrix
@@ -2276,7 +2279,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[MarkFirstRow]
+\begin{Iscandar}[MarkFirstRow]{}
 :Namespace WrappedPointer
 
   ∇ Status ← MarkFirstRow(global_row sector length);Mask;RowBits
@@ -2313,7 +2316,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[UnMarkFirstRow.apl]
+\begin{Iscandar}[UnMarkFirstRow.apl]{}
 :Namespace WrappedPointer
 
   ∇ Status ← UnMarkFirstRow(global_row sector length);Mask;RowBits
@@ -2351,7 +2354,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[MarkFinalRow.apl]
+\begin{Iscandar}[MarkFinalRow.apl]{}
 :Namespace WrappedPointer
 
   ∇ Status ← MarkFinalRow(global_row length);Mask;RowBits
@@ -2388,7 +2391,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[UnMarkFinalRow.apl]
+\begin{Iscandar}[UnMarkFinalRow.apl]{}
 :Namespace WrappedPointer
 
   ∇ Status ← UnMarkFinalRow(global_row length);Mask;RowBits
@@ -2426,7 +2429,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[Mark.apl]
+\begin{Iscandar}[Mark.apl]{}
 :Namespace WrappedPointer
 
   ∇ Status ← Mark pointer;plane;row;sector;length
@@ -2462,7 +2465,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[UnMark.apl]
+\begin{Iscandar}[UnMark.apl]{}
 :Namespace WrappedPointer
 
   ∇ Status ← UnMark pointer;plane;row;sector;length
@@ -2496,7 +2499,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[HeuristicNull.apl]
+\begin{Iscandar}[HeuristicNull.apl]{}
 :Namespace Heuristic
     :Namespace Null
         (⎕IO ⎕ML) ← 0 1
@@ -2511,7 +2514,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[PlanesDriver.apl]
+\begin{Iscandar}[PlanesDriver.apl]{}
 :Namespace PlanesDriver
 
     ⍝ --- Constants ---
@@ -2684,7 +2687,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[RowsDriver.apl]
+\begin{Iscandar}[RowsDriver.apl]{}
 :Namespace RowsDriver
 
     ⍝ --- Constants ---
@@ -2826,7 +2829,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[PairRowsDriver.apl]
+\begin{Iscandar}[PairRowsDriver.apl]{}
 :Namespace PairRowsDriver
 
     ⍝ --- Constants ---
@@ -2965,7 +2968,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 \end{Iscandar}
 
 
-\begin{Iscandar}[LargeDriver.apl]
+\begin{Iscandar}[LargeDriver.apl]{}
 :Namespace LargeDriver
 
     A ← 32
@@ -3140,7 +3143,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[LargeRowDriver.apl]
+\begin{Iscandar}[LargeRowDriver.apl]{}
 :Namespace LargeRowDriver
 
     A ← 32
@@ -3305,7 +3308,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[HugePlanesCoreDriver.apl]
+\begin{Iscandar}[HugePlanesCoreDriver.apl]{}
 :Namespace HugePlanesCoreDriver
 
     A←32 ⋄ P_SIZE←1024 ⋄ C_SIZE←32 ⋄ OK←1
@@ -3434,7 +3437,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[HugeRowsCoreDriver.apl]
+\begin{Iscandar}[HugeRowsCoreDriver.apl]{}
 :Namespace HugeRowsCoreDriver
 
     A←32 ⋄ OK←1
@@ -3455,7 +3458,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[HugePlanesRemainDriver.apl]
+\begin{Iscandar}[HugePlanesRemainDriver.apl]{}
 :Namespace HugePlanesRemainDriver
 
     A←32 ⋄ P_SIZE←1024 ⋄ C_SIZE←32 ⋄ OK←1
@@ -3586,7 +3589,7 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[HugeRowsRemainDriver.apl]
+\begin{Iscandar}[HugeRowsRemainDriver.apl]{}
 :Namespace HugeRowsRemainDriver
 
     A←32 ⋄ OK←1
