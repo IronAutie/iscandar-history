@@ -66,12 +66,13 @@
 % 1. Set ToC Depth: Section and Subsection only
 \setcounter{tocdepth}{2}
 
-% 2. List of Equations Setup
+% 2. List of Equations Setup (Manual Control Version)
 \newcommand{\listequationname}{List of Equations}
 \newlistof{myequations}{loe}{\listequationname}
-% Command to tag equations for the list: \myequations{Label}
-\newcommand{\myequations}[1]{%
-      \addcontentsline{loe}{myequations}{\protect\numberline{\theequation}#1}}
+
+% This command manually grabs a specific label and puts it in the list
+\newcommand{\manualeq}[2]{%
+      \addcontentsline{loe}{myequations}{\protect\numberline{\ref{#1}}#2}}
 
 % 3. Counter for Figure A, B, C... (Nizhoni Style)
 \newcounter{marginfig}
@@ -135,11 +136,16 @@ For modeling and testing purposes this paper demonstrates an $k$-level lattice $
 
 Discrete occupancy counts ($\Gamma$) at every tier \textbf{enable} constant-time steering. Following bit-block representation principles [2], these counters \textbf{generate} a real-time density map of the lattice:
 
+
 \begin{align}
     \text{Level 1 (Row):} \quad \Gamma_{1} &= \sum_{i=0}^{\mathcal{A}-1} \Gamma_{0,i} \label{eq:gamma1} \\
     \text{Level 2 (Plane):} \quad \Gamma_{2} &= \sum_{j=0}^{\mathcal{A}-1} \Gamma_{1,j} \label{eq:gamma2} \\
     \text{Level 3 (Cube):} \quad \Gamma_{3} &= \sum_{k=0}^{\mathcal{A}-1} \Gamma_{2,k} \label{eq:gamma3}
 \end{align}
+% These sit OUTSIDE and won't mess up the formatting
+\manualeq{eq:gamma1}{Fractal Summation: Level 1 (Row)}
+\manualeq{eq:gamma2}{Fractal Summation: Level 2 (Plane)}
+\manualeq{eq:gamma3}{Fractal Summation: Level 3 (Cube)}
 
 This hierarchical summation lets a Global Registrar at the Cube level \textbf{execute} an admissibility check in a single instruction cycle, \textbf{imposing} a fast-fail condition.
 
@@ -164,18 +170,23 @@ The $\mathcal{L}$ \textbf{maps} its branching factor to the processor word-width
 
 \begin{enumerate}
     \item \textbf{Base Case ($n = 1$):} At the Row level ($L_1$), a pre-calculated \textbf{Instruction Group mapping} resolves a free sector via a static Look-Up Table. This operation maintains atomicity by collapsing the resolution into a single-cycle, table-driven state transition.
+    
     \begin{equation}
-        T(\mathcal{L}_{1}) = I_{base}
-    \end{equation}
+    T(\mathcal{L}_{1}) = I_{base}
+    \label{eq:base_case} % Ensure this label exists
+\end{equation}
+\manualeq{eq:base_case}{Base Case: Level 1 Resolution}
 
     \item \textbf{Inductive Step:} Given the invariant that resolution time for a level-$k$ structure is $T(\mathcal{L}_{k}) = kI_{base}$, resolving a request at level $k+1$ (e.g., the Plane level) \textbf{requires}:
     \begin{itemize}
         \item The occupancy sum $\Gamma_{k+1}$ is \textbf{evaluated} via bitmask comparison to \textbf{select} a viable Level-$k$ child. When $\mathcal{A}$ \textbf{aligns} with a power of 2, this lookup and steering operation \textbf{consumes} a single table lookup [6].
         \item The resolution operation \textbf{descends} to the level-$k$ $\mathcal{L}$ identified by the steering vector from the Oracle.
         \item The resulting recurrence relation is:
-        \begin{equation}
-            T(\mathcal{L}_{k+1}) = I_{base} + T(\mathcal{L}_k) = I_{base} + kI_{base} = (k+1)I_{base}
-        \end{equation}
+      \begin{equation}
+    T(\mathcal{L}_{k+1}) = I_{base} + T(\mathcal{L}_k) = I_{base} + kI_{base} = (k+1)I_{base}
+    \label{eq:inductive_step}
+\end{equation}
+\manualeq{eq:inductive_step}{Inductive Resolution of the $(k+1)$-tier Lattice}
         \item \textbf{Termination Constraint:} The recursion \textbf{terminates} at $\mathcal{L}_{1}$, where the hardware bit-scan \textbf{yields} the final effective address offset.
     \end{itemize}
 \end{enumerate}
@@ -187,7 +198,9 @@ By induction, the resolution time for any $n$-level $\mathcal{L}$ structure is s
 In our model, $n$ is an architectural constant (e.g., $n = 3$); so total execution time is:
 \begin{equation}
     T_{total} = 3I_{base}
+    \label{eq:total_complexity}
 \end{equation}
+\manualeq{eq:total_complexity}{Total Resolution Complexity for 3D Manifolds}
 
 This result confirms that for a Cube of $\mathcal{A}^k$ Sectors, the time required to resolve an address is invariant. This performance is maintained provided the system stays in the operational domain of the Occupancy Limit ($\Phi$). By trading spatial capacity for temporal certainty, the architecture \textbf{eliminates} the ``temporal jitter'' that characterizes non-deterministic real-time systems. [8]
 
@@ -229,12 +242,14 @@ The Occupancy Limit ($\Phi$) \textbf{serves} as the authoritative boundary of th
 
 The decision logic for the Resolution Operator ($\Omega$) is:
 \begin{equation}
-\Omega(\text{request}) = 
+\Omega(\text{L}) = 
 \begin{cases} 
 \text{Resolve}(p, r, s) & \text{if } \Gamma_{3} < K \\
 \text{Refuse}(\text{Constant Time}) & \text{if } \Gamma_{3} \geq K 
 \end{cases}
+\label{eq:admission_control}
 \end{equation}
+\manualeq{eq:admission_control}{Deterministic Admission Control Function}
 where $K$ is the sector threshold at which the Occupancy Limit is triggered ($K = \mathcal{A}^k \times (1 - \Phi)$)
 
 \subsection{Summary of Empirical Performance}
@@ -248,13 +263,17 @@ Let $\Gamma_{total}$ be the sum of all leaf nodes $S_{0,i}$. At any discrete tim
 
 \begin{equation}
     \Gamma_{Apex} \text{ (a.k.a. } \Gamma_{3}) = \sum \Gamma_{2} = \sum \Gamma_{1} = \sum \Gamma_{0}
+    \label{eq:apex_conservation}
 \end{equation}
+\manualeq{eq:apex_conservation}{The Apex Conservation Law of Fractal Density}
 
 \vspace{5pt}
 \noindent Since deallocation is defined as:
-\begin{center}
-    $\Gamma_{x}(t+1) = \Gamma_{x}(t) - 1$ \quad for all levels $x \in \{0, 1, 2, 3\}$
-\end{center}
+\begin{equation}
+    \Gamma_{x}(t+1) = \Gamma_{x}(t) - 1 \quad \text{for all levels } x \in \{0, 1, 2, 3\}
+    \label{eq:state_transition}
+\end{equation}
+\manualeq{eq:state_transition}{Isochronous State Transition: Allocation Delta}
 
 \vspace{5pt}
 \noindent along the specific resolution path, the invariant is \textbf{preserved}. Because this path is fixed at depth $n$, the lattice is restored to a consistent, deterministic state in $nI_{base}$ time.
@@ -276,8 +295,19 @@ In this model, adjacency is defined by a partition's total volume \textbf{associ
 In a standard Voronoi partition, boundaries are dynamically computed as a function of the Euclidean distance to a specific ``seed'' or generator point. In the Iscandar lattice, while the ``seed'' is represented by the wrapped pointer, the partition boundaries are not computed at runtime, as defined by the invariant geometric properties of the lattice established in the Observations section. Instead, they are architecturally invariant, defined strictly by the Structural Arity ($\mathcal{A}$) and the hierarchical depth ($k$) established in the Axioms. This replaces the need for distance-based calculations with a pre-baked, static coordinate resolution:
 
 \begin{equation}
-\text{Boundary}_{\text{Iscandar}} = f(\mathcal{A}, k) \neq f(\text{dist}(p, \text{seed}))
+    \forall L \in \mathcal{L}, \quad \Omega(L) \iff \mathcal{G}(\mathcal{A}, k) \land \left( \nexists f(\text{dist}(p, \text{seed})) \to \Omega(L) \right)
+    \label{eq:omega_logic}
 \end{equation}
+\manualeq{eq:omega_logic}{Predicate Logic of Boundary Invariance}
+
+\begin{list}{}{
+    \leftmargin=0.75in
+    \rightmargin=0.75in
+}
+\item \small \itshape
+\noindent For all requests $L$ belonging to the lattice, the admission function $\Omega(L)$ is true if and only if it is a property of the geometry defined by Radix $\mathcal{A}$ and tier-depth $k$; furthermore, there exists no function of the spatial distance between a position $p$ and a previous seed that influences the outcome of $\Omega(L)$.
+\end{list}
+\vspace{1em}
 
 \subsection{As Linear Programming}
 
@@ -350,9 +380,12 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     
 \setcounter{equation}{9} % This sets the counter so the NEXT equation is 10
 \noindent \textbf{Summation Predicate:} 
+
 \begin{equation}
-    C_{plane} = \sum_{i=0}^{\mathcal{A}-1} (C_{row,i} \cdot [y_{i} = 1]) \label{eq:sum_predicate}
+    C_{plane} = \sum_{i=0}^{\mathcal{A}-1} (C_{row,i} \cdot [y_{i} = 1])
+    \label{eq:sum_predicate}
 \end{equation}
+\manualeq{eq:sum_predicate}{Hierarchical Occupancy Summation Predicate}
     
     \item[Discussion:] The Cube Scale Allocator computes the unique  \textbf{``Gatekeeper''} sector count of the architecture. It provides the primary fast-fail heuristic for the system; if a request $(S, M)$ is determined to be non-admissible at this tier, the algorithm immediately terminates without initiating a descent. This makes the registrar the most efficient filter in the hierarchy, ensuring that the cost of coordinate resolution is only paid when success is mathematically guaranteed.
 \end{description}
@@ -371,6 +404,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     C_{huge} = \sum_{i=0}^{\mathcal{A}-1} ( C_{plane,i} \cdot [z_{i} = 1] )
     \label{eq:sum_predicate_huge}
 \end{equation}
+\manualeq{eq:sum_predicate_huge}{Tier-3 (Huge) Lattice Occupancy Summation}
 \vspace{12pt}
     
     \item[Discussion:] \hfill \\
@@ -459,6 +493,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     C_{plane} = \sum_{i=0}^{\mathcal{A}-1} (C_{row,i} \cdot [y_{i} = 1])
     \label{eq:sum_predicate}
 \end{equation}
+\manualeq{eq:sum_predicate}{Tier-2 (Plane) Lattice Occupancy Summation}
 \vspace{12pt}
     
     \item[Discussion:] 
@@ -540,6 +575,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     C_{row} = \sum_{j=0}^{\mathcal{A}-1} (C_{bits,j} \cdot [x_{j} = 1])
     \label{eq:sum_predicate_row}
 \end{equation}
+\manualeq{eq:sum_predicate_row}{Tier-1 (Row) Lattice Occupancy Summation}
 \vspace{12pt}
     
     \item[Discussion:] \hfill \\
@@ -624,6 +660,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     C_{bits} = \sum_{i=0}^{\mathcal{A}-1} (\neg b_{i} \cdot [w_{i} = 1])
     \label{eq:sum_predicate_bits}
 \end{equation}
+\manualeq{eq:sum_predicate_bits}{Tier-0 (Atomic) Bit-Level Capacity Summation}
 \vspace{12pt}
     
     \item[Discussion:] \hfill \\
@@ -715,6 +752,7 @@ We map each instruction group to a specific predicate of the \textbf{Iscandar} h
     P_{Plane} \iff \sum_{i \in Plane} (Row [Inclusion]) \ge L
     \label{eq:predicate_plane}
 \end{equation}
+\manualeq{eq:predicate_plane}{The Plane Inclusion Predicate}
 \vspace{12pt}
 
 \begin{enumerate}
@@ -734,6 +772,8 @@ We map each instruction group to a specific predicate of the \textbf{Iscandar} h
     Weld \iff RHL(Row_n) + Intermediates + LHL(Row_{n+m}) \ge L
     \label{eq:predicate_weld}
 \end{equation}
+\manualeq{eq:predicate_weld}{The Weld Predicate for Multi-Block Resolution}
+\manualeq{eq:predicate_weld}{The Weld Predicate for Multi-Block Resolution}
 \vspace{12pt}
 
 \begin{enumerate}
@@ -753,6 +793,7 @@ We map each instruction group to a specific predicate of the \textbf{Iscandar} h
     P_{Tiny} \iff \sum_{i=start}^{end} \neg b_i = L
     \label{eq:predicate_tiny}
 \end{equation}
+\manualeq{eq:predicate_tiny}{The Tiny-Tier Bit-Fit Predicate}
 \vspace{12pt}
 
 \begin{enumerate}
@@ -762,9 +803,9 @@ We map each instruction group to a specific predicate of the \textbf{Iscandar} h
     \item \textbf{Instruction Group 13:} Commitment/Return: Write the new occupancy to the 15-bit metadata and return the start address $S$.
 \end{enumerate}
 
-\section{Desk Check Summary: The Tiny Search ($L \le 8$)}
+\section{Desk Check Summary: The Tiny Search ($L \le \mathcal{A}$)}}
 
-Here we posit a hypothetical 32-bit machine providing the data structures needed to demonstrate one example through the Instruction Groups, on possible "Tiny Search" tracing  the sequence needed to resolve an allocation request $L$ of 8 sectors or fewer.
+Here we posit a hypothetical 32-bit machine providing the data structures needed to demonstrate one example through the Instruction Groups, on possible "Tiny Search" tracing  the sequence needed to resolve an allocation request $L$ of $\mathcal{A}$  sectors or fewer.
 
 \begin{enumerate}
     \item \textbf{Admissibility Check:} The Global Registrar compares the request size $L$ against the aggregate occupancy ($\Gamma$) and entropy thresholds.
