@@ -192,7 +192,7 @@
 Unlike allocation models using variable-time search algorithms [1], this architecture employs a hierarchical occupancy map to resolve coordinates deterministically. Extending the traditional binary buddy system to an arbitrary radix replaces it with a geometric steering mechanism.
 
 \subsection{Batteries Are Included!}
-The .tex source for this manuscript functions as a self-organizing research example. It can be processed by a PowerShell script to extracts Dyalog APL source listings directly from surrounding portions of this paper which document them best, to create a local research environment. This ensures the researcher does not need to manually configure local paths or binary repositories. See Section 12 for instructions on putting together the environment and Section 10 for its use. \textbf {Welcome.apl} below is the basic demonstration. 
+The .tex source for this manuscript functions as a self-organizing research example. It can be processed by a PowerShell script to extracts Dyalog APL source listings directly from surrounding portions of this paper which document them best, to create a local research environment. This ensures the researcher does not need to manually configure local paths or binary repositories. See Appendix A and C for putting together the environment and Section 10 for its use. \textbf {Welcome.apl} below is the basic demonstration. 
 
 \subsubsection{The Welcome Example.}
 
@@ -214,21 +214,15 @@ This listing defines the memory allocator data structure, Iscandar's answer to t
 
 
 \subsection{Axiom II: Hierarchical Occupancy Counters ($\Gamma$)}
-
-Discrete occupancy counts ($\Gamma$) at every tier \textbf{enable} constant-time steering. Following bit-block representation principles [2], these counters \textbf{generate} a real-time density map of the lattice:
-
+Discrete occupancy counts ($\Gamma$) at every tier enable constant-time steering. Following bit-block representation principles, these counters generate a real-time density map of the lattice:
 
 \begin{align}
-    \text{Level 1 (Row):} \quad \Gamma_{1} &= \sum_{i=0}^{\mathcal{A}-1} \Gamma_{0,i} \label{eq:gamma1} \\
-    \text{Level 2 (Plane):} \quad \Gamma_{2} &= \sum_{j=0}^{\mathcal{A}-1} \Gamma_{1,j} \label{eq:gamma2} \\
-    \text{Level 3 (Cube):} \quad \Gamma_{3} &= \sum_{k=0}^{\mathcal{A}-1} \Gamma_{2,k} \label{eq:gamma3}
+  \text{Level 1 (Row):} \quad \Gamma_{1} &= \sum_{i=0}^{\mathcal{A}-1}\Gamma_{0,i} \label{eq:gamma1} \\
+  \text{Level 2 (Plane):} \quad \Gamma_{2} &= \sum_{j=0}^{\mathcal{A}-1}\Gamma_{1,j} \label{eq:gamma2} \\
+  \text{Level 3 (Cube):} \quad \Gamma_{3} &= \sum_{k=0}^{\mathcal{A}-1}\Gamma_{2,k} \label{eq:gamma3}
 \end{align}
-% These sit OUTSIDE and won't mess up the formatting
-\manualeq{eq:gamma1}{Fractal Summation: Level 1 (Row)}
-\manualeq{eq:gamma2}{Fractal Summation: Level 2 (Plane)}
-\manualeq{eq:gamma3}{Fractal Summation: Level 3 (Cube)}
 
-This hierarchical summation lets a Global Registrar at the Cube level \textbf{execute} an admissibility check in a single instruction cycle, \textbf{imposing} a fast-fail condition.
+This hierarchical summation lets a Global Registrar at the Cube level execute an admissibility check in a single instruction cycle, imposing a fast-fail condition.
 
 \subsection{Axiom III: Enforcing an Occupancy Limit ($\Phi$)}
 
@@ -314,24 +308,19 @@ The Resolution Operator ($\Omega$) acts as a volumetric circuit breaker. By eval
 
 \subsection{Proof of Coalescence Invariant}
 
-Let $\Gamma_{total}$ be the sum of all leaf nodes $S_{0,i}$. At any discrete time $t$, the hierarchical counters \textbf{must} satisfy the invariant:
+Let $\Gamma_{\text{total}}$ be the sum of all leaf nodes $S_{0,i}$. At any discrete time $t$, the hierarchical counters \textbf{must} satisfy the invariant:
 
 \begin{equation}
-    \Gamma_{Apex} \text{ (a.k.a. } \Gamma_{3}) = \sum \Gamma_{2} = \sum \Gamma_{1} = \sum \Gamma_{0}
-    \label{eq:apex_conservation}
+    \Gamma_{\text{Apex}} \text{ (a.k.a. } \Gamma_{3}) = \sum \Gamma_{2} = \sum \Gamma_{1} = \sum \Gamma_{0}
 \end{equation}
-\manualeq{eq:apex_conservation}{The Apex Conservation Law of Fractal Density}
 
 \vspace{5pt}
 \noindent Since deallocation is defined as:
 \begin{equation}
     \Gamma_{x}(t+1) = \Gamma_{x}(t) - 1 \quad \text{for all levels } x \in \{0, 1, 2, 3\}
-    \label{eq:state_transition}
 \end{equation}
-\manualeq{eq:state_transition}{Isochronous State Transition: Allocation Delta}
 
-\vspace{5pt}
-\noindent along the specific resolution path, the invariant is \textbf{preserved}. Because this path is fixed at depth $n$, the lattice is restored to a consistent, deterministic state in $nI_{base}$ time.
+\noindent along the specific resolution path, the invariant is preserved. Because this path is fixed at depth $n$, the lattice is restored to a consistent, deterministic state in $nI_{\text{base}}$ time.
 
 \section{Observations}
 
@@ -353,7 +342,6 @@ In a standard Voronoi partition, boundaries are dynamically computed as a functi
     \forall L \in \mathcal{L}, \quad \Omega(L) \iff \mathcal{G}(\mathcal{A}, k) \land \left( \nexists f(\text{dist}(p, \text{seed})) \to \Omega(L) \right)
     \label{eq:omega_logic}
 \end{equation}
-\manualeq{eq:omega_logic}{Predicate Logic of Boundary Invariance}
 
 \begin{list}{}{
     \leftmargin=0.75in
@@ -366,7 +354,7 @@ In a standard Voronoi partition, boundaries are dynamically computed as a functi
 
 \subsection{As Linear Programming}
 
-The operational stability of the system is maintained via an Interior Point Method}---analogous to projective transformations used in Karmarkar’s algorithm [14]. By enforcing a \textbf Occupancy Limit ($\Phi$), we \textbf{ensure} the resolution path avoids ``edges'' of the feasible region (the fragmentation trap). Here, the allocator does not merely manage space; it \textbf{navigates} a high-dimensional manifold where the floor serves as a protective barrier against non-deterministic search behaviors.
+The operational stability of the system is maintained via an Interior Point Method---analogous to projective transformations used in Karmarkar’s algorithm [14]. By enforcing an Occupancy Limit ($\Phi$), we ensure the resolution path avoids ``edges'' of the feasible region (the fragmentation trap). Here, the allocator does not merely manage space; it navigates a high-dimensional manifold where the floor serves as a protective barrier against non-deterministic search behaviors.
 
 \subsection{Amortized Performance: Constant Time}
 The \textbf{Iscandar} architecture utilizes a \textit{Seamless Sack} model that achieves amortized constant time for memory operations through a Next-Fit Circular Cursor mechanism.
@@ -505,8 +493,6 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \end{description}
 
     This manages the 32-radix plane counts, welding 2D plane segments into a unified 3D volume request. By treating planes as the fundamental unit of resolution at this tier, the system ensures that even the largest possible allocations are resolved with identical determinism. The Huge allocator calculates the specific number of Planes required to weld a unified 3D volume, treating each Plane count as a subordinate metric for the total Cube count.
-\end{description}
-
 
 
 % --- FIGURE: HUGE ALLOCATOR ---
@@ -655,10 +641,6 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     \caption{Large Allocator: Search Polytopes and Plane Boundary Row Join.}
     \label{fig:large_allocator_row_join}
 \end{figure}
-
-\clearpage
-
-
 
 \clearpage
 
@@ -1287,9 +1269,7 @@ Write-Host "Iscandar Project Verified." -ForegroundColor Cyan
 \section{Oracle Manufacture}
 
 \begin{Iscandar}[OracleCenter.apl]
-
-    :Namespace OracleCenter
-
+:Namespace OracleCenter
     (⎕IO ⎕ML) ← 0 1
     Data ← ⍬  ⍝ Placeholder for the memory-mapped matrix
 
@@ -3654,6 +3634,5 @@ This listing is the APL implementation of the basic structure of Section 2.
 \end{Iscandar}
 
 \clearpage % Ensures the last page of the listing also has no number
-
 
 \end{document}
