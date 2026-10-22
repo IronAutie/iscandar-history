@@ -28,70 +28,79 @@
 \usepackage{float}
 
 % =========================================================================
-% 3. Layout, Geometry, and Margin Metrics
+% 3. Optimized High-Density Layout and Margin Metrics
 % =========================================================================
 \usepackage{geometry}
-\geometry{letterpaper, margin=1in}
+% Expanded printable horizontal layout to half-inch boundaries
+\geometry{letterpaper, margin=0.5in}
 \usepackage{marginnote}
 
 \newcounter{marginfig}
 \renewcommand{\themarginfig}{\Alph{marginfig}}
 
 \newcommand{\fignote}[1][0pt]{%
-  \bgroup 
-  \stepcounter{marginfig}%
-  \marginnote{\textbf{Figure \themarginfig}}[#1]%
-  \egroup 
+  \addtocounter{marginfig}{1}%
+  \marginnote{\small\textsf{\textbf{Fig.~\themarginfig}}}[#1]%
 }
 
 % =========================================================================
-% 4. Text Boxes, Verbatim Environments, and Custom Lists
+% 4. Automated Code Extraction and Verbatim Engine Configuration
 % =========================================================================
-\usepackage{tocloft}
-\usepackage[most]{tcolorbox} 
 \usepackage{fancyvrb}
-\fvset{commandchars=none} % Instantly disables macro parsing globally inside all Verbatim blocks
-\usepackage{alltt}
+\usepackage{tcolorbox}
+\tcbuselibrary{enhanced, breakable}
 
-% --- Custom List of APL Source Listings Setup ---
-\newcommand{\listiscandarname}{List of APL Source Listings}
-\newlistof{iscandar}{lol}{\listiscandarname}
-\cftsetindents{iscandar}{1.5em}{3.5em}
-\setcounter{tocdepth}{2}
+% Load multicol to split the box interior cleanly into two parallel streams
+\usepackage{multicol}
+\setlength{\columnsep}{1.5pc}
+
+% Disable macro syntax processing inside Verbatim blocks to support raw APL tokens
+\fvset{commandchars=none}
+
+% =========================================================================
+% 5. Dynamic Table of Listings (LOL) Custom Engine
+% =========================================================================
 \newcounter{iscandarnum}
+\newcommand{\listiscandarname}{List of APL Source Listings}
+
+\newcommand{\listofiscandars}{%
+  \section*{\listiscandarname}%
+  \@starttoc{lol}%
+}
+\newcommand{\l@iscandar}[2]{\noindent\texttt{#1}\dotfill #2\par}
 
 % =========================================================================
-% 5. Unified Macro Environments (Dual-Target Deployment Engine)
+% 6. Conditional Environment Branching for Multi-Target Output
 % =========================================================================
-
 \ifarxivmode
-  % --- TARGET A: ARCHIVE COMPLIANT STATIC CONFIGURATION ---
-  % Standard cross-referencing text for arXiv (No hyperref overhead)
-  \newcommand{\srclink}[2]{See Listing \ref{#2} for \texttt{#1}}
-  
+  % --- TARGET A: FORMAL MANUSCRIPT PRINT CONFIGURATION ---
   \newenvironment{Iscandar}[2][]{%
     \VerbatimEnvironment
     \refstepcounter{iscandarnum}%
     \addcontentsline{lol}{iscandar}{\protect\numberline{\theiscandarnum}#1}%
     \begin{tcolorbox}[
-      enhanced, sharp corners, boxrule=0.5pt,
+      enhanced, sharp corners, boxrule=0.4pt,
       colback=gray!5!white, colframe=gray!75!black,
       title={\textbf{Listing \theiscandarnum:} \texttt{#1}},
-      fonttitle=\bfseries\sffamily, coltitle=black, colbacktitle=gray!15!white,
+      fonttitle=\bfseries\sffamily\small, coltitle=black, colbacktitle=gray!15!white,
       attach boxed title to top left={yshift=-2mm, xshift=2mm},
-      top=4mm, breakable,
-      before={\par\vspace{0.5em}\noindent},
-      after={\par\vspace{0.5em}}
+      breakable,
+      fontupper={\fontsize{6.5pt}{7.5pt}\selectfont},
+      boxsep=1pt,
+      top=1.5mm, bottom=1mm, left=1mm, right=1mm,
+      before={\par\vspace{0.2em}\noindent},
+      after={\par\vspace{0.2em}}
     ]%
     \label{#2}% Sets the cross-reference anchor securely inside the box
+    \begin{multicols}{2}% Activates two-column wrapping mode inside the frame
     \begin{Verbatim}%
   }{%
     \end{Verbatim}
-    \end{tcolorbox}
+    \end{multicols}
+    \end{tcolorbox}%
   }
 \else
   % --- TARGET B: LOCAL INTERACTIVE CONFIGURATION ---
-  % Hyperlinks the listing number exclusively for interactive distribution
   \usepackage[hidelinks]{hyperref} 
   \usepackage{xcolor}
   
@@ -102,65 +111,29 @@
     \refstepcounter{iscandarnum}%
     \addcontentsline{lol}{iscandar}{\protect\numberline{\theiscandarnum}#1}%
     \begin{tcolorbox}[
-      enhanced, sharp corners, boxrule=0.5pt,
+      enhanced, sharp corners, boxrule=0.4pt,
       colback=gray!5!white, colframe=gray!75!black,
       title={\textbf{Listing \theiscandarnum:} \texttt{#1}},
-      fonttitle=\bfseries\sffamily, coltitle=black, colbacktitle=gray!15!white,
+      fonttitle=\bfseries\sffamily\small, coltitle=black, colbacktitle=gray!15!white,
       attach boxed title to top left={yshift=-2mm, xshift=2mm},
-      top=4mm, breakable,
-      before={\par\vspace{0.5em}\noindent},
-      after={\par\vspace{0.5em}}
+      breakable,
+      fontupper={\fontsize{6.5pt}{7.5pt}\selectfont},
+      boxsep=1pt,
+      top=1.5mm, bottom=1mm, left=1mm, right=1mm,
+      before={\par\vspace{0.2em}\noindent},
+      after={\par\vspace{0.2em}}
     ]%
     \hypertarget{#2}{}% Creates a direct target handle for local jumps
     \label{#2}%
+    \begin{multicols}{2}% Activates two-column wrapping mode inside the frame
     \begin{Verbatim}%
   }{%
     \end{Verbatim}
-    \end{tcolorbox}
+    \end{multicols}
+    \end{tcolorbox}%
   }
 \fi
 
-% A. The PowerShell Extraction Environment Box (Permanently Visible)
-\newenvironment{BottleOpener}{%
-  \VerbatimEnvironment
-  \begin{tcolorbox}[
-    enhanced, sharp corners, boxrule=1pt,
-    colback=gray!10!white, colframe=black,
-    title={\texttt{Tool: BottleOpener.ps1}},
-    fonttitle=\bfseries\sffamily, coltitle=white, colbacktitle=black,
-    attach boxed title to top left={yshift=-2mm, xshift=2mm},
-    boxed title style={sharp corners, boxrule=0.5pt},
-    top=4mm, breakable
-  ]%
-  \begin{Verbatim}% 
-}{%
-  \end{Verbatim}
-  \end{tcolorbox}
-}
-
-% C. Generic Shading Helper for Telemetry
-\newtcolorbox{testresult}{
-    colback=gray!10!white,
-    colframe=gray!50!black,
-    fonttitle=\bfseries,
-    title=Telemetry Output,
-    arc=0mm,
-    boxrule=0.5pt
-}
-
-% =========================================================================
-% 6. Document Metadata and Author Formatting
-% =========================================================================
-\title{\textbf{An Extension of Buddy Systems to Arbitrary Radix for Deterministic Memory Allocation}}
-\author{Andrew Jonathan Fine\\Independent Student in Computer Architecture\\i.am.extremely.useful@gmail.com}
-\date{April 2026}
-
-\renewcommand*{\thefootnote}{\fnsymbol{footnote}}
-\usepackage{placeins}
-
-% =========================================================================
-% --- READY FOR DOCUMENT ENVIRONMENT ---
-% =========================================================================
 \begin{document}
 
 \maketitle
