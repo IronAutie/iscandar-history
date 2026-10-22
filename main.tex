@@ -94,7 +94,7 @@ Any resolved coordinate sequence \textbf{represents} a continuous physical block
 The $\mathcal{L}$ \textbf{maps} its branching factor to the processor word-width to \textbf{optimize} the classical buddy system search [3]. Let $\mathcal{L}_{n}$ \textbf{designate} a sub-lattice of level $n$, where resolution time $T(\mathcal{L}_{n})$ \textbf{represents} the total instruction count ($\iota$) required to \textbf{resolve} a memory coordinate. Resolution time $T(\mathcal{L}_{n})$ \textbf{represents} the instruction count ($\iota$) for \textbf{resolving} a memory coordinate in a level-$n$ sub-lattice [4]. \\
 
 \begin{enumerate}
-    \item \textbf{Base Case ($n = 1$):} At the Row level ($\mathcal{L}_{1}$), a hardware bit-scan primitive \textbf{resolves} a free sector; this operation \textbf{maintains} atomicity on 32-bit architectures.
+    \item \textbf{Base Case ($n = 1$):} At the Row level ($L_1$), a pre-calculated \textbf{Instruction Group mapping} resolves a free sector via a static Look-Up Table. This operation maintains atomicity by collapsing the resolution into a single-cycle, table-driven state transition.
     \begin{equation}
         T(\mathcal{L}_{1}) = I_{base}
     \end{equation}
@@ -128,35 +128,32 @@ To \textbf{preclude} latency variability during boundary-straddling, \textbf{Isc
 Here we describe the ``Factory'' math used to pre-calculate the Oracle tables, transforming a search problem into a static retrieval of pre-verified geometric facts.
 
 \subsubsection{Generating the Left and Right Hand Lookup Oracle}
-Part of the Oracle are tables of 1D vectors that map every possible bit-permutation of a Guard Shard to its boundary potential.   These are pre-calculated \textit{Finite State Automata} that eliminate runtime scanning \cite{stringology}.
+Part of the Oracle are tables of 1D vectors that map every possible bit-permutation of a Guard Shard to its boundary potential.   These are pre-calculated \textit{Finite State Automata} that eliminate runtime scanning functioning as a direct mapping of the manifold’s geometry onto the Look-Up Tables (LUTs) of the Phase IV hardware.
 \begin{itemize}
     \item \textbf{Right-Hand Lookahead (RHL):} For any shard state $S$, the table stores the starting index of the longest contiguous zero-run terminating at the right-hand boundary. If the terminal bit is \textbf{1}, the value is \textbf{Null}.
     \item \textbf{Left-Hand Lookahead (LHL):} Maps the shard state to the final bit position of the zero-run starting from the left-hand boundary. If the initial bit is \textbf{1}, the value is \textbf{Null}.
     \end{itemize}
-    
-   
-
 
 \subsubsection{Generating the Center Oracle (2D Matrix)}
 The Core Shard utilizes a 2D matrix ($2^{\mathcal{A}/4} \times \mathcal{A}/4$) to resolve internal gaps.
 \begin{itemize}
     \item \textbf{Mechanism:} Exhaustive enumeration of all $2^{\mathcal{A}/4}$ bit-patterns against all possible length requests within the core.
-    \item \textbf{Math:} Each cell $(i, j)$ is filled using a windowed zero-run algorithm. This transforms the shard into a precalculated \textit{Finite State Automata} \cite{stringology}.
+    \item \textbf{Math:} Each cell $(i, j)$ is filled using a windowed zero-run algorithm. This transforms the shard into a precalculated \textit{Finite State Automata}, where the resultant state-space is compressed into the Phase IV hardware’s static lookup tables for single-cycle gap resolution.
 \end{itemize}
 
 \section{Deterministic Coalescence and the Occupancy Limit}
 Maintaining temporal determinism in a dynamic environment \textbf{requires} a deallocation process (coalescence) \textbf{mirroring} the efficiency of the allocation logic. Operational stability of the \textbf{Iscandar} lattice uses discrete enforcement of the Occupancy Limit($\Phi$), \textbf{precluding} the high-entropy states typically associated with conventional allocators [5].
 
 \subsection{Symmetric Coalescence Mechanics}
-Here, coalescence is not a variable-time search for adjacent free blocks, but a \textbf{deterministic state update}. Whether the Oracle \textbf{descends} to clear a bit-position or \textbf{propagates} the release upward through the hierarchy, the operation \textbf{remains isochronous}. Because the bit-address of any Sector ($S_{0}$) is a fixed function of its coordinates, the update to the occupancy counters ($\Gamma$) \textbf{consumes} the same instruction count ($I_{base}$) as the initial resolution.
+Here, coalescence is not a variable-time search for adjacent free blocks, but a deterministic state update. Whether the Oracle descends to clear a bit-position or propagates the release upward through the hierarchy, the operation remains isochronous. Because the bit-address of any Sector ($S_0$) is a fixed function of its coordinates, the update to the occupancy counters ($\Gamma$) consumes the same instruction count ($I_{base}$) as the initial resolution. \textbf{The alignment is self-similar across all hierarchical depths, a property derived from the Structural Arity ($\mathcal{A}$) rather than a pre-defined set of size-classes.}
 
 \begin{enumerate}
-    \item The atomic leaf node state $\Gamma_{0}$ is \textbf{toggled} to $0$ (Available).
-    \item The change \textbf{propagates} immediately to the parent Row counter ($\Gamma_{1}$).
-    \item The Level-2 (Plane) and Level-3 (Cube) counters are \textbf{updated} through integer subtraction.
+    \item The atomic leaf node state $\Gamma_0$ is toggled to 0 (Available).
+    \item The change propagates immediately to the parent Row counter ($\Gamma_1$).
+    \item The Level-2 (Plane) and Level-3 (Cube) counters are updated through integer subtraction.
 \end{enumerate}
 
-Because the lattice depth is fixed at $n=3$, time complexity for allocation are identical to deallocation ($3I_{base}$). This symmetry \textbf{ensures} that system overhead remains constant regardless of memory ``churn,'' \textbf{eliminating} the temporal spikes typically made by coalescing algorithms [6].
+Because the lattice depth is fixed at $n = 3$, time complexity for allocation is identical to deallocation ($3I_{base}$). This symmetry ensures that system overhead remains constant regardless of memory ``churn,'' eliminating the temporal spikes typically made by coalescing algorithms. [6]
 
 \subsection{Operational Enforcement of $\Omega$}
 The Occupancy Limit ($\Phi$) \textbf{serves} as the authoritative boundary of the system’s operational domain. While traditional allocators attempt to satisfy requests until the address space is 100\% utilized---leading to $O(N)$ search patterns as fragmentation increases [7]---our  lattice uses the $\Gamma_{3}$ counter as a deterministic ``circuit breaker,'' depending on the memory request of the moment.\\
@@ -203,7 +200,15 @@ The binary buddy system, pioneered by Knowlton [8] and Knuth [9], sought to mini
 We generalize buddy system principles to an \textbf{Arbitrary Radix} ($R=\mathcal{A}$). By shifting from a binary tree to a high-radix fractal lattice, we collapse the depth of the search space to a fixed architectural constant $n$. This structural shift moves memory management from the domain of probabilistic searching to the domain of \textbf{Geometric Coordinate Resolution}.
 
 \subsection{As a Symmetric Voronoi Partition}
-As detailed in the appendices, this lattice functions as a \textbf{Symmetric Voronoi Partition}, where the adjacency of ``buddies'' is a pre-baked geometric property of the address space rather than a calculated proximity. In this model, adjacency is defined by a partition's total volume \textbf{associating} with its handle (a wrapped pointer), rather than the Euclidean distance of individual points from a centroid (e.g., the proximity of residences to a central post office).
+As detailed in the Architectural Axioms (Section 2.1), this lattice functions as a \textbf{Symmetric Voronoi Partition}, where the adjacency of ``buddies'' is a pre-baked geometric property of the address space rather than a calculated proximity, as shown in Section 5.2.\\ 
+
+In this model, adjacency is defined by a partition's total volume \textbf{associating} with its handle (a wrapped pointer resolved in Section 9.4) rather than the Euclidean distance of individual points from a centroid. rather than the Euclidean distance of individual points from a centroid, as established in the geometric rules of the address space.\\
+
+In a standard Voronoi partition, boundaries are dynamically computed as a function of the Euclidean distance to a specific ``seed'' or generator point. In the Iscandar lattice, while the ``seed'' is represented by the wrapped pointer, the partition boundaries are not computed at runtime, as defined by the invariant geometric properties of the lattice established in the Observations section. Instead, they are architecturally invariant, defined strictly by the Structural Arity ($\mathcal{A}$) and the hierarchical depth ($k$) established in the Axioms. This replaces the need for distance-based calculations with a pre-baked, static coordinate resolution:
+
+\begin{equation}
+\text{Boundary}_{\text{Iscandar}} = f(\mathcal{A}, k) \neq f(\text{dist}(p, \text{seed}))
+\end{equation}
 
 \subsection{As Linear Programming}
 
@@ -231,7 +236,7 @@ The architecture maintains determinism through hierarchical skip-logic at interm
     \item \textbf{Ceiling:} For a lattice of volume $N = \mathcal{A}^k$, the architecture caps the maximum investigation path at $k \times \mathcal{A}$, limiting the worst-case cost to $k \times \mathcal{A}$ operations.
 \end{itemize}
 
-\subsection{As Supporting Six Sigma Design}
+\subsection{As Supporting Six Sigma Design}99
 As detailed in the appendices, the compactness of the \textbf{Iscandar} kernel enables \textbf{complete path coverage testing} that operates in tandem with the previously established formal methods.
 \subsection{Scalability via Depth Extension}
 The \textbf{Iscandar} architecture scales by increasing the lattice depth up to two additional levels. Because the resolution time is a linear function of depth ($k \times I_{base}$), extending the lattice to $k = 4$ or $k = 5$ provides a massive increase in addressable memory volume while maintaining a strictly deterministic and predictable execution profile.
@@ -293,7 +298,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \begin{itemize}
     \item \textbf{Mechanism:} The \textit{Structural Bridge}.
     \item \textbf{Geometric Event:} \textit{Boundary Handshake} between adjacent vectors.
-    \item \textbf{Resolution:} The system constructs the span via $P + T$. The Right-Hand Lookup (RHL) of Vector A (Preamble) mates with the Left-Hand Lookup (LHL) of Vector B (Tail) to verify connectivity across the boundary \cite{polytopes}.
+    \item \textbf{Resolution:} The system constructs the span via $P + T$. The Right-Hand Lookup (RHL) of Vector A (Preamble) mates with the Left-Hand Lookup (LHL) of Vector B (Tail) to verify connectivity across the boundary, a geometric invariant enforced by these tables.
 \end{itemize}
 
     This tier represents a fractal expansion of the Level 1 logic. It treats individual rows as the atomic units of resolution, welding row-sequences to satisfy multi-row allocation requests. The Large allocator functions as a resolution engine, calculating a dynamic subset of Rows within the Plane to satisfy continuity requirements.
@@ -313,7 +318,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     
     \item \textbf{Geometric Event:} \textit{Multi-Vector Extrusion}
     
-    \item \textbf{Resolution:} The system constructs the span via $P + (m \times \mathcal{A}) + T$. The Oracle verifies the $m$ intervening words as ``Clear Rows'' ($\mathcal{A}$ nullity checks), treating the span as a single geometric object via induction \cite{polytopes}.
+    \item \textbf{Resolution:} The system constructs the span via $P + (m \times \mathcal{A}) + T$. The Oracle verifies the $m$ intervening words as ``Clear Rows'' ($\mathcal{A}$ nullity checks), treating the span as a single geometric object via induction, preserving isochronous resolution by collapsing the m-length extrusion into a occupancy check.
 \end{itemize}
 \end{description}
 
@@ -455,7 +460,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \begin{itemize}
     \item \textbf{Mechanism:}  \textit{Tripartite Join}
     \item \textbf{Geometric Event:}  \textit{Polytope Intersection}
-    \item \textbf{Resolution:} The Oracle pieces together the Right-Hand Lookahead (RHL) of the first Guard, the internal gaps of the Center Lookahead, and the Left-Hand Lookahead (LHL) of the second Guard, to verify a contiguous span of available sectors. [?]
+    \item \textbf{Resolution:} The Oracle pieces together the Right-Hand Lookahead (RHL) of the first Guard, the internal gaps of the Center Lookahead, and the Left-Hand Lookahead (LHL) of the second Guard, to verify a contiguous span of available sectors, representing a complete geometric resolution within the Oracle’s combinatorial state-space.
 \end{itemize}
 \end{description}
 
@@ -546,7 +551,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     
     \item \textbf{Geometric Event:} An \textit{Interior Locality} query.
     
-    \item \textbf{Resolution:} The 2D Oracle Table functions as a point-in-polytope calculator. The system requires only the center lookup to return the $(position, length)$ tuple \cite{topology}.
+    \item \textbf{Resolution:} The 2D Oracle Table functions as a point-in-polytope calculator. The system requires only the center lookup to return the $(position, length)$ tuple collapsing the interior search space into a single-cycle coordinate resolution as defined by the Oracle’s static manifold mapping..
 \end{itemize}
 \end{description}
     This represents the leaf-level execution of the deterministic descent. The \textbf{Oracle Center look-up table} identifies contiguous zero-bit sequences within a sector. This forms the Atomic Polytope of a search, resolving the physical bit-offset in a fixed hardware cycle.
