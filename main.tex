@@ -1211,29 +1211,24 @@ if ($tex -match $pattern) {
 \section {Project Checklist.}
 
 \section{The Bottle Opener: Use after Bootstrap.}
-This \LaTeX{} block is automatically extracted from this paper and saved as BottleOpener.ps1 by the bootstrap mechanism listed in the above Appendix A, when executed by the researcher upon this .tex file (Iscandar.tex), all APL sections in this paper will be extracted and organized in the current working directory of the Powershell prompt.
+This \LaTeX\ block is automatically extracted from this paper and saved as \texttt{BottleOpener.ps1} by the bootstrap mechanism listed in the above Appendix A. When executed by the researcher upon this .tex file (\texttt{Iscandar.tex}), all APL sections in this paper will be extracted and organized in the current working directory of the PowerShell prompt.
 
-\begin{BottleOpener}
-# Run 'BottleOpener.ps1' from a Powershell prompt.
+Run \texttt{'BottleOpener.ps1'} from a PowerShell prompt.
+
+\begin{verbatim}
 $tex = Get-Content "Iscandar.tex" -Raw
-
-$pattern = '(?s)\\begin\{Iscandar\}\[(.*?)\]' +
-           '\s*\n(.*?)\n\\end\{Iscandar\}'
-
+$pattern = '(?s)\\begin\{Iscandar\}\[(.*?)\]\{(.*?)\}(.*?)\\end\{Iscandar\}'
 $clips = [regex]::Matches($tex, $pattern)
 
 foreach ($c in $clips) {
     $f = $c.Groups[1].Value.Trim()
-    $v = $c.Groups[2].Value.Trim()
-    
+    $v = $c.Groups[3].Value.Trim()
     # PowerShell allows breaks after the pipe
-    $v | 
-    Out-File $f -Encoding utf8
-    
+    $v | Out-File $f -Encoding utf8
     Write-Host "Clipped: $f" -ForegroundColor Green
 }
 Write-Host "Iscandar Organized." -ForegroundColor Cyan
-\end{BottleOpener}
+\end{verbatim}
 
 \subsection{Project Directories}
 This \LaTeX{} block is automatically extracted from this paper and saved as Project.ps1 by the bootstrap mechanism listed in the above section 12.1, when executed by the researcher, it establishes the physical directory hierarchy for the project related to this paper.
