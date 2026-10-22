@@ -68,10 +68,6 @@
 
 \renewcommand{\thefigure}{\Alph{figure}}
 
-% 2. Fix the conflict with your kaobook/tufte style class
-\makeatletter
-\let\c@marginfig\relax
-\makeatother
 
 % !TEX program = xelatex
 \usepackage{fontspec}
@@ -959,7 +955,7 @@ To contrast, a theoretical binary buddy system was simulated for a heap size com
     \stepcounter{marginfig}
     \begin{tikzpicture}
         % --- THE MARGIN ANCHOR ---
-        \node[anchor=east, font=\bfseries] at (16.5, 7) {(\themarginfig)};
+        \node[anchor=east, font=\bfseries] at (14.5, 7) {(\themarginfig)};
 
         \begin{axis}[
             title={Theoretical Buddy System: Touches vs. Sector Occupancy},
@@ -1028,6 +1024,7 @@ For immediate demonstration: this listing can be copied directly from the LaTeX 
 
 \pagestyle{empty} % Silences the page numbers starting here
 \begin{HonestLab}
+\addcontentsline{lol}{lstlisting}{Section 11: Iscandar Laboratory Source Code}
 
 ⍝ === ISCANDAR-OZ: VOLUMETRIC LABORATORY (VER 16.4.1) ===
 ⍝ ARCHIVE VERSION: 2026-04-19
