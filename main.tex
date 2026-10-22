@@ -717,74 +717,52 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
 \subsubsection*{The Tiny Resolution ($\mathcal{A}/4 < L \le \mathcal{A}$)}
 
 \begin{description}
-    \item[Domain:] The bit-lattice spanning multiple sub-word boundaries within a single Row manifold, typically requiring the evaluation of cross-byte contiguity.
-    
-\vspace{12pt}
-\setcounter{equation}{13}
-\noindent \textbf{Summation Predicate:} 
-\begin{equation}
-    C_{\text{bits}} = \sum_{i=0}^{\mathcal{A}-1} \left( \neg b_{i} \cdot [w_{i} = 1] \right)
-    \label{eq:sum_predicate_bits}
-\end{equation}
-\begin{center}
-    \small\textbf{Tier-0 (Atomic) Bit-Level Capacity Summation}
-\end{center}
-\vspace{12pt}
-    
-    \item[Discussion:] \hfill \\
+\item[Discussion:] \hfill \\
 \begin{itemize}
-    \item \textbf{Mechanism:} The request targets the Core Shard ($S_c$) for allocations that exceed the single-byte Nano threshold but fit within a Row's width.
+    \item \textbf{Mechanism:} This targets a request in sectors exceeding the single-byte Nano threshold but still fitting within a Row's width.
     
     \item \textbf{Geometric Event:} A \textit{Bimodal Interior} query.
     
-    \item \textbf{Resolution:} To maintain determinism without a stochastic search, the system executes a two-stage probe. The resolution logic first applies the \textbf{Left Oracle} to identify an eligible run. Should that fail, the system takes a ``second bite of the apple'' by immediately applying the \textbf{Right Oracle}. This dual-pass mechanism ensures that runs straddling internal alignment boundaries are captured within a fixed, predictable execution window.
+    \item \textbf{Resolution:} The resolution logic first applies the \textbf{Left Oracle} to identify an eligible run of at least  $\mathcal{A}/4$ sectors. This polytope can be revealed by this Oracle as anywhere in the row. Should that fail, the system takes a ``second bite of the apple'' by immediately applying the \textbf{Right Oracle}. This polytope when present is revealed as always on the right hand side of the row. This enhances captures of straddles within the row.
 \end{itemize}
 \end{description}
 
-This represents the leaf-level execution of the deterministic descent. By utilizing a sequence of \textbf{Left and Right Oracle look-up tables}, the system resolves physical bit-offsets in a bounded number of cycles, effectively collapsing the search space for mid-sized atomic requests.
+The example below utilizes a sequence of \textbf{Left and Right Oracle look-up tables}, to reveal polytopes A and B respectively to seek a memory allocation of 11 sectors exactly. Polytope A shows a presence of 10 sectors, polytope B shows 11 sectors, so we use the run from Polytope B.
 
 
 % --- FIGURE: TINY ALLOCATOR (FRACTURED WELD) ---
 \begin{figure}[H]
     \centering
-    \stepcounter{marginfig}
-    \begin{tikzpicture}[x=0.42cm, y=0.42cm]
-        % --- THE MARGIN ANCHOR ---
-        \node[anchor=east, font=\bfseries] at (34, 15) {(\themarginfig)};
-
-        % --- AXES & DIMENSION LABELS ---
-        \draw[->, thick] (0,0) -- (15,0);
-        \node[anchor=north east, font=\small, text=black!80] at (15,-0.1) {Joined Position ($P$)};
-        \draw[->, thick] (0,0) -- (0,15) node[above, font=\small] {Magnitude ($M$)};
-
-        % --- THE FRACTURED BIT-LATTICE ---
-        \foreach \x in {0,1,...,4} \fill[green!25, draw=black!40] (\x,-3) rectangle (\x+1,-4);
-        \foreach \x in {5,6,...,9} \fill[green!25, draw=white] (\x,-3) rectangle (\x+1,-4);
+    \begin{tikzpicture}
+        \begin{axis}[
+            xmin=0, xmax=32,
+            ymin=0, ymax=32,
+            width=10cm,
+            height=10cm,
+            axis lines=box,
+            xtick={0, 8, 16, 24, 32},
+            ytick={0, 8, 16, 24, 32},
+            grid=major,
+            xlabel={Bit Pattern A and B of Index by Oracles},
+            ylabel={Contiguous Sector Run Length},
+            label style={font=\small}
+        ]
         
-        % Frame and Weld Point
-        \draw[thick] (0,-3) rectangle (10,-4);
-        \draw[ultra thick, red, line cap=round] (5,-2.5) -- (5,-4.5);
-        \node[below, font=\tiny, yshift=-0.5cm] at (5,-4) {TINY ALLOCATOR: FRACTURED WELD};
-
-        % --- THE MANIFOLD GEOMETRY (SUB-SECTOR POLYTOPE) ---
-        \fill[green!20, draw=green!60, ultra thick, opacity=0.9] (0,0) -- (10,0) -- (0,10) -- cycle;
-        \draw[dashed, red, thick] (5,0) -- (5,5); 
+        % Triangle A (10x10)
+        \addplot[thick, fill=red!20] coordinates {(8,0) (18,0) (8,10) (8,0)};
+        \node at (axis cs:11,2.5) {A};
         
-        \node[green!80!black, font=\bfseries\tiny, align=center] at (3.5,3) {FRACTURED\\WELD\\POLYTOPE};
-        \node[green!60!black, font=\tiny, rotate=-45] at (6.5,5.5) {$P+M=10$};
+        % Triangle C (11x11)
+        \addplot[thick, fill=green!20] coordinates {(21,0) (32,0) (21,11)  (21,0)};
+        \node at (axis cs:24.5,2.5) {B};
+        \end{axis}
 
-        % --- TICKS & NUMERICAL LABELS ---
-        \draw[thick] (0,0.2) -- (0,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {0};
-        \draw[thick] (5,0.2) -- (5,-0.2) node[below=14pt, red, font=\tiny, fill=white, inner sep=1pt] {5};
-        \draw[thick] (10,0.2) -- (10,-0.2) node[below=14pt, font=\tiny, fill=white, inner sep=1pt] {10};
-        \draw[thick] (0.2,10) -- (-0.2,10) node[left=2pt, font=\tiny] {10};
+        % --- MARGIN MARKER (E) ---
+        % Positions the label at the top right of the bounding box
+        \node[anchor=north west, font=\bfseries\Large] at (current axis.north east) {\hspace{5.0cm}(D)};
     \end{tikzpicture}
-    \caption{Tiny Allocator: Fractured Weld Polytope and Bit-Lattice Resolution.}
-    \label{fig:tiny_allocator_fracture}
+    \caption*{Tiny mode seed polytopes A and B from indexing Left and Right Oracles.}
 \end{figure}
-
-\FloatBarrier %
-
 
 \subsubsection*{The Nano Resolution ($L \le \mathcal{A}/4$)}
 
@@ -795,11 +773,13 @@ This represents the leaf-level execution of the deterministic descent. By utiliz
 \begin{itemize}
     \item \textbf{Mechanism:} This stage isolates a single byte-aligned segment of the Row to extract a \textit{Seed Polytope}. It ignores higher-level boundary conditions to focus on high-speed intra-byte contiguity.
     
-    \item \textbf{Geometric Event:} An \textit{Atomic Intersection}.
+    \item \textbf{Geometric Event:} An \textit{Intersection of Atomic (Seed) Polytopes}.
     
-    \item \textbf{Resolution:} The \textbf{Center Oracle} intersects between the current Row's bit-pattern and the requested length $L$, mapping the pattern to an exact fit of available sectors, obtaining a seed polytope of 1 to 8 bits (where multiple possibilies are available as shown in Figure E) to be joined with other polytopes later.
+    \item \textbf{Resolution:} The \textbf{Center Oracle} intersects between the current Row's bit-pattern and the requested length $L$, mapping the pattern to an exact fit of available sectors, obtaining a seed polytope of 1 to 8 bits (with multiple possibilities as shown in Figure E) to be joined with other polytopes later.
 \end{itemize}
 \end{description}
+
+
 
 \begin{figure}[H]
     \centering
