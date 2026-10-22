@@ -69,7 +69,6 @@
 % 5. Dynamic Table of Listings (LOL) Custom Engine
 % =========================================================================
 \newcounter{iscandarnum}
-\newcommand{\listiscandarname}{List of APL Source Listings}
 
 % System level wrapper to unlock protection on the '@' character safely
 \makeatletter
@@ -1381,7 +1380,7 @@ for ([double]$d=0; $d -lt 4gb; $d++) {
 $W.Close(); $S_i.Close()
 \end{Iscandar}
 
-\section{Dyalog APL Laboratory Listings.}
+\section{APL Laboratory Listings.}
 
 \begin{Iscandar}[Welcome.apl]{src:welcome}
 :Namespace Welcome
@@ -1420,7 +1419,7 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
-\begin{Iscandar}[Support.apl]{}
+\begin{Iscandar}[Support.apl]{src:support}
 :Namespace STATUS
     :Access Public Shared
     :Field Public Shared ReadOnly SUCCESS    ← 0
@@ -1454,8 +1453,6 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
-\subsection{APL Definitions}
-This listing is the APL implementation of the basic structure of Section 2.
 \begin{Iscandar}[Definitions.apl]{}
 :Namespace CONSTANTS
     :Access Public Shared
