@@ -1683,11 +1683,64 @@ To contrast, a theoretical binary buddy system was simulated for a heap size com
     language=APL % Note: standard listings APL support varies; ttfamily preserves glyphs
 }
 
-\clearpage % Ensures the last page of the listing also has no number
+\clearpage % Ensures the last page of the listing also has no number\begin{thebibliography}{99}
 
-\section{Iscandar: Laboratory Source Code}
+\begin{thebibliography}{99}
 
-\subsection{Bootstrap Mechanism (see Section 1, Batteries Included!)}
+\bibitem{1} P. R. Wilson, M. S. Johnstone, M. Neely, and D. Boles. \textit{Dynamic Storage Allocation: A Survey and Critical Review}. International Workshop on Memory Management, Springer, 1995. This survey establishes the baseline for traditional memory allocation challenges, providing a foil for the deterministic performance of the Iscandar lattice.
+
+\bibitem{2} D. E. Knuth. \textit{The Art of Computer Programming, Volume 1: Fundamental Algorithms}. Addison-Wesley, 3rd Edition, 1997. This foundational text is cited to ground the bit-block management principles and deterministic axioms used in the lattice design.
+
+\bibitem{3} J. S. Vitter. \textit{External Memory Algorithms and Data Structures}. ACM Computing Surveys, Vol. 33, No. 2, 2001. This reference provides the theoretical basis for distributing entropy across hierarchical levels to ensure search resolution remains constant.
+
+\bibitem{4} K. C. Knowlton. \textit{A Fast Storage Allocator}. Communications of the ACM, Vol. 8, No. 10, 1965. This citation anchors the optimization of branching factors relative to processor word-width, a critical alignment for the Iscandar buddy system.
+
+\bibitem{5} M. A. Bender and M. Farach-Colton. \textit{The B-Level: A Cache-Oblivious Data Structure}. Proceedings of the 41st Annual Symposium on Foundations of Computer Science, 2000. This work formalizes the instruction count ($\iota$) required to resolve memory coordinates within a hierarchical sub-lattice.
+
+\bibitem{6} T. J. Anderson. \textit{The Efficiency of Bit-Map Indexing}. Statistical and Scientific Database Management, Vol. 3, 1987. This citation provides mathematical justification for single-cycle table lookups when the occupancy sum aligns with a power of 2.
+
+\bibitem{7} J. M. Robson. \textit{An Estimating of the Store Size Necessary for Dynamic Storage Allocation}. Journal of the ACM, Vol. 18, No. 3, 1971. This reference establishes the $O(\log N)$ complexity bounds of stochastic allocators, against which the Iscandar architecture’s $O(1)$ performance is compared.
+
+\bibitem{8} E. D. Jensen, C. D. Locke, and H. Tokuda. \textit{A Time-Driven Scheduling Model for Real-Time Operating Systems}. Proceedings of the IEEE Real-Time Systems Symposium, 1985. This paper defines temporal jitter in real-time systems, validating the need for the Iscandar's deterministic latency.
+
+\bibitem{9} T. A. Standish. \textit{Data Structure Techniques}. Addison-Wesley, 1980. This text is used to explain high-entropy states and fragmentation walls that occur as heap utilization increases in conventional systems.
+
+\bibitem{10} I. Puaut. \textit{Real-Time Performance of Dynamic Memory Allocators}. Proceedings of the 14th Euromicro Conference on Real-Time Systems, 2002. This work is cited to highlight the temporal spikes typical of coalescence algorithms, which the Iscandar architecture avoids through symmetric resolution.
+
+\bibitem{11} D. E. Knuth. \textit{The Art of Computer Programming, Volume 3: Sorting and Searching}. Addison-Wesley, 2nd Edition, 1998. This reference provides the $O(N)$ saturation model used to demonstrate the catastrophic failure of linear search as memory pools approach 100\% utilization.
+
+\bibitem{12} K. C. Knowlton. \textit{Methods for Data Structure Management in Hierarchical Systems}. Bell System Technical Journal, 1965. This citation acknowledges the early power-of-two partitioning schemes that preceded the Iscandar’s high-radix lattice.
+
+\bibitem{13} D. E. Knuth. \textit{Fundamental Algorithms (The Buddy System Formalization)}. Addison-Wesley, 3rd Edition, 1997. This formalization of binary buddy system constraints serves to differentiate the Iscandar’s constant-depth tree from logarithmic search trees.
+
+\bibitem{14} N. Karmarkar. \textit{A New Polynomial-Time Algorithm for Linear Programming}. Combinatorica, Vol. 4, No. 4, 1984. This reference provides the analogy for Interior Point Methods, justifying the use of the Occupancy Limit ($\Phi$) to stay within the feasible region of the memory manifold.
+
+\bibitem{15} B. S. Everitt. \textit{The Cambridge Dictionary of Statistics}. Cambridge University Press, 1998. This statistical reference defines the Coefficient of Variation (CV) used to empirically measure the system’s isochronous performance.
+
+\end{thebibliography}
+
+% --- FORMAL MANUSCRIPT TERMINATION MARKER ---
+\vspace{3em}
+\noindent\hrulefill
+\vspace{0.5em}
+
+\begin{center}
+  \small\itshape
+  This concludes the formal manuscript. The following appendix contains the complete, 
+  self-bootstrapping Dyalog APL source code listings attached for execution 
+  and laboratory verification purposes.
+\end{center}
+
+\vspace{0.5em}
+\noindent\hrulefill
+
+% =========================================================================
+% APPENDIX A: GLOBAL CONFIGURATION PASSTHROUGH
+% =========================================================================
+\newpage
+\appendix % <--- This switch forces all following \sections to become Appendices
+
+\section{Bootstrap Mechanism (see Section 1, Batteries Included!)}
 
 A researcher can manually copy the following block into a Windows 11 Powershell terminal to extract the \texttt{BottleOpener} tool (see section 12.2, below) for organizing the code base for execution by any community (unregistered) version of the Dyalog 20 64-bit Unicode interpreter for APL.
 
@@ -1700,8 +1753,10 @@ if ($tex -match $pattern) {
 }
 \end{verbatim}
 
-\subsection{The Bottle Opener}
-This \LaTeX{} block is automatically extracted from this paper and saved as BottleOpener.ps1 by the bootstrap mechanism listed in the above section 12.1, when executed by the researcher upon this .tex file (Iscandar.tex), all APL sections in this paper will be extracted and organized in the current working directory of the Powershell prompt.
+\section {Project Checklist.}
+
+\section{The Bottle Opener: Use after Bootstrap.}
+This \LaTeX{} block is automatically extracted from this paper and saved as BottleOpener.ps1 by the bootstrap mechanism listed in the above Appendix A, when executed by the researcher upon this .tex file (Iscandar.tex), all APL sections in this paper will be extracted and organized in the current working directory of the Powershell prompt.
 
 \begin{BottleOpener}
 # Run 'BottleOpener.ps1' from a Powershell prompt.
@@ -1753,34 +1808,9 @@ foreach ($dir in $subDirs) {
 Write-Host "Iscandar Project Verified." -ForegroundColor Cyan
 \end{Iscandar}
 
-\subsection{Project Checklist}
-TBD
+\section{Oracle Manufacture}
 
-\section{Project Support}
-The following components support the project for this paper: 
-
-\subsection{Error Status}
-
-\begin{Iscandar}[Support.apl]
-:Namespace STATUS
-    :Access Public Shared
-    :Field Public Shared ReadOnly SUCCESS    ← 0
-    :Field Public Shared ReadOnly MARK       ← 1
-    :Field Public Shared ReadOnly UNMARK     ← 2
-    :Field Public Shared ReadOnly FAIL_NULL   ← 3
-    :Field Public Shared ReadOnly FAIL_NANO   ← 4
-    :Field Public Shared ReadOnly FAIL_TINY   ← 5
-    :Field Public Shared ReadOnly FAIL_SMALL  ← 6
-    :Field Public Shared ReadOnly FAIL_LARGE  ← 7
-    :Field Public Shared ReadOnly FAIL_HUGE   ← 8
-    :Field Public Shared ReadOnly FAIL_CUBE   ← 9
-:EndNamespace
-\end{Iscandar}
-
-
-\subsection{Oracle Manufacture}
-
-\subsubsection{Center Oracle}
+\subsection{Center Oracle}
    
 \begin{Iscandar}[OracleCenter.ps1]
 # Manufactures the 38.6GB Center Oracle Blob
@@ -1837,7 +1867,7 @@ $Stream.Close()
 Write-Host "Iscandar Center Oracle Manufacture: Complete."
 \end{Iscandar}
 
-\subsubsection{Left Oracle}
+\subsection{Left Oracle}
 \begin{Iscandar}[OracleLeft.ps1]
 # OracleLeft.ps1 (Max 40 Chars)
 # Logic: Trailing Run (Ends at LSB)
@@ -1874,7 +1904,7 @@ for ([double]$d=0; $d -lt 4gb; $d++) {
 $W.Close(); $S_i.Close()
 \end{Iscandar}
 
-\subsubsection{Right Oracle}
+\subsection{Right Oracle}
 
 \begin{Iscandar}[OracleRight.ps1]
 # OracleRight.ps1 (Max 40 Chars)
@@ -1911,6 +1941,23 @@ for ([double]$d=0; $d -lt 4gb; $d++) {
 $W.Close(); $S_i.Close()
 \end{Iscandar}
 
+\section{Dyalog APL Laboratory Listings.}
+
+\begin{Iscandar}[Support.apl]
+:Namespace STATUS
+    :Access Public Shared
+    :Field Public Shared ReadOnly SUCCESS    ← 0
+    :Field Public Shared ReadOnly MARK       ← 1
+    :Field Public Shared ReadOnly UNMARK     ← 2
+    :Field Public Shared ReadOnly FAIL_NULL   ← 3
+    :Field Public Shared ReadOnly FAIL_NANO   ← 4
+    :Field Public Shared ReadOnly FAIL_TINY   ← 5
+    :Field Public Shared ReadOnly FAIL_SMALL  ← 6
+    :Field Public Shared ReadOnly FAIL_LARGE  ← 7
+    :Field Public Shared ReadOnly FAIL_HUGE   ← 8
+    :Field Public Shared ReadOnly FAIL_CUBE   ← 9
+:EndNamespace
+\end{Iscandar}
 
 \begin{Iscandar}[MarkPlanes.apl]
 :Namespace WrappedPointer
@@ -3568,37 +3615,5 @@ $W.Close(); $S_i.Close()
 
 \clearpage % Ensures the last page of the listing also has no number
 
-\begin{thebibliography}{99}
 
-\bibitem{1} P. R. Wilson, M. S. Johnstone, M. Neely, and D. Boles. \textit{Dynamic Storage Allocation: A Survey and Critical Review}. International Workshop on Memory Management, Springer, 1995. This survey establishes the baseline for traditional memory allocation challenges, providing a foil for the deterministic performance of the Iscandar lattice.
-
-\bibitem{2} D. E. Knuth. \textit{The Art of Computer Programming, Volume 1: Fundamental Algorithms}. Addison-Wesley, 3rd Edition, 1997. This foundational text is cited to ground the bit-block management principles and deterministic axioms used in the lattice design.
-
-\bibitem{3} J. S. Vitter. \textit{External Memory Algorithms and Data Structures}. ACM Computing Surveys, Vol. 33, No. 2, 2001. This reference provides the theoretical basis for distributing entropy across hierarchical levels to ensure search resolution remains constant.
-
-\bibitem{4} K. C. Knowlton. \textit{A Fast Storage Allocator}. Communications of the ACM, Vol. 8, No. 10, 1965. This citation anchors the optimization of branching factors relative to processor word-width, a critical alignment for the Iscandar buddy system.
-
-\bibitem{5} M. A. Bender and M. Farach-Colton. \textit{The B-Level: A Cache-Oblivious Data Structure}. Proceedings of the 41st Annual Symposium on Foundations of Computer Science, 2000. This work formalizes the instruction count ($\iota$) required to resolve memory coordinates within a hierarchical sub-lattice.
-
-\bibitem{6} T. J. Anderson. \textit{The Efficiency of Bit-Map Indexing}. Statistical and Scientific Database Management, Vol. 3, 1987. This citation provides mathematical justification for single-cycle table lookups when the occupancy sum aligns with a power of 2.
-
-\bibitem{7} J. M. Robson. \textit{An Estimating of the Store Size Necessary for Dynamic Storage Allocation}. Journal of the ACM, Vol. 18, No. 3, 1971. This reference establishes the $O(\log N)$ complexity bounds of stochastic allocators, against which the Iscandar architecture’s $O(1)$ performance is compared.
-
-\bibitem{8} E. D. Jensen, C. D. Locke, and H. Tokuda. \textit{A Time-Driven Scheduling Model for Real-Time Operating Systems}. Proceedings of the IEEE Real-Time Systems Symposium, 1985. This paper defines temporal jitter in real-time systems, validating the need for the Iscandar's deterministic latency.
-
-\bibitem{9} T. A. Standish. \textit{Data Structure Techniques}. Addison-Wesley, 1980. This text is used to explain high-entropy states and fragmentation walls that occur as heap utilization increases in conventional systems.
-
-\bibitem{10} I. Puaut. \textit{Real-Time Performance of Dynamic Memory Allocators}. Proceedings of the 14th Euromicro Conference on Real-Time Systems, 2002. This work is cited to highlight the temporal spikes typical of coalescence algorithms, which the Iscandar architecture avoids through symmetric resolution.
-
-\bibitem{11} D. E. Knuth. \textit{The Art of Computer Programming, Volume 3: Sorting and Searching}. Addison-Wesley, 2nd Edition, 1998. This reference provides the $O(N)$ saturation model used to demonstrate the catastrophic failure of linear search as memory pools approach 100\% utilization.
-
-\bibitem{12} K. C. Knowlton. \textit{Methods for Data Structure Management in Hierarchical Systems}. Bell System Technical Journal, 1965. This citation acknowledges the early power-of-two partitioning schemes that preceded the Iscandar’s high-radix lattice.
-
-\bibitem{13} D. E. Knuth. \textit{Fundamental Algorithms (The Buddy System Formalization)}. Addison-Wesley, 3rd Edition, 1997. This formalization of binary buddy system constraints serves to differentiate the Iscandar’s constant-depth tree from logarithmic search trees.
-
-\bibitem{14} N. Karmarkar. \textit{A New Polynomial-Time Algorithm for Linear Programming}. Combinatorica, Vol. 4, No. 4, 1984. This reference provides the analogy for Interior Point Methods, justifying the use of the Occupancy Limit ($\Phi$) to stay within the feasible region of the memory manifold.
-
-\bibitem{15} B. S. Everitt. \textit{The Cambridge Dictionary of Statistics}. Cambridge University Press, 1998. This statistical reference defines the Coefficient of Variation (CV) used to empirically measure the system’s isochronous performance.
-
-\end{thebibliography}
 \end{document}
