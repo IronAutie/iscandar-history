@@ -1123,7 +1123,7 @@ This \LaTeX{} block is automatically extracted from this paper and saved as Proj
 
 \begin{Iscandar}[Project.ps1]
 # Run 'Project.ps1' from a Powershell prompt
-$root = "Iscandar_Lab"
+$root = "$env:USERPROFILE\Documents\Iscandar_Lab"
 $subDirs = @(
     "Bin",        # Target for APL research artifacts
     "Oracles",    # Destination for LHL/RHL/Center LUTs
