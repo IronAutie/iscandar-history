@@ -653,6 +653,33 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     \item[Discussion:] The Cube Scale Allocator computes the unique  \textbf{``Gatekeeper''} sector count of the architecture. It provides the primary fast-fail heuristic for the system; if a request $(S, M)$ is determined to be non-admissible at this tier, the algorithm immediately terminates without initiating a descent. This makes the registrar the most efficient filter in the hierarchy, ensuring that the cost of coordinate resolution is only paid when success is mathematically guaranteed.
 \end{description}
 
+\begin{Iscandar}[HeuristicCube.apl]
+:Namespace Heuristic
+    (⎕IO ⎕ML) ← 0 1
+
+    ∇ R ← Cube s;P;p;r;idx;v
+      :Access Public Shared
+      ⍝ Full-Manifold Saturation Path
+      ⍝ s: Must be exactly 32768
+      
+      :If s ≠ 32768
+          R ← 1 ⍬
+      :ElseIf ##.Cube.count ≠ 0
+          R ← 1 ⍬
+      :Else
+          ⍝ 1. Origin coordinates and Real flag
+          (p r idx v) ← 0 0 0 0
+          
+          ⍝ 2. Pack the 32-bit Pointer word
+          P ← ##.WrappedPointer.Wrap p r idx s v
+          
+          ⍝ 3. Return (Status, Pointer) Tuple
+          R ← (##.WrappedPointer.Mark P) P
+      :EndIf
+    ∇
+:EndNamespace
+\end{Iscandar}
+
 \subsection*{Polytope Formation At Row and Plane Levels}
 
 \subsubsection*{The Huge Resolution ($\mathcal{A}^2 < L < \mathcal{A}^3$) }
@@ -1662,6 +1689,20 @@ $W.Close(); $S_i.Close()
 
 :EndNamespace
 \end{Iscandar}
+
+\begin{Iscandar}[HeuristicNull.apl]
+:Namespace Heuristic
+    (⎕IO ⎕ML) ← 0 1
+
+    ∇ R ← Null s
+      :Access Public Shared
+      ⍝ Default failure path: returns tuple (Status, NullPointer)
+      R ← 1 ⍬
+    ∇
+
+:EndNamespace
+\end{Iscandar}
+
 
 \clearpage % Ensures the last page of the listing also has no number
 
