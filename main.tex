@@ -731,7 +731,7 @@ This represents the leaf-level execution of the deterministic descent. By utiliz
 \end{itemize}
 \end{description}
 
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
     \begin{tikzpicture}
         \begin{axis}[
@@ -753,16 +753,19 @@ This represents the leaf-level execution of the deterministic descent. By utiliz
         
         % Triangle B (6x6)
         \addplot[thick, fill=red!20] coordinates {(8,0) (14,0) (8,6) (8,0)};
-        \node at (axis cs:10,2) {B};
+        \node at (axis cs:9.3,2) {B};
         
         % Triangle C (8x8)
         \addplot[thick, fill=green!20] coordinates {(16,0) (24,0) (16,8) (16,0)};
         \node at (axis cs:18.5,2.5) {C};
         \end{axis}
-    \end{tikzpicture}
-    \caption*{Figure E: Nano mode seed polytopes from indexing Center Oracle.}
-\end{figure}
 
+        % --- MARGIN MARKER (E) ---
+        % Positions the label at the top right of the bounding box
+        \node[anchor=north west, font=\bfseries\Large] at (current axis.north east) {\hspace{5.0cm}(E)};
+    \end{tikzpicture}
+    \caption*{Nano mode seed polytopes from indexing Center Oracle.}
+\end{figure}
 
 \section{Description of Instruction Groups}
 
