@@ -254,12 +254,14 @@ We show here how non-deterministic latency inherent in traditional memory manage
     \item[Atomic Polytope] The leaf-level search polytope within a Row manifold (Level 0). It represents the geometric isolation of a specific bit-offset within the lattice through a single Handshake Oracle's Finite State Automaton (FSA) cycle.
     
     \item[Coefficient of Variation (CV)] A statistical measure of the dispersion of data points. In the \textbf{Iscandar} context, having a CV of zero would in theory confirm that the instruction path length is identical across all execution cycles. [15]
+
+    \item[Isochronous] The property of an algorithm to execute each time in the same amount of time regardless of input or current state, within a permissible variance. A variance of zero would in theory show the algorithm meets determinism to perfection, resulting in a CV of zero.
     
     \item[Contiguity Guarantee] The formal assurance (Section 2.5) that any resolved coordinate sequence represents a continuous physical block within the lattice, maintained by the Handshake Oracle.
     
     \item[Global Registrar] The Level 3 (Cube Scale) apex of the hierarchy. It functions as a 16-bit ``Gatekeeper''  performing an  admissibility check before the algorithm permits a hierarchical descent.
     
-    \item[Handshake Oracle (LHL/RHL/Center)] A Finite State Automaton, being a precomputed body of solutions used at the Tiny (Level 0) and Small (Level 1) allocator levels to bridge ``fractured'' sequences between sectors. It utilizes Left-Hand Lookahead (LHL), Right-Hand Lookahead (RHL) and Center Lookahead tables to weld disparate fragments into a contiguous magnitude. In microcontroller implementations these are laid out as ROM tables. 
+    \item[Handshake Oracle (LHL/RHL/Center)] "Oracle" for short, a Finite State Automaton, being a precomputed body of solutions used at the Tiny (Level 0) and Small (Level 1) allocator levels to bridge ``fractured'' sequences between sectors. It uses Left-Hand Lookahead (LHL), Right-Hand Lookahead (RHL) and Center Lookahead tables to weld adjacent fragments into a contiguous magnitude. In microcontroller implementations these are laid out as ROM tables. 
     
     \item[Polytope Formation] The visual representation of the admissible search space within the lattice. Each hierarchical tier (Cube, Plane, Row) can manifest polytopes that collapse as memory occupancy increases.
     
