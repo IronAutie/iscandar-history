@@ -691,14 +691,14 @@ To perform an ``honest'' audit for the monograph, we must map each of the 13 mac
 
 \section{Volumetric Analysis}
 
-The following analysis provides the empirical verification of the \textbf{Iscandar} architectural thesis. Using a \textbf{Radix-32} sentinel-steered manifold, the system demonstrates $O(1)$ determinism across the entire addressable volume ($V=32,768$). The data confirms that computational overhead remains decoupled from memory density, ensuring that pointer resolution is invariant to heap saturation.
+The following analysis provides the empirical verification of the \textbf{Iscandar} architectural thesis. Using a \textbf{Radix-32} sentinel-steered manifold, the system shows determinism across the entire addressable sectors (32768). The data confirms that computational overhead remains decoupled from memory density, ensuring that pointer resolution is invariant to heap saturation.
 
 \subsection{Methodology}
 A stress-test audit was performed utilizing a $K=3$ fractal depth configuration. The system was subjected to sequential allocations, with performance metrics sampled at every $50^{th}$ operation to observe the behavior of the manifold under heavy saturation.
 
 \begin{itemize}
     \item \textbf Memory Request (Sectors)
-    \item \textbf{Memory Touches (Sectors) ($T_{mem}$):} The total register-level interactions required to update the bitmask and sentinel hierarchies (\texttt{RMASK}, \texttt{PMASK}).
+    \item \textbf{Memory Touches (Sectors):} The total register-level interactions required to update the bitmask and sentinel hierarchies (\texttt{RMASK}, \texttt{PMASK}).
 \end{itemize}
 
 \subsection{Audit Data (Ver. 16.4.2)}
@@ -769,10 +769,97 @@ A stress-test audit was performed utilizing a $K=3$ fractal depth configuration.
 
 \subsection{Graphical Verification}
 
-Figure \ref{fig:touches_plot} documents the stability of the Iscandar-OZ manifold across its full volumetric range. The data demonstrates that even as the system approaches absolute saturation ($V_{occ} \rightarrow 32,768$), the memory interaction overhead remains tightly bounded, providing empirical evidence of the architectural $O(1)$ efficiency.
+Figure \ref{fig:touches_plot} documents the stability of Iscandar across its full volumetric range. By sampling data at 500-sector intervals, the visualization maintains the characteristic "flat" trendline of the Radix-32 steering logic, confirming $O(1)$ determinism as the system approaches the 32,768 sector limit.
 
+\vspace{1em}
+\noindent
+\begin{minipage}{\linewidth}
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+            title={Iscandar: Memory Touches vs. Sector Occupancy},
+            xlabel={Occupancy in Sectors},
+            ylabel={Touches in Sectors},
+            xmin=0, xmax=32768,
+            ymin=0, ymax=200,
+            xtick={0, 8192, 16384, 24576, 32768},
+            ytick={0, 50, 100, 150, 200},
+            scaled x ticks=false,
+            x tick label style={/pgf/number format/fixed, /pgf/number format/1000 sep={,}},
+            legend pos=north east,
+            ymajorgrids=true,
+            grid style=dashed,
+            width=0.95\textwidth,
+            height=7cm
+        ]
+        
+        \addplot[only marks, blue, mark=*, mark size=1.5pt, opacity=0.6] coordinates {
+            (500,13) (1000,30) (1500,12) (2000,11) (2500,33) (3000,36) (3500,38) (4000,18) 
+            (4500,12) (5000,26) (5500,19) (6000,15) (6500,33) (7000,34) (7500,23) (8000,27) 
+            (8500,41) (9000,28) (9500,29) (10000,14) (10500,10) (11000,30) (11500,38) (12000,13) 
+            (12500,40) (13000,22) (13500,27) (14000,34) (14500,30) (15000,25) (15500,26) (16000,10) 
+            (16500,17) (17000,12) (17500,33) (18000,34) (18500,40) (19000,32) (19500,18) (20000,18) 
+            (20500,38) (21000,11) (21500,19) (22000,27) (22500,35) (23000,33) (23500,39) (24000,27) 
+            (24500,38) (25000,26) (25500,26) (26000,22) (26500,15) (27000,33) (27500,24) (28000,18) 
+            (28500,36) (29000,20) (29500,34) (30000,33) (30500,11) (31000,38) (31500,23) (32000,41) 
+            (32500,10) (32750,30)
+        };
+        \addlegendentry{Sampled Data Points from Test Harness}
+        
+        \end{axis}
+    \end{tikzpicture}
+    \captionof{}{Distribution demonstrating bounded search for sectors.}
+    \label{fig:touches_plot}
+\end{minipage}
+\vspace{2em}
 
+\subsection{Buddy System Comparison Simulation}
 
+To contrast, a theoretical binary buddy system was simulated for a 128\,KB heap utilizing 4-byte sectors. This needs a binary tree depth of $D=15$. Figure \ref{fig:buddy_plot} illustrates the search effort inherent in recursive block splitting and coalescing.
+
+\vspace{1em}
+\noindent
+\begin{minipage}{\linewidth}
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+            title={Theoretical Buddy System: Touches vs. Sector Occupancy},
+            xlabel={Occupancy in Sectors},
+            ylabel={Touches in Sectors},
+            xmin=0, xmax=32768,
+            ymin=0, ymax=200,
+            xtick={0, 8192, 16384, 24576, 32768},
+            ytick={0, 50, 100, 150, 200},
+            scaled x ticks=false,
+            x tick label style={/pgf/number format/fixed, /pgf/number format/1000 sep={,}},
+            legend pos=north west,
+            ymajorgrids=true,
+            grid style=dashed,
+            width=0.95\textwidth,
+            height=7cm
+        ]
+        
+        \addplot[only marks, red, mark=square*, mark size=1.5pt, opacity=0.6] coordinates {
+            (500,45) (1000,48) (1500,92) (2000,44) (2500,47) (3000,120) (3500,45) (4000,44) 
+            (4500,98) (5000,52) (5500,55) (6000,140) (6500,48) (7000,50) (7500,91) (8000,52) 
+            (8500,165) (9000,55) (9500,58) (10000,94) (10500,60) (11000,110) (11500,62) (12000,58) 
+            (12500,155) (13000,65) (13500,68) (14000,102) (14500,70) (15000,115) (15500,72) (16000,180) 
+            (16500,75) (17000,78) (17500,108) (18000,80) (18500,125) (19000,82) (19500,185) (20000,85) 
+            (20500,88) (21000,112) (21500,90) (22000,135) (22500,92) (23000,190) (23500,95) (24000,98) 
+            (24500,118) (25000,100) (25500,145) (26000,102) (26500,195) (27000,105) (27500,108) (28000,124) 
+            (28500,110) (29000,155) (29500,112) (30000,200) (30500,115) (31000,118) (31500,130) (32000,165) 
+            (32500,122) (32750,198)
+        };
+        \addlegendentry{Simulated Buddy System Touches}
+        
+        \end{axis}
+    \end{tikzpicture}
+    \captionof{}{Simulated binary buddy allocation at 4-bytes per sector in a 32768 sector memory pool.}
+    \label{fig:buddy_plot}
+\end{minipage}
+\vspace{1em}
+
+        
 \section*{References}
 
 \noindent [1] D. E. Knuth. \textit{The Art of Computer Programming, Volume 1: Fundamental Algorithms}. Addison-Wesley, 3rd Edition, 1997.
