@@ -178,7 +178,6 @@ The .tex source for this manuscript functions as a self-organizing research exam
 
 \subsubsection{The Welcome Example.}
 
-\thispagestyle{empty}
 \begin{Iscandar}[Welcome.apl]
 :Namespace Welcome
 
@@ -313,7 +312,6 @@ This listing is the APL implementation of the basic structure of Section 2.
 :EndNamespace
 \end{Iscandar}
 
-\thispagestyle{empty}
 \begin{Iscandar}[Iscandar.apl]
 :Namespace Iscandar
 
@@ -744,7 +742,6 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     \item[Discussion:] The Cube Scale Allocator computes the unique  \textbf{``Gatekeeper''} sector count of the architecture. It provides the primary fast-fail heuristic for the system; if a request $(S, M)$ is determined to be non-admissible at this tier, the algorithm immediately terminates without initiating a descent. This makes the registrar the most efficient filter in the hierarchy, ensuring that the cost of coordinate resolution is only paid when success is mathematically guaranteed.
 \end{description}
 
-\thispagestyle{empty}
 \begin{Iscandar}[HeuristicCube.apl]
 :Namespace Heuristic
     :Namespace Cube
@@ -1093,7 +1090,6 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
     \label{fig:small_allocator_bit_join}
 \end{figure}
 
-\pagenumbering{gobble}
 \begin{Iscandar}[HeuristicSmall.apl]
 :Namespace Heuristic
   :Namespace HeuristicSmall
@@ -1141,7 +1137,7 @@ This section describes how \textbf{Iscandar} resolves memory requests by interse
   :EndNamespace
 :EndNamespace
 \end{Iscandar}
-\thispagestyle{empty}
+
 
 \subsection*{Polytope Formation Within Row}
 
@@ -1212,7 +1208,6 @@ This represents the leaf-level execution of the deterministic descent. By utiliz
     \label{fig:tiny_allocator_fracture}
 \end{figure}
 
-\pagenumbering{gobble}
 \begin{Iscandar}[HeuristicTiny.apl]
 :Namespace Heuristic
   :Namespace HeuristicTiny
@@ -1258,7 +1253,7 @@ This represents the leaf-level execution of the deterministic descent. By utiliz
   :EndNamespace
 :EndNamespace
 \end{Iscandar}
-\thispagestyle{empty}
+
 
 \subsubsection*{The Nano Resolution ($L \le \mathcal{A}/4$)}
 
@@ -1311,7 +1306,6 @@ This represents the leaf-level execution of the deterministic descent. By utiliz
     \caption*{Nano mode seed polytopes from indexing Center Oracle.}
 \end{figure}
 
-\pagenumbering{gobble}
 \begin{Iscandar}[HeuristicNano.apl]
 :Namespace Heuristic
   :Namespace HeuristicNano
@@ -1353,7 +1347,7 @@ This represents the leaf-level execution of the deterministic descent. By utiliz
   :EndNamespace
 :EndNamespace
 \end{Iscandar}
-\thispagestyle{empty}
+
 
 \section{Description of Instruction Groups}
 
@@ -1868,7 +1862,7 @@ for ([double]$d=0; $d -lt 4gb; $d++) {
 $W.Close(); $S_i.Close()
 \end{Iscandar}
 
-\thispagestyle{empty}
+
 \begin{Iscandar}[MarkPlanes.apl]
 :Namespace WrappedPointer
 
@@ -1917,7 +1911,7 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
-\thispagestyle{empty}
+
 
 \begin{Iscandar}[UnMarkPlanes.apl]
 :Namespace WrappedPointer
@@ -1967,7 +1961,6 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
-\thispagestyle{empty}
 \begin{Iscandar}[MarkSingleRow.apl]
 :Namespace WrappedPointer
 
@@ -2007,7 +2000,6 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
-\thispagestyle{empty}
 \begin{Iscandar}[UnMarkSingleRow.apl]
 :Namespace WrappedPointer
 
@@ -2048,7 +2040,6 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
-\thispagestyle{empty}
 \begin{Iscandar}[MarkRows.apl]
 :Namespace WrappedPointer
 
@@ -2109,7 +2100,6 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
-\thispagestyle{empty}
 \begin{Iscandar}[UnMarkRows.apl]
 :Namespace WrappedPointer
 
@@ -2170,7 +2160,6 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
-\thispagestyle{empty}
 \begin{Iscandar}[MarkFirstRow]
 :Namespace WrappedPointer
 
@@ -2208,7 +2197,6 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
-\thispagestyle{empty}
 \begin{Iscandar}[UnMarkFirstRow.apl]
 :Namespace WrappedPointer
 
@@ -2247,7 +2235,6 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
-\thispagestyle{empty}
 \begin{Iscandar}[MarkFinalRow.apl]
 :Namespace WrappedPointer
 
@@ -2285,7 +2272,6 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
-\thispagestyle{empty}
 \begin{Iscandar}[UnMarkFinalRow.apl]
 :Namespace WrappedPointer
 
@@ -2324,7 +2310,6 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
-\thispagestyle{empty}
 \begin{Iscandar}[Mark.apl]
 :Namespace WrappedPointer
 
@@ -2361,7 +2346,6 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
-\thispagestyle{empty}
 \begin{Iscandar}[UnMark.apl]
 :Namespace WrappedPointer
 
@@ -2411,7 +2395,6 @@ $W.Close(); $S_i.Close()
 :EndNamespace
 \end{Iscandar}
 
-\pagenumbering{gobble}
 \begin{Iscandar}[PlanesDriver.apl]
 :Namespace PlanesDriver
 
@@ -2584,9 +2567,7 @@ $W.Close(); $S_i.Close()
     ∇
 :EndNamespace
 \end{Iscandar}
-\thispagestyle{empty}
 
-\pagenumbering{gobble}
 \begin{Iscandar}[RowsDriver.apl]
 :Namespace RowsDriver
 
@@ -2728,9 +2709,7 @@ $W.Close(); $S_i.Close()
     ∇
 :EndNamespace
 \end{Iscandar}
-\thispagestyle{empty}
 
-\pagenumbering{gobble}
 \begin{Iscandar}[PairRowsDriver.apl]
 :Namespace PairRowsDriver
 
@@ -2868,7 +2847,7 @@ $W.Close(); $S_i.Close()
     ∇
 :EndNamespace
 \end{Iscandar}
-\thispagestyle{empty}
+
 
 \begin{Iscandar}[LargeDriver.apl]
 :Namespace LargeDriver
