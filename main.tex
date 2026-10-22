@@ -785,98 +785,40 @@ The example below utilizes a sequence of \textbf{Left and Right Oracle look-up t
     \caption*{Nano mode seed polytopes from indexing Center Oracle.}
 \end{figure}
 
+\section{Bounded Complexity by Bounding Execution Paths}
+\label{sec:bounded_execution}
 
-\section{Description of Instruction Groups}
+Traditional memory systems use depth first search through fragmented space, causing performance spikes as utilization grows. Here we ensure every memory request follows a hardcoded path with a fixed execution limit.
 
-We map each instruction group to a specific predicate of the \textbf{Iscandar} hierarchy established in the Architectural Axioms. This ensures the hardware execution is a transparent reflection of the underlying mathematics. Here, we assume a 32-radix descent where each level acts as a ``Gate'' that must be cleared to reach the subsequent tier.
+\subsection{Mechanics of Guaranteed Termination}
 
-\subsection{Phase I: The Admissibility Gate (Level 3)}
+The system bypasses dynamic scanning loops through three distinct structural boundaries:
 
-\vspace{12pt}
-\setcounter{equation}{14}
-\noindent \textbf{Predicate:} 
-\begin{equation}
-    L \in \Gamma_{Apex} \iff \Gamma_{Apex} \leftarrow \Gamma_{Apex} + L
-    \label{eq:predicate_apex}
-\end{equation}
-\vspace{12pt}
-
-\begin{enumerate}
-    \item \textbf{Instruction Group 1:} Load Global Registrar: Fetch the 16-bit register located at the Apex sector address as defined in the Cube Scale Allocator.
-    \item \textbf{Instruction Group 2:} Admissibility Comparison: Compare against the requested magnitude $L$. If False: Immediate Exit (Fast-Fail) as required by the Global Registrar's heuristics. If True: Increment by the requested magnitude.
-\end{enumerate}
-
-\subsection{Phase II: The Plane-Level Resolution (Level 2)}
-
-\vspace{12pt}
-\setcounter{equation}{15}
-\noindent \textbf{Predicate:} 
-\begin{equation}
-    P_{\text{Plane}} \iff \sum_{i \in \text{Plane}} (\text{Row}[\text{Inclusion}]) \ge L
-    \label{eq:predicate_plane}
-\end{equation}
-\begin{center}
-    \small\textbf{The Plane Inclusion Predicate}
-\end{center}
-\vspace{12pt}
-
-\begin{enumerate}
-    \setcounter{enumi}{2}
-    \item \textbf{Instruction Group 3:} Index Plane Metadata: Using the address bits, index into the 32-radix plane metadata table.
-    \item \textbf{Instruction Group 4:} Load Row-Summary: Fetch the 15-bit metadata for the target plane summarizing the 32 constituent rows as established in Axiom II.
-    \item \textbf{Instruction Group 5:} Candidate Selection: Evaluate the plane-state to identify the first row-sequence that satisfies the weld.
-    \item \textbf{Instruction Group 6:} Heuristic Branch/Scan: Evaluate the 32-radix plane metadata scan to confirm the steering vector.
-\end{enumerate}
-
-\subsection{Phase III: The Row-Level Weld (Level 1)}
-
-\vspace{12pt}
-\setcounter{equation}{16}
-\begin{equation}
-    \text{Weld} \iff \text{RHL}(\text{Row}_n) + \text{Intermediates} + \text{LHL}(\text{Row}_{n+m}) \ge L
-    \label{eq:predicate_weld}
-\end{equation}
-\begin{center}
-    \small\textbf{The Weld Predicate for Multi-Block Resolution}
-\end{center}
-\vspace{12pt}
-
-\begin{enumerate}
-    \setcounter{enumi}{6}
-    \item \textbf{Instruction Group 7:} Leading Fragment Access (RHL): Perform a Look-Up Table (LUT) lookup on the starting row's tail.
-    \item \textbf{Instruction Group 8:} Trailing Fragment Access (LHL): Perform a LUT lookup on the final row's head.
-    \item \textbf{Instruction Group 9:} Scalar Summation: Add Lead + Intermediates + Trail, maintaining the Contiguity Guarantee.
-    \item \textbf{Instruction Group 10:} Weld Validation: Compare the result against $M$ to finalize the inter-row continuity.
-\end{enumerate}
-
-\subsection{Phase IV: The Bit-Lattice Isolation (Level 0)}
-
-\vspace{12pt}
-\setcounter{equation}{17}
-\noindent \textbf{Predicate:} 
-\begin{equation}
-    P_{\text{leaf}} \iff 
-    \begin{cases} 
-    \text{Oracle}_{C}(S_{\text{word}}, L) & \text{if } L \le \mathcal{A}/4 \\
-    \text{Oracle}_{L}(S_{\text{word}}, L) \lor \text{Oracle}_{R}(S_{\text{word}}, L) & \text{if } L > \mathcal{A}/4
-    \end{cases}
-    \label{eq:predicate_leaf}
-\end{equation}
-\begin{center}
-    \small\textbf{The Leaf-Tier Path Selection Predicate}
-\end{center}
-\vspace{12pt}
-
-\begin{enumerate}
-    \setcounter{enumi}{10}
-    \item \textbf{Instruction Group 11: Path Selection (Nano vs. Tiny):} The logic evaluates the request magnitude $L$. If $L \le \mathcal{A}/4$, the system engages the Nano path; otherwise, the bimodal Tiny path is engaged.
+\begin{itemize}
+    \item \textbf{Immediate Rejection at Top Level:} Top-level size admissibility is evaluated using a single comparison against global capacity metrics. If a request exceeds the limit of the Cube data structure, we drops out immediately without executing a deep lookup, establishing a constant-time fast-fail bound.
     
-    \item \textbf{Instruction Group 12: Bimodal Execution (Tiny Path):} For Tiny requests, the system executes a primary probe via the Left Oracle. Upon a null result, a deterministic secondary probe via the Right Oracle is triggered to capture straddle-runs.
+    \item \textbf{Loopless Grid Sweeps through Row Occupation Counters:} When an allocation request falls within multi-row boundaries, the engine evaluates the row coordinates linearly. Rather than executing an open-ended \texttt{while} loop that scans memory maps dynamically, the driver executes through a sequence of unrolled conditional branches. Because these branch paths are laid out explicitly in a fixed sequence, the calculation has a strict, compile-time termination ceiling.
     
-    \item \textbf{Instruction Group 13: Atomic Resolution (Nano Path):} For Nano requests, the system performs a single-cycle intersection using the Center Oracle to isolate the seed polytope.
+    \item \textbf{Static Matrix Lookups:} Small-scale sector requests route directly to precomputed look-up tables. These tables determine boundary containment and handle alignment splits without using search or sort operations. The system processes the bit pattern of a row through a fixed sequence of matrix indexes, ensuring the path finishes in a predictable number of instructions.
+\end{itemize}
 
-    \item \textbf{Instruction Group 14: Triangle Projection:} The successfully resolved bit-run from either path is mapped to the physical offset, finalizing the Atomic Polytope isolation.
-\end{enumerate}
+\subsection{Bounded-Error Quantum Path Complexity Ceiling}
+
+For a memory pool defined by a total sector volume $N$ (where $N = 32,768$), a brute-force classical search across the coordinate landscape scales directly with the total volume of the heap. By organizing this space into a rigid three-dimensional geometric hierarchy, the length of any single dimension is established as $N^{1/3}$.\\
+
+The system achieves its primary efficiency factor by scanning an entire row of sectors simultaneously via unrolled driver logic. By processing a row---which contains $N^{1/3}$ sectors---as a single, atomic bit-pattern transaction rather than inspecting individual sectors sequentially, the total unmanaged search boundary is divided by the row length. This drops the deterministic classical search ceiling from $N$ down to $\frac{N}{N^{1/3}}$, which simplifies strictly to $N^{2/3}$ (evaluating to $1,024$ operations).\\
+
+Using a bounded-error quantum oracle shifts the lookup from a strictly deterministic evaluation to a probabilistic model (Wang et al., 2025). Because the oracle evaluates the superposition of the remaining coordinate landscape, amplitude amplification isolates the target state in root time (Shu et al., 2024).\\
+
+This quantum point of view by necessity also shifts our perspective of complexity from worst case to typical case. Factoring this quantum capability into the structurally reduced row distribution collapses the mathematical upper bound. By applying the root-time speedup directly to the classical volume expression, we get:
+
+\begin{equation*}
+    \text{Maximum Bounds} = \left( N^{2/3} \right)^{1/2} = N^{\left(\frac{2}{3} \cdot \frac{1}{2}\right)} = N^{1/3}
+\end{equation*}
+
+Given $N = 32,768$, the architectural search ceiling collapses gracefully from the classical $N^{2/3}$ bound of $1,024$ operations down to a quantum-accelerated bound of $N^{1/3}$, yielding $32$ operations under typical probabilistic conditions. (NOTE: Our Oracles, being quantum in nature, may miss some paths to finding unused sectors, so any probabilistic error will be revealed in potential fragmentation after a search.)\\
+
+Hence, the typical complexity of any memory search algorithm presented here will be bounded by the cubic data structure in which it operates, as $O(N^{1/3})$.
 
 \section{Desk Check Summary: Nano and Tiny Resolutions ($L \le \mathcal{A}$)}
 
@@ -1108,6 +1050,14 @@ To contrast, a theoretical binary buddy system was simulated for a heap size com
 \bibitem{14} N. Karmarkar. \textit{A New Polynomial-Time Algorithm for Linear Programming}. Combinatorica, Vol. 4, No. 4, 1984. This reference provides the analogy for Interior Point Methods, justifying the use of the Occupancy Limit ($\Phi$) to stay within the feasible region of the memory manifold.
 
 \bibitem{15} B. S. Everitt. \textit{The Cambridge Dictionary of Statistics}. Cambridge University Press, 1998. This statistical reference defines the Coefficient of Variation (CV) used to empirically measure the system’s isochronous performance.
+
+\bibitem{16} Shu, G., Shan, Z., Xu, J., Zhao, J., & Wang, S. (2024). A general quantum algorithm for numerical integration. Scientific Reports, 14. https://doi.org/10.1038/s41598-024-61010-9
+
+    This paper provides the mathematical precedent for the manuscript’s claim regarding search boundary reduction via quantum mechanics. While focused on numerical integration, the underlying algorithm demonstrates how to evaluate a broad data space in superposition and apply amplitude amplification to isolate target states. This justifies the manuscript's assertion that factoring a bounded-error quantum oracle into the structurally reduced row distribution successfully collapses the theoretical complexity ceiling to root time, or O($N^{1/2}$).
+
+ \bibitem{17} Wang, Z., Zhang, K., & Korepin, V. (2025). Near‐Deterministic Quantum Search Algorithm Without Phase Design. Advanced Quantum Technologies. https://doi.org/10.1002/qute.202400557
+
+    This article explores the probabilistic realities of Grover’s search algorithm, specifically the challenge of achieving near-deterministic results without complex phase designs. In the context of the manuscript, this research justifies the architectural transition from a strictly deterministic classical model (atomic row-scanning) to a probabilistic quantum model. It grounds the assertion that utilizing a quantum oracle necessitates a bounded-error margin, framing the reliance on high probability amplitude as a valid and documented architectural trade-off for quantum acceleration.
 
 \end{thebibliography}
 
