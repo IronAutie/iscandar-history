@@ -59,8 +59,65 @@
 
 \renewcommand*{\thefootnote}{\fnsymbol{footnote}}
 
+% --- PREAMBLE FRONT-MATTER SETUP ---
+\usepackage{tocloft} % For custom lists
+\usepackage{hyperref} % For PDF bookmarks
+
+% 1. Set ToC Depth: Section and Subsection only
+\setcounter{tocdepth}{2}
+
+% 2. List of Equations Setup
+\newcommand{\listequationname}{List of Equations}
+\newlistof{myequations}{loe}{\listequationname}
+% Command to tag equations for the list: \myequations{Label}
+\newcommand{\myequations}[1]{%
+      \addcontentsline{loe}{myequations}{\protect\numberline{\theequation}#1}}
+
+% 3. Counter for Figure A, B, C... (Nizhoni Style)
+\newcounter{marginfig}
+\renewcommand{\themarginfig}{\Alph{marginfig}}
+
 \begin{document}
+
+\pagenumbering{roman} % Start Roman sequence here (Title = i)
 \maketitle
+\thispagestyle{empty} % Hides the "i" on the title page itself
+
+\begin{abstract}
+Traditional heap management architectures, such as the binary buddy system, inherently suffer from non-deterministic search latencies and ``jitter'' as heap occupancy increases. This paper introduces \textbf{Iscandar}, a deterministic memory management algorithm based on a Radix-32 Partitioned Allocator. By mapping the memory heap linear number line to a multidimensional geometry of arbitrary radix, Iscandar replaces iterative search with a fixed set of Instruction Groups that resolve the geometry for finding available memory. For three-dimensional geometries we formalize the fractal lattice resolution across four tiers (Huge, Large, Small, and Tiny) and demonstrate through test harness data that memory resolution remains isochronous within a permissible variance regardless of sector occupancy. 
+\end{abstract}
+
+% --- FRONT MATTER EXECUTION ---
+\newpage
+\pagenumbering{roman} % Use Roman numerals for the map
+
+% A. Table of Contents
+\cleardoublepage
+\pdfbookmark[0]{Contents}{toc} % Hidden bookmark for PDF sidebar
+\tableofcontents
+\newpage
+
+% B. List of Figures
+\cleardoublepage
+\addcontentsline{toc}{section}{\listfigurename}
+\listoffigures
+\newpage
+
+% C. List of Equations
+\cleardoublepage
+\addcontentsline{toc}{section}{\listequationname}
+\listofmyequations
+\newpage
+
+% D. List of APL Listings
+\cleardoublepage
+\addcontentsline{toc}{section}{List of APL Source Listings}
+\lstlistoflistings
+\newpage
+
+% --- BEGIN MAIN MANUSCRIPT ---
+\pagenumbering{arabic} % Switch to Page 1, 2, 3...
+\setcounter{page}{1}
 
 \section{Introduction to \textbf{Iscandar}}
 
