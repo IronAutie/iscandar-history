@@ -1,5 +1,6 @@
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
+\usepackage{fontspec}  
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{booktabs}
@@ -67,24 +68,26 @@
 
 \renewcommand{\thefigure}{\Alph{figure}}
 
-\usepackage{listings}
-\usepackage{textcomp} % Helps with symbol rendering
+% 2. Fix the conflict with your kaobook/tufte style class
+\makeatletter
+\let\c@marginfig\relax
+\makeatother
 
-\lstnewenvironment{HonestLab}
-{
-    \lstset{
-        numbers=none,           % FORCES the removal of numbers
-        basicstyle=\ttfamily,
-        columns=flexible,
-        keepspaces=true,
-        xleftmargin=0pt,        % Moves text to the hard left
-        firstnumber=1,
-        stepnumber=0,           % Disables the counter engine
-        % Character Mapping to prevent stripping
-        literate={⍝}{{\texttt{-|}}}1 {⋄}{{\texttt{|}}}1 {⍳}{{i}}1 {⍴}{{r}}1
-    }
+% !TEX program = xelatex
+\usepackage{fontspec}
+\usepackage{fancyvrb}
+
+% FreeMono is standard on Overleaf and handles APL glyphs correctly
+\setmonofont{FreeMono}
+
+% Create a "Protected" environment that ignores the listing margin grid
+\DefineVerbatimEnvironment{HonestLab}{Verbatim}{
+    fontsize=\small,
+    xleftmargin=0pt,        % Forces the text to the absolute left
+    fontfamily=tt,
+    baselinestretch=1,
+    commandchars=\\\{\}     % Allows formatting if needed, but leaves text raw
 }
-{}
 
 \begin{document}
 
