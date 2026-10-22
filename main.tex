@@ -20,28 +20,46 @@
 \setmonofont{FreeMono}
 \usepackage{fancyvrb}
 
-\usepackage{listings}
-\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{fancyvrb}
 
-% Define J colors for the PDF display
-\lstdefinelanguage{J}{
-  morekeywords={NB.,coclass,conew,create,if.,do.,else.,end.,2!:,32,a.},
-  sensitive=false,
-  morecomment=[l]{NB.},
-  basicstyle=\small\ttfamily,
-  keywordstyle=\color{blue},
-  commentstyle=\color{gray},
-  frame=single,
-  breaklines=true
+\usepackage[most]{tcolorbox}
+\usepackage{fancyvrb}
+
+% Updated environment: removed commandchars to protect braces
+\newenvironment{BottleOpener}{%
+  \VerbatimEnvironment
+  \begin{tcolorbox}[
+    enhanced, sharp corners, boxrule=1pt,
+    colback=gray!10!white, colframe=black,
+    title={\texttt{Tool: BottleOpener.ps1}},
+    fonttitle=\bfseries\sffamily, coltitle=white, colbacktitle=black,
+    attach boxed title to top left={yshift=-2mm, xshift=2mm},
+    boxed title style={sharp corners, boxrule=0.5pt},
+    top=4mm, breakable
+  ]%
+  \begin{Verbatim}[keepspaces=true]% % Removed commandchars here
+}{%
+  \end{Verbatim}
+  \end{tcolorbox}
 }
 
-\DefineVerbatimEnvironment{Iscandar}{Verbatim}{
-    fontsize=\small,
-    fontfamily=tt,
-    keepspaces=true,
-    showspaces=false,
-    xleftmargin=0pt,
-    commandchars=\\\{\}
+% Do the same for the Iscandar environment
+\newenvironment{Iscandar}[1][]{%
+  \VerbatimEnvironment
+  \begin{tcolorbox}[
+    enhanced, sharp corners, boxrule=0.5pt,
+    colback=gray!5!white, colframe=gray!75!black,
+    title={\texttt{File: #1}},
+    fonttitle=\bfseries\sffamily, coltitle=white, colbacktitle=gray!60!black,
+    attach boxed title to top left={yshift=-2mm, xshift=2mm},
+    boxed title style={sharp corners, boxrule=0.5pt},
+    top=4mm, breakable
+  ]%
+  \begin{Verbatim}[keepspaces=true]% % Removed commandchars here
+}{%
+  \end{Verbatim}
+  \end{tcolorbox}
 }
 
 \geometry{letterpaper, margin=1in}
@@ -1049,54 +1067,74 @@ To contrast, a theoretical binary buddy system was simulated for a heap size com
 
 \section{Iscandar: Laboratory Source Code}
 
-\subsection{The PowerShell Scissor Protocol}
-To initialize the Iscandar laboratory environment, the researcher should execute the following PowerShell script from the directory containing this manuscript. The script identifies partitioned \texttt{Iscandar} environments within the \LaTeX\ source and ``clips'' them into the physical directory hierarchy required for the \textbf{LatticeCore} namespace.
+\subsection{Bootstrap Mechanism (see Section 1, Batteries Included!)}
 
-\begin{lstlisting}[language=PowerShell, frame=single, numbers=none, caption=Iscandar Scissor Protocol]
-# Iscandar Scissor Script: Extracting Dyalog APL Components
-$targetDir = "Iscandar_Lab/Bin"
-if (!(Test-Path $targetDir)) { New-Item -ItemType Directory -Path $targetDir }
+A researcher can manually copy the following block into a Windows 11 Powershell terminal to extract the \texttt{BottleOpener} tool (see section 12.2, below) for organizing the code base for execution by any community (unregistered) version of the Dyalog 20 64-bit Unicode interpreter for APL.
 
-# Scrape the .tex source for Iscandar-tagged environments
-$tex = Get-Content "main(4).tex" -Raw
-$clips = [regex]::Matches($tex, "(?s)\\begin\{Iscandar\}(.*?)\\end\{Iscandar\}")
-
-# Clip and organize into the Bin directory
-for ($i = 0; $i -lt $clips.Count; $i++) {
-    $code = $clips[$i].Groups[1].Value.Trim()
-    $code | Out-File "$targetDir/Iscandar_Component_$i.apl" -Encoding utf8
+\begin{verbatim}
+$tex = Get-Content "Iscandar.tex" -Raw
+$pattern = '(?s)\\begin\{BottleOpener\}.*?\n(.*)\n\\end\{BottleOpener\}'
+if ($tex -match $pattern) {
+    $Matches[1] | Out-File "BottleOpener.ps1" -Encoding utf8
+    .\BottleOpener.ps1
 }
-Write-Host "Iscandar Environment Assembled: $($clips.Count) components clipped." -ForegroundColor Cyan
-\end{lstlisting}
+\end{verbatim}
 
-\subsection{Dyalog APL Environment Setup}
-Once organized by the Scissor Protocol, the following components enable the directory hierarchy and \textbf{Handshake Oracle} initialization. These code blocks are extracted into the \texttt{Iscandar\_Lab/Bin} directory for direct execution within a Dyalog APL 20 environment.
+\subsection{The Bottle Opener}
+This \LaTeX{} block is automatically extracted from this paper and saved as BottleOpener.ps1 by the bootstrap mechanism listed in the above section 12.1, when executed by the researcher upon this .tex file (Iscandar.tex), all APL sections in this paper will be extracted and organized in the current working directory of the Powershell prompt.
 
-\begin{Iscandar}
-⍝ Component: Directory Assembly
-⍝ Assembles the Iscandar_Lab hierarchy within the Dyalog workspace
-dirs ← 'Iscandar_Lab/Oracles' 'Iscandar_Lab/Workspaces'
-{⎕MKDIR ⍵}¨ dirs
+\begin{BottleOpener}
+# Run 'BottleOpener.ps1' from a Powershell prompt.
+$tex = Get-Content "Iscandar.tex" -Raw
+
+$pattern = '(?s)\\begin\{Iscandar\}\[(.*?)\]' +
+           '\s*\n(.*?)\n\\end\{Iscandar\}'
+
+$clips = [regex]::Matches($tex, $pattern)
+
+foreach ($c in $clips) {
+    $f = $c.Groups[1].Value.Trim()
+    $v = $c.Groups[2].Value.Trim()
+    
+    # PowerShell allows breaks after the pipe
+    $v | 
+    Out-File $f -Encoding utf8
+    
+    Write-Host "Clipped: $f" -ForegroundColor Green
+}
+Write-Host "Iscandar Organized." -ForegroundColor Cyan
+\end{BottleOpener}
+
+\subsection{Project Directories}
+This \LaTeX{} block is automatically extracted from this paper and saved as Project.ps1 by the bootstrap mechanism listed in the above section 12.1, when executed by the researcher, it establishes the physical directory hierarchy for the project related to this paper.
+
+\begin{Iscandar}[Project.ps1]
+# Run 'Project.ps1' from a Powershell prompt
+$root = "Iscandar_Lab"
+$subDirs = @(
+    "Bin",        # Target for APL research artifacts
+    "Oracles",    # Destination for LHL/RHL/Center LUTs
+    "Workspaces", # Storage for serialized memory states
+    "Telemetry"   # Output for stress-test audit data
+)
+
+# Deterministic creation of the Lattice hierarchy
+if (!(Test-Path $root)) { 
+    New-Item -ItemType Directory -Path $root 
+}
+
+foreach ($dir in $subDirs) {
+    $path = Join-Path $root $dir
+    if (!(Test-Path $path)) {
+        New-Item -ItemType Directory -Path $path
+        Write-Host "Created: $path" -ForegroundColor Green
+    }
+}
+Write-Host "Iscandar Project Verified." -ForegroundColor Cyan
 \end{Iscandar}
 
-\begin{Iscandar}
-⍝ Component: Handshake Oracle Initialization
-⍝ Deterministic resolution for fractured sequences using LHL and RHL tables.
-⍝ Bridges "fractured" sequences between sectors.
-LHL ← { ⍝ Implementation of Left-Hand Lookahead }
-RHL ← { ⍝ Implementation of Right-Hand Lookahead }
-Center ← { ⍝ Implementation of Center Lookahead }
-\end{Iscandar}
-
-\subsection{Verification of Deployment}
-Upon successful extraction and execution of the APL components, the following physical hierarchy will be confirmed. This structure ensures that the research environment is partitioned and ready for the bimodal resolution logic.
-
-\begin{itemize}
-    \item \textbf{Iscandar\_Lab/}: The root research container.
-    \item \textbf{Iscandar\_Lab/Oracles/}: Destination for binary look-up tables (LUTs) used in Nano and Tiny resolution.
-    \item \textbf{Iscandar\_Lab/Workspaces/}: Storage for serialized memory states and environment locales.
-    \item \textbf{Iscandar\_Lab/Bin/}: Target directory for extracted APL research artifacts.
-\end{itemize}
+\subsection{Project Checklist}
+TBD
 
 \clearpage % Ensures the last page of the listing also has no number
 
