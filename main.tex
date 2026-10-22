@@ -2,11 +2,12 @@
 \documentclass[11pt]{article}
 
 % =========================================================================
+% =========================================================================
 % MASTER TARGET CONTROL SWITCH
 % =========================================================================
 \newif\ifarxivmode
-% -------------------------------------------------------------------------
-\arxivmodefalse  % <--- Set to \arxivmodetrue ONLY when uploading to arXiv
+% Set to \arxivmodetrue ONLY when uploading to arXiv
+\arxivmodefalse
 % -------------------------------------------------------------------------
 
 % =========================================================================
@@ -67,6 +68,9 @@ we formalize the fractal lattice resolution across sizes of sector requests usin
 \usepackage{tcolorbox}
 \tcbuselibrary{enhanced, breakable}
 
+
+\DefineVerbatimEnvironment{BottleOpener}{Verbatim}{commandchars=\\\{\}}
+
 % Disable macro syntax processing inside Verbatim blocks to support raw APL tokens
 \fvset{commandchars=none}
 
@@ -107,10 +111,10 @@ we formalize the fractal lattice resolution across sizes of sector requests usin
       after={\par\vspace{0.2em}}
     ]%
     \label{#2}% Sets the cross-reference anchor securely inside the box
-    \begin{Verbatim}%
+    \begin{Verbatim}
   }{%
     \end{Verbatim}
-    \end{tcolorbox}%
+    \end{tcolorbox}
   }
 \else
   % --- TARGET B: LOCAL INTERACTIVE CONFIGURATION ---
@@ -138,10 +142,10 @@ we formalize the fractal lattice resolution across sizes of sector requests usin
     ]%
     \hypertarget{#2}{}% Creates a direct target handle for local jumps
     \label{#2}%
-    \begin{Verbatim}%
+    \begin{Verbatim}
   }{%
     \end{Verbatim}
-    \end{tcolorbox}%
+    \end{tcolorbox}
   }
 \fi
 
@@ -1054,14 +1058,13 @@ To contrast, a theoretical binary buddy system was simulated for a heap size com
 
 A researcher can manually copy the following block into a Windows 11 Powershell terminal to extract the \texttt{BottleOpener} tool (see section 12.2, below) for organizing the code base for execution by any community (unregistered) version of the Dyalog 20 64-bit Unicode interpreter for APL.
 
-\begin{verbatim}
+\begin{Iscandar}{src:bootstrapper}
 $tex = Get-Content "Iscandar.tex" -Raw
-$pattern = '(?s)\\begin\{BottleOpener\}.*?\n(.*)\n\\end\{BottleOpener\}'
+$pattern = '(?s)\\begin\{BottleOpener\}(.*?)\\end\{BottleOpener\}'
 if ($tex -match $pattern) {
-    $Matches[1] | Out-File "BottleOpener.ps1" -Encoding utf8
-    .\BottleOpener.ps1
+    $Matches[1].Trim() | Out-File "BottleOpener.ps1" -Encoding utf8
 }
-\end{verbatim}
+\end{Iscandar}
 
 \section {Project Checklist.}
 
@@ -1070,20 +1073,22 @@ This \LaTeX\ block is automatically extracted from this paper and saved as \text
 
 Run \texttt{'BottleOpener.ps1'} from a PowerShell prompt.
 
-\begin{verbatim}
+\begin{Iscandar}{src:bottleopener}
+\begin{BottleOpener}
 $tex = Get-Content "Iscandar.tex" -Raw
-$pattern = '(?s)\\begin\{Iscandar\}\[(.*?)\]\{(.*?)\}(.*?)\\end\{Iscandar\}'
+$pattern = '(?s)\\begin\{Iscandar\}\[(.*?)\](?:\{.*?\})?\s*(.*?)\\end\{Iscandar\}'
 $clips = [regex]::Matches($tex, $pattern)
 
 foreach ($c in $clips) {
     $f = $c.Groups[1].Value.Trim()
-    $v = $c.Groups[3].Value.Trim()
-    # PowerShell allows breaks after the pipe
+    $v = $c.Groups[2].Value.Trim()
+    
     $v | Out-File $f -Encoding utf8
     Write-Host "Clipped: $f" -ForegroundColor Green
 }
 Write-Host "Iscandar Organized." -ForegroundColor Cyan
-\end{verbatim}
+\end{BottleOpener}
+\end{Iscandar}
 
 \subsection{Project Directories}
 This \LaTeX{} block is automatically extracted from this paper and saved as Project.ps1 by the bootstrap mechanism listed in the above section 12.1, when executed by the researcher, it establishes the physical directory hierarchy for the project related to this paper.
