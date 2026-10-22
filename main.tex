@@ -660,7 +660,25 @@ To perform an ``honest'' audit for the monograph, we must map each of the 13 mac
 \end{enumerate}
 
 \end{verbatim}
+\section{Desk Check Summary: Tiny Search ($M \le 8$)}
 
+Here we posit a hypothetical 32-bit machine providing the data structures needed to demonstrate one example path, the "Tiny Search" execution, tracing a step deterministic instruction sequence required to resolve an allocation of 8 sectors or fewer.
+
+\begin{enumerate}
+    \item \textbf{Admissibility Check:} The Global Registrar compares the request size $M$ against the aggregate occupancy ($\Gamma$) and entropy thresholds.
+    \item \textbf{Plane Navigation:} The Rotational Steering Vector ($\vec{R}$) is applied at the Cube level to select a candidate Plane.
+    \item \textbf{Metadata Retrieval:} The 32-bit Row-Summary mask for the selected plane is loaded into the register.
+    \item \textbf{Row Isolation:} A mask check identifies the first available Row index within the plane summary.
+    \item \textbf{Sector Load:} The 32-bit data word representing the candidate Row is fetched.
+    \item \textbf{Hierarchical Bisection:} The 32-bit row is divided into two 16-bit "Half-Words" to initiate the Oracle probe.
+    \item \textbf{Primary Oracle (High):} A $O(1)$ Look-Up Table (LUT) probe returns the Left/Right Hand Lookahead for the high 16 bits.
+    \item \textbf{Primary Oracle (Low):} A $O(1)$ LUT probe returns the Left/Right Hand Lookahead for the low 16 bits.
+    \item \textbf{Boundary Intersection:} The system calculates the "Center-Straddle" by summing the RHL of the high half and the LHL of the low half.
+    \item \textbf{Core Shard Interrogation:} If the straddle fails, the 32-bit row is treated as four 8-bit quadrants for unrolled sequential validation.
+    \item \textbf{Geometric Resolution:} The successful bit-run is mapped to a physical offset using the Triangle Projection method.
+    \item \textbf{Lattice Commitment:} The new occupancy state is masked into the row, and local metadata is updated.
+    \item \textbf{Deterministic Exit:} The system returns the resolved pointer.
+\end{enumerate}
 
 \section{Volumetric Analysis}
 
